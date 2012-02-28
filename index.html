@@ -214,15 +214,23 @@ Windows的使用者請額外安裝能編譯R的工具庫: <a href="http://cran.r
 
 
 <ol>
-<li><p>使用inline，這也是最簡單的方式。以下是一個取自[Frequently Asked Questions about Rcpp]的範例:</p>
+<li><p>使用inline，這也是最簡單的方式。以下是一個取自<a href="http://dirk.eddelbuettel.com/code/rcpp/Rcpp-FAQ.pdf">Frequently Asked Questions about Rcpp</a>的範例:</p>
 
-<pre><code>fx &lt;- cxxfunction(signature( x = "numeric" ), '
-    NumericVector xx(x);
+<pre><code>&lt;div&gt;
+</code></pre>
+
+<pre>
+<code class='R'>fx &lt;- cxxfunction(signature( x = &quot;numeric&quot; ), '
+
+<pre><code>    NumericVector xx(x);
     return wrap( std::accumulate( xx.begin(), xx.end(), 0.0));',
-    plugin = "Rcpp")
-res &lt;- fx( seq( 1, 10, by = 0.5 ) )
-res
-</code></pre></li>
+    plugin = &amp;quot;Rcpp&amp;quot;)
+res &amp;lt;- fx( seq( 1, 10, by = 0.5 ) )
+res&lt;/code&gt;
+</code></pre>
+
+<p></pre>
+</div></p></li>
 <li><p>使用R CMD SHLIB的話則需要調整compiler的參數。以下的範例應該是透過修改環境變數的方式。</p>
 
 <pre><code>export PKG_LIBS='Rscript -e "Rcpp:::LdFlags()"'
