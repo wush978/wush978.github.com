@@ -4,7 +4,7 @@
   <title><![CDATA[My Octopress Blog]]></title>
   <link href="http://wush978.github.com/atom.xml" rel="self"/>
   <link href="http://wush978.github.com/"/>
-  <updated>2012-02-28T15:39:23+08:00</updated>
+  <updated>2012-02-28T15:44:05+08:00</updated>
   <id>http://wush978.github.com/</id>
   <author>
     <name><![CDATA[Your Name]]></name>
@@ -12,5 +12,36 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Rcpp]]></title>
+    <link href="http://wush978.github.com/blog/2012/02/28/rcpp/"/>
+    <updated>2012-02-28T15:42:00+08:00</updated>
+    <id>http://wush978.github.com/blog/2012/02/28/rcpp</id>
+    <content type="html"><![CDATA[<h1>Rcpp 心得</h1>
+
+<ul>
+<li><p>[概述] (#overview)</p>
+
+<ul>
+<li>[背景知識] (#background)</li>
+<li>[介紹] (#introduction)</li>
+<li>[安裝] (#install)</li>
+<li>[編譯] (#compile)</li>
+<li>[參考資料] (#reference)</li>
+</ul>
+</li>
+<li><p>[語法] (#syntax)</p>
+
+<ul>
+<li>[R to C++] (#R_Cplusplus)</li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+]]></content>
+  </entry>
   
 </feed>
