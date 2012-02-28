@@ -4,7 +4,7 @@
   <title><![CDATA[My Octopress Blog]]></title>
   <link href="http://wush978.github.com/atom.xml" rel="self"/>
   <link href="http://wush978.github.com/"/>
-  <updated>2012-02-28T15:44:05+08:00</updated>
+  <updated>2012-02-28T15:48:02+08:00</updated>
   <id>http://wush978.github.com/</id>
   <author>
     <name><![CDATA[Your Name]]></name>
@@ -41,6 +41,49 @@
 
 
 <hr />
+
+<h2 id=overview>概述</h2>
+
+
+
+
+<h3 id=background>背景知識<h3>
+
+[Rcpp] [1] 是一個整合R和C++的library。
+使用過R中的<code>.Call</code>函數的人一定會對於處理R和C之間資料結構的轉換感到很煩人，而Rcpp給我的第一個印象就是他把這些重複性很高的轉換給包起來了!所以在使用Rcpp時使用者不需要再去撰寫諸如以下的程式碼:
+
+[1] : http://dirk.eddelbuettel.com/code/rcpp.html
+
+    /* return a R integer vector with R API */
+    #include <R.h>
+    #include <Rdefines.h>
+    SEXP foo() 
+    {
+        SEXP retval;
+        PROTECT(retval = NEW_INTEGER(2));
+        INTEGER_POINTER(retval)[0] = 1;
+        INTEGER_POINTER(retval)[1] = 2;
+        UNPROTECT(1);
+        return retval;
+    }
+    
+在Rcpp中, 透過C++的物件導向和template語法可以用下列的語法得到相同的效果：
+
+    /* return a R integer vector with Rcpp */
+    #include <Rcpp.h>
+    RcppExport SEXP foo()
+    {
+        Rcpp::IntegerVector retval(2);
+        retval[0] = 1;
+        retval[1] = 2;
+        return Rcpp::wrap( retval );
+    }
+
+我喜歡Rcpp的語法的理由是:
+1. 語法更簡潔。尤其是在比較<code>INTEGER_POINTER(retval)[0]</code>和<code>retval[0]</code>，這種在真正寫功能時最常用到的語法，我比較喜歡使用後者。雖然你也可以再宣告一個指標:<code>int* retval_ptr = INTEGER_POINTER(retval)</code>來達到類似的效果，但是對我來說, 明明都是代表retval這個物件，卻需要宣告兩個變數就是彆扭。
+2. 型態上更精確: 我認為比起SEXP或NEW_INTEGER, IntegerVector更清楚的告訴我這個東西的資料型態
+3. RAII([Resource Acquisition Is Initialization])，降低了memory leak的可能，也讓我不用再去擔心PROTECT, UNPROTECT
+
 ]]></content>
   </entry>
   
