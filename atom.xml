@@ -4,7 +4,7 @@
   <title><![CDATA[Work Work]]></title>
   <link href="http://wush978.github.com/atom.xml" rel="self"/>
   <link href="http://wush978.github.com/"/>
-  <updated>2012-02-28T16:23:04+08:00</updated>
+  <updated>2012-02-28T16:23:39+08:00</updated>
   <id>http://wush978.github.com/</id>
   <author>
     <name><![CDATA[Wush Wu]]></name>
@@ -62,7 +62,7 @@
 
 <p>Rcpp中大量的使用了後面三種，所以如果看不習慣Rcpp的使用者，可能得先回頭把C++後面三種的語法複習一下了。</p>
 
-<h3 id="introduction> 介紹 </h3>
+<h3 id="introduction"> 介紹 </h3>
 
 
 <p><a href="http://dirk.eddelbuettel.com/code/rcpp.html">Rcpp</a> 是一個整合R和C++的library。
