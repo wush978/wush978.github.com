@@ -213,23 +213,23 @@ Windows的使用者請額外安裝能編譯R的工具庫: <a href="http://cran.r
 <ol>
 <li><p>使用inline，這也是最簡單的方式。以下是一個取自[Frequently Asked Questions about Rcpp]的範例:</p>
 
-<p>fx &lt;- cxxfunction(signature( x = &#8220;numeric&#8221; ), &#8217;</p>
-
-<pre><code>NumericVector xx(x);
-return wrap( std::accumulate( xx.begin(), xx.end(), 0.0));',
-plugin = "Rcpp")
-</code></pre>
-
-<p>res &lt;- fx( seq( 1, 10, by = 0.5 ) )
-res</p></li>
+<pre><code>fx &lt;- cxxfunction(signature( x = "numeric" ), '
+    NumericVector xx(x);
+    return wrap( std::accumulate( xx.begin(), xx.end(), 0.0));',
+    plugin = "Rcpp")
+res &lt;- fx( seq( 1, 10, by = 0.5 ) )
+res
+</code></pre></li>
 <li><p>使用R CMD SHLIB的話則需要調整compiler的參數。以下的範例應該是透過修改環境變數的方式。</p>
 
-<p>export PKG_LIBS=&#8217;Rscript -e &#8220;Rcpp:::LdFlags()&#8221;&#8217;
-export PKG_CXXFLAGS=&#8217;Rscript -e &#8220;Rcpp::CxxFlags()&#8221;&#8217;
-R CMD SHLIB myfile.cpp</p></li>
+<pre><code>export PKG_LIBS='Rscript -e "Rcpp:::LdFlags()"'
+export PKG_CXXFLAGS='Rscript -e "Rcpp::CxxFlags()"'
+R CMD SHLIB myfile.cpp
+</code></pre></li>
 <li><p>在R內呼叫Rcpp的函數<code>Rcpp:::SHLIB</code>來編譯。</p>
 
-<p>Rcpp:::SHLIB(&#8220;mysource.cpp&#8221;)</p></li>
+<pre><code>Rcpp:::SHLIB("mysource.cpp")
+</code></pre></li>
 </ol>
 
 
