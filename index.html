@@ -222,11 +222,11 @@ Windows的使用者請額外安裝能編譯R的工具庫: <a href="http://cran.r
 <pre>
 <code class='R'>fx &lt;- cxxfunction(signature( x = &quot;numeric&quot; ), '
 
-<pre><code>    NumericVector xx(x);
-    return wrap( std::accumulate( xx.begin(), xx.end(), 0.0));',
-    plugin = &amp;quot;Rcpp&amp;quot;)
-res &amp;lt;- fx( seq( 1, 10, by = 0.5 ) )
-res&lt;/code&gt;
+<pre><code>        NumericVector xx(x);
+        return wrap( std::accumulate( xx.begin(), xx.end(), 0.0));',
+        plugin = &amp;quot;Rcpp&amp;quot;)
+    res &amp;lt;- fx( seq( 1, 10, by = 0.5 ) )
+    res&lt;/code&gt;
 </code></pre>
 
 <p></pre>
