@@ -4,7 +4,7 @@
   <title><![CDATA[My Octopress Blog]]></title>
   <link href="http://wush978.github.com/atom.xml" rel="self"/>
   <link href="http://wush978.github.com/"/>
-  <updated>2012-02-28T16:05:54+08:00</updated>
+  <updated>2012-02-28T16:06:53+08:00</updated>
   <id>http://wush978.github.com/</id>
   <author>
     <name><![CDATA[Your Name]]></name>
@@ -21,20 +21,20 @@
     <content type="html"><![CDATA[<h1>Rcpp 心得</h1>
 
 <ul>
-<li><p>[概述] (#overview)</p>
+<li><p><a href="#overview">概述</a></p>
 
 <ul>
-<li>[背景知識] (#background)</li>
-<li>[介紹] (#introduction)</li>
-<li>[安裝] (#install)</li>
-<li>[編譯] (#compile)</li>
-<li>[參考資料] (#reference)</li>
+<li><a href="#background">背景知識</a></li>
+<li><a href="#introduction">介紹</a></li>
+<li><a href="#install">安裝</a></li>
+<li><a href="#compile">編譯</a></li>
+<li><a href="#reference">參考資料</a></li>
 </ul>
 </li>
-<li><p>[語法] (#syntax)</p>
+<li><p><a href="#syntax">語法</a></p>
 
 <ul>
-<li>[R to C++] (#R_Cplusplus)</li>
+<li><a href="#R_Cplusplus">R to C++</a></li>
 </ul>
 </li>
 </ul>
