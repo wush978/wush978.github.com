@@ -13,7 +13,7 @@
 介紹
 安裝
 編譯
-參考資料 語法 R to C++ 概述 背景知識 就我所知，要能理解Rcpp的語法，你必須先對C++這個我個人認為最難學的語言先學到某種程度才行。根據Effective C++的作者Scott Meyers的看法，C++其實是下列四種程式語言的集合 &hellip;">
+參考資料 概述 背景知識 就我所知，要能理解Rcpp的語法，你必須先對C++這個我個人認為最難學的語言先學到某種程度才行。根據Effective C++的作者Scott Meyers的看法，C++其實是下列四種程式語言的集合(難怪很難，一個打四個 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -111,7 +111,7 @@
 <div class="entry-content"><h1>Rcpp 心得</h1>
 
 <ul>
-<li><p><a href="#overview">概述</a></p>
+<li><a href="#overview">概述</a>
 
 <ul>
 <li><a href="#background">背景知識</a></li>
@@ -119,12 +119,6 @@
 <li><a href="#install">安裝</a></li>
 <li><a href="#compile">編譯</a></li>
 <li><a href="#reference">參考資料</a></li>
-</ul>
-</li>
-<li><p><a href="#syntax">語法</a></p>
-
-<ul>
-<li><a href="#R_Cplusplus">R to C++</a></li>
 </ul>
 </li>
 </ul>
@@ -158,32 +152,51 @@
 <p><a href="http://dirk.eddelbuettel.com/code/rcpp.html">Rcpp</a> 是一個整合R和C++的library。
 使用過R中的<code>.Call</code>函數的人一定會對於處理R和C之間資料結構的轉換感到很煩人，而Rcpp給我的第一個印象就是他把這些重複性很高的轉換給包起來了!所以在使用Rcpp時使用者不需要再去撰寫諸如以下的程式碼:</p>
 
-<pre><code>/* return a R integer vector with R API */
-#include &lt;R.h&gt;
-#include &lt;Rdefines.h&gt;
-SEXP foo() 
-{
-    SEXP retval;
-    PROTECT(retval = NEW_INTEGER(2));
-    INTEGER_POINTER(retval)[0] = 1;
-    INTEGER_POINTER(retval)[1] = 2;
-    UNPROTECT(1);
-    return retval;
-}
-</code></pre>
+<figure class='code'><figcaption><span>return a R integer vector with R API</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;R.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;Rdefines.h&gt;</span>
+</span><span class='line'><span class="n">SEXP</span> <span class="nf">foo</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">SEXP</span> <span class="n">retval</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">PROTECT</span><span class="p">(</span><span class="n">retval</span> <span class="o">=</span> <span class="n">NEW_INTEGER</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
+</span><span class='line'>  <span class="n">INTEGER_POINTER</span><span class="p">(</span><span class="n">retval</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">INTEGER_POINTER</span><span class="p">(</span><span class="n">retval</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">UNPROTECT</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">retval</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
 
 <p>在Rcpp中, 透過C++的物件導向和template語法可以用下列的語法得到相同的效果：</p>
 
-<pre><code>/* return a R integer vector with Rcpp */
-#include &lt;Rcpp.h&gt;
-RcppExport SEXP foo()
-{
-    Rcpp::IntegerVector retval(2);
-    retval[0] = 1;
-    retval[1] = 2;
-    return Rcpp::wrap( retval );
-}
-</code></pre>
+<figure class='code'><figcaption><span>return a R integer vector with Rcpp</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="cp">#include &lt;Rcpp.h&gt;</span>
+</span><span class='line'><span class="n">RcppExport</span> <span class="n">SEXP</span> <span class="n">foo</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">Rcpp</span><span class="o">::</span><span class="n">IntegerVector</span> <span class="n">retval</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+</span><span class='line'>  <span class="n">retval</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">retval</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">Rcpp</span><span class="o">::</span><span class="n">wrap</span><span class="p">(</span> <span class="n">retval</span> <span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
 
 <p>比較上面兩段語法後，我基於以下的理由比較喜歡Rcpp的語法:</p>
 
@@ -215,8 +228,7 @@ Windows的使用者請額外安裝能編譯R的工具庫: <a href="http://cran.r
 </ol>
 
 
-<figure class='code'><figcaption><span>Compile with package &#8220;inline&#8221;  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span>Compile with R package &#8220;inline&#8221;</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -232,17 +244,17 @@ Windows的使用者請額外安裝能編譯R的工具庫: <a href="http://cran.r
 
 
 <ol>
-<li>使用R CMD SHLIB的話則需要調整compiler的參數。以下的範例應該是透過修改環境變數的方式。</li>
+<li>使用R CMD SHLIB的話則需要調整compiler的參數。以下的範例是在bash底下執行，是透過修改環境變數的方式。</li>
 </ol>
 
 
-<figure class='code'><figcaption><span>Compile with R CMD SHLIB </span></figcaption>
-<div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span>Compile with R CMD SHLIB </span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>export PKG_LIBS='Rscript -e "Rcpp:::LdFlags()"'
-</span><span class='line'>export PKG_CXXFLAGS='Rscript -e "Rcpp::CxxFlags()"'
-</span><span class='line'>R CMD SHLIB myfile.cpp</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">export </span><span class="nv">PKG_LIBS</span><span class="o">=</span><span class="s1">&#39;Rscript -e &quot;Rcpp:::LdFlags()&quot;&#39;</span>
+</span><span class='line'><span class="nb">export </span><span class="nv">PKG_CXXFLAGS</span><span class="o">=</span><span class="s1">&#39;Rscript -e &quot;Rcpp::CxxFlags()&quot;&#39;</span>
+</span><span class='line'>R CMD SHLIB myfile.cpp
+</span></code></pre></td></tr></table></div></figure>
 
 
 <ol>
@@ -250,13 +262,20 @@ Windows的使用者請額外安裝能編譯R的工具庫: <a href="http://cran.r
 </ol>
 
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>Rcpp:::SHLIB("mysource.cpp")</span></code></pre></td></tr></table></div></figure>
+<figure class='code'><figcaption><span>Compile with Rcpp:::SHLIB</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='r'><span class='line'>Rcpp<span class="p">:::</span>SHLIB<span class="p">(</span><span class="s">&quot;mysource.cpp&quot;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>在windows底下，方法2.我花了很久才測出來(網路上找到資料是說只要Rcpp和他的父目錄名稱有空白就會出錯)!後來我大部分是用方法1和3了。</p>
 
 <h3 id="reference"> 參考資料 </h3>
+
+
+<ul>
+<li><a href="http://dirk.eddelbuettel.com/papers/Rcpp-introduction.pdf">Rcpp: Seamless R and C++ Interface</a></li>
+<li><a href="http://dirk.eddelbuettel.com/code/rcpp/Rcpp-FAQ.pdf">Frequently Asked Questions about Rcpp</a></li>
+</ul>
 
 </div>
 
