@@ -13,8 +13,7 @@
 介紹
 安裝
 編譯
-參考資料 語法 R to C++ 概述 背景知識 Rcpp 是一個整合R和C++的library。
-使用過R中的.Call函數的人一定會對於處理R和C之間資料結構的轉換感到很煩人，而Rcpp給我的第一個印象就是他把這些重複性很高的轉換給包起來了! &hellip;">
+參考資料 語法 R to C++ 概述 背景知識 就我所知，要能理解Rcpp的語法，你必須先對C++這個我個人認為最難學的語言先學到某種程度才行。根據Effective C++的作者Scott Meyers的看法，C++其實是下列四種程式語言的集合 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -144,6 +143,21 @@
 <h3 id="background">背景知識</h3>
 
 
+<p>就我所知，要能理解Rcpp的語法，你必須先對C++這個我個人認為最難學的語言先學到某種程度才行。根據<a href="http://www.amazon.com/Effective-Specific-Improve-Programs-Designs/dp/0321334876">Effective C++</a>的作者Scott Meyers的看法，C++其實是下列四種程式語言的集合(難怪很難，一個打四個!!):</p>
+
+<ul>
+<li>C的特性 (指標、陣列等等)</li>
+<li>物件導向</li>
+<li>STL 標準函式庫</li>
+<li>Template</li>
+</ul>
+
+
+<p>Rcpp中大量的使用了後面三種，所以如果看不習慣Rcpp的使用者，可能得先回頭把C++後面三種的語法複習一下了。</p>
+
+<h3 id="introduction>介紹</h3>
+
+
 <p><a href="http://dirk.eddelbuettel.com/code/rcpp.html">Rcpp</a> 是一個整合R和C++的library。
 使用過R中的<code>.Call</code>函數的人一定會對於處理R和C之間資料結構的轉換感到很煩人，而Rcpp給我的第一個印象就是他把這些重複性很高的轉換給包起來了!所以在使用Rcpp時使用者不需要再去撰寫諸如以下的程式碼:</p>
 
@@ -187,6 +201,8 @@ RcppExport SEXP foo()
 降低了memory leak等資源洩漏的可能，也免除了使用<code>PROTECT</code>、<code>UNPROTECT</code>的困擾。</p></li>
 </ol>
 
+
+<p>介紹完Rcpp吸引我的理由後，接下來我就開始繼續紀錄我摸索Rcpp的點點滴滴啦。</p>
 </div>
   
   
