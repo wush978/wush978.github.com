@@ -4,7 +4,7 @@
   <title><![CDATA[Work Work]]></title>
   <link href="http://wush978.github.com/atom.xml" rel="self"/>
   <link href="http://wush978.github.com/"/>
-  <updated>2012-02-28T16:24:03+08:00</updated>
+  <updated>2012-02-28T19:24:08+08:00</updated>
   <id>http://wush978.github.com/</id>
   <author>
     <name><![CDATA[Wush Wu]]></name>
@@ -109,7 +109,44 @@ RcppExport SEXP foo()
 </ol>
 
 
-<p>介紹完Rcpp吸引我的理由後，接下來我就開始繼續紀錄我摸索Rcpp的點點滴滴啦。</p>
+<p>除了語法上吸引我之外，Rcpp還可以還可以和inline套件結合，直接在R內進行即時編譯；還可以和另一個套件sugar一起使用，再增加程式的執行效能。</p>
+
+<h3 id="install"> 安裝 </h3>
+
+
+<p>Rcpp的安裝非常簡單，和一般的R套件相同。有興趣的使用者還可以額外安裝inline或sugar來玩。
+Windows的使用者請額外安裝能編譯R的工具庫: <a href="http://cran.r-project.org/bin/windows/Rtools/">Rtools</a> ，並且記得到Rcpp的目錄中不要包含空白，否則用R CMD SHLIB編譯的時候會有錯誤。</p>
+
+<h3 id="compile"> 編譯 </h3>
+
+
+<ol>
+<li><p>使用inline，這也是最簡單的方式。以下是一個取自[Frequently Asked Questions about Rcpp]的範例:</p>
+
+<p>fx &lt;- cxxfunction(signature( x = &#8220;numeric&#8221; ), &#8217;</p>
+
+<pre><code>NumericVector xx(x);
+return wrap( std::accumulate( xx.begin(), xx.end(), 0.0));',
+plugin = "Rcpp")
+</code></pre>
+
+<p>res &lt;- fx( seq( 1, 10, by = 0.5 ) )
+res</p></li>
+<li><p>使用R CMD SHLIB的話則需要調整compiler的參數。以下的範例應該是透過修改環境變數的方式。</p>
+
+<p>export PKG_LIBS=&#8217;Rscript -e &#8220;Rcpp:::LdFlags()&#8221;&#8217;
+export PKG_CXXFLAGS=&#8217;Rscript -e &#8220;Rcpp::CxxFlags()&#8221;&#8217;
+R CMD SHLIB myfile.cpp</p></li>
+<li><p>在R內呼叫Rcpp的函數<code>Rcpp:::SHLIB</code>來編譯。</p>
+
+<p>Rcpp:::SHLIB(&#8220;mysource.cpp&#8221;)</p></li>
+</ol>
+
+
+<p>在windows底下，方法2.我花了很久才測出來(網路上找到資料是說只要Rcpp和他的父目錄名稱有空白就會出錯)!後來我大部分是用方法1和3了。</p>
+
+<h3 id="reference"> 參考資料 </h3>
+
 ]]></content>
   </entry>
   
