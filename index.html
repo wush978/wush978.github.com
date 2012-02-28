@@ -162,9 +162,9 @@ RcppExport SEXP foo()
 <p>比較上面兩段語法後，我基於以下的理由比較喜歡Rcpp的語法:</p>
 
 <ol>
-<li><p>Rcpp的語法比較簡潔。尤其是在比較<code>INTEGER_POINTER(retval)[0]</code>和<code>retval[0]</code>，這種在真正寫功能時最常用到的語法，我比較喜歡使用後者。雖然你也可以再宣告一個指標:<code>int* retval_ptr = INTEGER_POINTER(retval)</code>來達到類似的效果，但是對我來說, 明明都是代表retval這個物件，卻需要宣告兩個變數就是彆扭。</p></li>
-<li><p>Rcpp可以使用更精確的型態。我認為比起SEXP或NEW_INTEGER, IntegerVector是更清楚的，而且也更簡潔。除了IntegerVector外，Rcpp之中也定義了許許多多的型態，甚至連Matrix、Robj(S4 object)和environment都有呢!</p></li>
-<li><p>在物件導向的語法中我就可以依循RAII([Resource Acquisition Is Initialization])的原則來寫code，降低了memory leak等資源洩漏的可能，也讓我不用再去擔心PROTECT、UNPROTECT。</p></li>
+<li><p>Rcpp的語法比較簡潔。尤其是在比較<code>INTEGER_POINTER(retval)[0]</code>和<code>retval[0]</code>，這種在真正寫功能時最常用到的語法，我比較喜歡使用後者。雖然你也可以再宣告一個指標:<code>int* retval_ptr = INTEGER_POINTER(retval)</code>來達到類似的效果，但是對我來說, 明明都是代表<code>retval</code>這個物件，卻需要宣告兩個變數就是彆扭。</p></li>
+<li><p>Rcpp可以使用更精確的型態。我認為比起<code>SEXP</code>或<code>NEW_INTEGER</code>， <code>IntegerVector</code>是更清楚的，而且也更簡潔。除了<code>IntegerVector</code>外，Rcpp之中也定義了許許多多的型態，甚至連<code>Matrix</code>、<code>Robj</code>(S4 object)和<code>environment</code>都有呢!</p></li>
+<li><p>在物件導向的語法中我就可以依循<h>RAII([Resource Acquisition Is Initialization])</h>的原則來寫code，降低了memory leak等資源洩漏的可能，也免除了使用<code>PROTECT</code>、<code>UNPROTECT</code>的困擾。</p></li>
 </ol>
 
 </div>
