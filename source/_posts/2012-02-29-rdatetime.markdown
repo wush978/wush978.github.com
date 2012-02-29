@@ -37,12 +37,12 @@ R中主要的時間物件為<code>POSIXct</code>和<code>POSIXlt</code>。[Date-
 (lt代表local time)。其中timezone是以屬性tzone來代表的。
 
 以以下的程式碼為例：
-``` r example from http://www.r-project.org/doc/Rnews/Rnews_2001-2.pdf
+``` rout example from [Date-Time Classes]
 > file.info(dir())[, "mtime", drop=FALSE]
 data                  2012-02-29 21:18:11
 ```
 在預設下，是以ISO標準格式來表示日期時間。
-``` r example from http://www.r-project.org/doc/Rnews/Rnews_2001-2.pdf
+``` r example from [Date-Time Classes]
 > file_time <- file.info(dir())[, "mtime", drop=FALSE]
 > file_time
 data                  2012-02-29 21:18:11
