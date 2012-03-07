@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
+<<<<<<< HEAD
   <title><![CDATA[Work Work]]></title>
   <link href="http://wush978.github.com/atom.xml" rel="self"/>
   <link href="http://wush978.github.com/"/>
@@ -8,12 +9,22 @@
   <id>http://wush978.github.com/</id>
   <author>
     <name><![CDATA[Wush Wu]]></name>
+=======
+  <title><![CDATA[My Octopress Blog]]></title>
+  <link href="http://wush978.github.com/atom.xml" rel="self"/>
+  <link href="http://wush978.github.com/"/>
+  <updated>2012-03-01T02:17:52+08:00</updated>
+  <id>http://wush978.github.com/</id>
+  <author>
+    <name><![CDATA[Your Name]]></name>
+>>>>>>> 5afb1eadb1564e496566c3cd14312d47fadbe9a1
     
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
   
   <entry>
+<<<<<<< HEAD
     <title type="html"><![CDATA[Rcpp-1]]></title>
     <link href="http://wush978.github.com/blog/2012/02/28/rcpp/"/>
     <updated>2012-02-28T15:42:00+08:00</updated>
@@ -31,6 +42,43 @@
 <li><a href="#reference">參考資料</a></li>
 </ul>
 </li>
+=======
+    <title type="html"><![CDATA[R: DateTime格式的心得]]></title>
+    <link href="http://wush978.github.com/blog/2012/02/29/rdatetime/"/>
+    <updated>2012-02-29T21:53:00+08:00</updated>
+    <id>http://wush978.github.com/blog/2012/02/29/rdatetime</id>
+    <content type="html"><![CDATA[<ul>
+<li><a href="#overview">概述</a></li>
+<li><a href="#functions">函數心得</a>
+
+<ul>
+<li>取得當前的時間
+
+<ul>
+<li><a href="#Sys.time">Sys.time</a></li>
+<li><a href="#Sys.Date">Sys.Date</a></li>
+</ul>
+</li>
+<li>時間格式間的轉換
+
+<ul>
+<li><a href="#mktime">mktime</a></li>
+<li><a href="#localtime">localtime</a></li>
+<li><a href="#gmtime">gmtime</a></li>
+</ul>
+</li>
+<li>時間和字串間的轉換
+
+<ul>
+<li><a href="#strftime">strftime</a></li>
+<li><a href="#strptime">strptime</a></li>
+</ul>
+</li>
+<li><a href="#trunc">trunc</a></li>
+</ul>
+</li>
+<li><a href="#reference">參考資料</a></li>
+>>>>>>> 5afb1eadb1564e496566c3cd14312d47fadbe9a1
 </ul>
 
 
@@ -39,6 +87,7 @@
 <h2 id="overview"> 概述 </h2>
 
 
+<<<<<<< HEAD
 
 
 <h3 id="background"> 背景知識 </h3>
@@ -90,10 +139,39 @@
 <p>在Rcpp中, 透過C++的物件導向和template語法可以用下列的語法得到相同的效果：</p>
 
 <figure class='code'><figcaption><span>return a R integer vector with Rcpp</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+=======
+<p>R中主要的時間物件為<code>POSIXct</code>和<code>POSIXlt</code>。[Date-Time Classes]第8頁內提到設計者們在設計這類物件的考量：</p>
+
+<ul>
+<li>日期格式應該由[locale]參數來決定。</li>
+<li>時間應該由電腦的Time zones來決定。</li>
+<li>參考資料庫標準(SQL99 ISO)中使用的時間格式<code>timestamp with time zone</code></li>
+<li>考量到跨平台，使用[POSIX]</li>
+</ul>
+
+
+<p>[POSIX]是以<a href="Coordinated%20Universal%20Time">UTC</a>為基準，以c語言的<code>double</code>型態來儲存的時間格式，
+而<code>POSIXct</code>則是代表以這種絕對座標所表示的時間。<code>POSIXlt</code>則是另一種包含timezones的格式
+(lt代表local time)。其中timezone是以屬性tzone來代表的。</p>
+
+<p>以以下的程式碼為例：</p>
+
+<figure class='code'><figcaption><span>example from [Date-Time Classes]</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='rout'><span class='line'><span class="gp">&gt; </span>file.info<span class="p">(</span>dir<span class="p">())[,</span> <span class="s">&quot;mtime&quot;</span><span class="p">,</span> drop<span class="o">=</span><span class="kc">FALSE</span><span class="p">]</span>
+</span><span class='line'><span class="go">data                  2012-02-29 21:18:11</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>在預設下，是以ISO標準格式來表示日期時間。</p>
+
+<figure class='code'><figcaption><span>example from [Date-Time Classes]</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+>>>>>>> 5afb1eadb1564e496566c3cd14312d47fadbe9a1
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
+<<<<<<< HEAD
 <span class='line-number'>6</span>
 <span class='line-number'>7</span>
 <span class='line-number'>8</span>
@@ -186,6 +264,64 @@ Windows的使用者請額外安裝能編譯R的工具庫: <a href="http://cran.r
 <li><a href="http://dirk.eddelbuettel.com/papers/Rcpp-introduction.pdf">Rcpp: Seamless R and C++ Interface</a></li>
 <li><a href="http://dirk.eddelbuettel.com/code/rcpp/Rcpp-FAQ.pdf">Frequently Asked Questions about Rcpp</a></li>
 </ul>
+=======
+</pre></td><td class='code'><pre><code class='r'><span class='line'><span class="o">&gt;</span> file_time <span class="o">&lt;-</span> file.info<span class="p">(</span>dir<span class="p">())[,</span> <span class="s">&quot;mtime&quot;</span><span class="p">,</span> drop<span class="o">=</span><span class="kc">FALSE</span><span class="p">]</span>
+</span><span class='line'><span class="o">&gt;</span> file_time
+</span><span class='line'>data                  <span class="m">2012</span><span class="o">-</span><span class="m">02</span><span class="o">-</span><span class="m">29</span> <span class="m">21</span>:<span class="m">18</span>:<span class="m">11</span>
+</span><span class='line'><span class="o">&gt;</span> format<span class="p">(</span>file_time<span class="p">,</span> format<span class="o">=</span><span class="s">&quot;%x %X&quot;</span><span class="p">)</span>
+</span><span class='line'>data                  <span class="m">2012</span><span class="o">/</span><span class="m">2</span><span class="o">/</span><span class="m">29</span> 下午 <span class="m">09</span>:<span class="m">18</span>:<span class="m">11</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>另外再列了幾個[Date-Time Classes]內的範例</p>
+
+<h2 id="functions"> 函數心得 </h2>
+
+
+
+
+<h3 id="Sys.time"> Sys.time </h3>
+
+
+
+
+<figure class='code'><figcaption><span>Sys.time</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='r'><span class='line'><span class="kr">function</span> <span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>回傳<code>POSIXct</code>物件來表示現在的時間</p>
+
+<h3 id="Sys.Date"> Sys.Date</h3>
+
+
+
+
+<figure class='code'><figcaption><span>Sys.time</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='r'><span class='line'><span class="kr">function</span> <span class="p">()</span> <span class="p">{</span>as.Date<span class="p">(</span>as.POSIXlt<span class="p">(</span>Sys.time<span class="p">()))}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>回傳<code>Date</code>物件來表示現在的日期</p>
+
+<h3 id="trunc"> trunc </h3>
+
+
+
+
+<figure class='code'><figcaption><span>trunc.POSIXt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='r'><span class='line'><span class="kr">function</span> <span class="p">(</span>x<span class="p">,</span> units <span class="o">=</span> c<span class="p">(</span><span class="s">&quot;secs&quot;</span><span class="p">,</span> <span class="s">&quot;mins&quot;</span><span class="p">,</span> <span class="s">&quot;hours&quot;</span><span class="p">,</span> <span class="s">&quot;days&quot;</span><span class="p">),</span> <span class="m">...</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>將<code>x</code>的時間格式轉換為以<code>units</code>為單位</p>
+
+<h2 id="reference"> 參考資料 </h3>
+
+[Date-Time Classes]: http://www.r-project.org/doc/Rnews/Rnews_2001-2.pdf
+[locale]: http://en.wikipedia.org/wiki/Locale
+[UTC]: http://en.wikipedia.org/wiki/Coordinated_Universal_Time
+>>>>>>> 5afb1eadb1564e496566c3cd14312d47fadbe9a1
 
 ]]></content>
   </entry>
