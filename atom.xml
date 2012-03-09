@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+<<<<<<< HEAD
+  <title><![CDATA[Work Work]]></title>
+  <link href="http://wush978.github.com/atom.xml" rel="self"/>
+  <link href="http://wush978.github.com/"/>
+  <updated>2012-02-28T21:46:07+08:00</updated>
+  <id>http://wush978.github.com/</id>
+  <author>
+    <name><![CDATA[Wush Wu]]></name>
+=======
+  <title><![CDATA[My Octopress Blog]]></title>
+  <link href="http://wush978.github.com/atom.xml" rel="self"/>
+  <link href="http://wush978.github.com/"/>
+  <updated>2012-03-01T02:17:52+08:00</updated>
+  <id>http://wush978.github.com/</id>
+  <author>
+    <name><![CDATA[Your Name]]></name>
+>>>>>>> 5afb1eadb1564e496566c3cd14312d47fadbe9a1
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+<<<<<<< HEAD
+    <title type="html"><![CDATA[Rcpp-1]]></title>
+    <link href="http://wush978.github.com/blog/2012/02/28/rcpp/"/>
+    <updated>2012-02-28T15:42:00+08:00</updated>
+    <id>http://wush978.github.com/blog/2012/02/28/rcpp</id>
+    <content type="html"><![CDATA[<h1>Rcpp 心得</h1>
+
+<ul>
+<li><a href="#overview">概述</a>
+
+<ul>
+<li><a href="#background">背景知識</a></li>
+<li><a href="#introduction">介紹</a></li>
+<li><a href="#install">安裝</a></li>
+<li><a href="#compile">編譯</a></li>
+<li><a href="#reference">參考資料</a></li>
+</ul>
+</li>
+=======
+    <title type="html"><![CDATA[R: DateTime格式的心得]]></title>
+    <link href="http://wush978.github.com/blog/2012/02/29/rdatetime/"/>
+    <updated>2012-02-29T21:53:00+08:00</updated>
+    <id>http://wush978.github.com/blog/2012/02/29/rdatetime</id>
+    <content type="html"><![CDATA[<ul>
+<li><a href="#overview">概述</a></li>
+<li><a href="#functions">函數心得</a>
+
+<ul>
+<li>取得當前的時間
+
+<ul>
+<li><a href="#Sys.time">Sys.time</a></li>
+<li><a href="#Sys.Date">Sys.Date</a></li>
+</ul>
+</li>
+<li>時間格式間的轉換
+
+<ul>
+<li><a href="#mktime">mktime</a></li>
+<li><a href="#localtime">localtime</a></li>
+<li><a href="#gmtime">gmtime</a></li>
+</ul>
+</li>
+<li>時間和字串間的轉換
+
+<ul>
+<li><a href="#strftime">strftime</a></li>
+<li><a href="#strptime">strptime</a></li>
+</ul>
+</li>
+<li><a href="#trunc">trunc</a></li>
+</ul>
+</li>
+<li><a href="#reference">參考資料</a></li>
+>>>>>>> 5afb1eadb1564e496566c3cd14312d47fadbe9a1
+</ul>
+
+
+<hr />
+
+<h2 id="overview"> 概述 </h2>
+
+
+<<<<<<< HEAD
+
+
+<h3 id="background"> 背景知識 </h3>
+
+
+<p>就我所知，要能理解Rcpp的語法，你必須先對C++這個我個人認為最難學的語言先學到某種程度才行。根據<a href="http://www.amazon.com/Effective-Specific-Improve-Programs-Designs/dp/0321334876">Effective C++</a>的作者Scott Meyers的看法，C++其實是下列四種程式語言的集合(難怪很難，一個打四個!!):</p>
+
+<ul>
+<li>C的特性 (指標、陣列等等)</li>
+<li>物件導向</li>
+<li>STL 標準函式庫</li>
+<li>Template</li>
+</ul>
+
+
+<p>Rcpp中大量的使用了後面三種，所以如果看不習慣Rcpp的使用者，可能得先回頭把C++後面三種的語法複習一下了。</p>
+
+<h3 id="introduction"> 介紹 </h3>
+
+
+<p><a href="http://dirk.eddelbuettel.com/code/rcpp.html">Rcpp</a> 是一個整合R和C++的library。
+使用過R中的<code>.Call</code>函數的人一定會對於處理R和C之間資料結構的轉換感到很煩人，而Rcpp給我的第一個印象就是他把這些重複性很高的轉換給包起來了!所以在使用Rcpp時使用者不需要再去撰寫諸如以下的程式碼:</p>
+
+<figure class='code'><figcaption><span>return a R integer vector with R API</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;R.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;Rdefines.h&gt;</span>
+</span><span class='line'><span class="n">SEXP</span> <span class="nf">foo</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">SEXP</span> <span class="n">retval</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">PROTECT</span><span class="p">(</span><span class="n">retval</span> <span class="o">=</span> <span class="n">NEW_INTEGER</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span>
+</span><span class='line'>  <span class="n">INTEGER_POINTER</span><span class="p">(</span><span class="n">retval</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">INTEGER_POINTER</span><span class="p">(</span><span class="n">retval</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">UNPROTECT</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">retval</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>在Rcpp中, 透過C++的物件導向和template語法可以用下列的語法得到相同的效果：</p>
+
+<figure class='code'><figcaption><span>return a R integer vector with Rcpp</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+=======
+<p>R中主要的時間物件為<code>POSIXct</code>和<code>POSIXlt</code>。[Date-Time Classes]第8頁內提到設計者們在設計這類物件的考量：</p>
+
+<ul>
+<li>日期格式應該由[locale]參數來決定。</li>
+<li>時間應該由電腦的Time zones來決定。</li>
+<li>參考資料庫標準(SQL99 ISO)中使用的時間格式<code>timestamp with time zone</code></li>
+<li>考量到跨平台，使用[POSIX]</li>
+</ul>
+
+
+<p>[POSIX]是以<a href="Coordinated%20Universal%20Time">UTC</a>為基準，以c語言的<code>double</code>型態來儲存的時間格式，
+而<code>POSIXct</code>則是代表以這種絕對座標所表示的時間。<code>POSIXlt</code>則是另一種包含timezones的格式
+(lt代表local time)。其中timezone是以屬性tzone來代表的。</p>
+
+<p>以以下的程式碼為例：</p>
+
+<figure class='code'><figcaption><span>example from [Date-Time Classes]</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='rout'><span class='line'><span class="gp">&gt; </span>file.info<span class="p">(</span>dir<span class="p">())[,</span> <span class="s">&quot;mtime&quot;</span><span class="p">,</span> drop<span class="o">=</span><span class="kc">FALSE</span><span class="p">]</span>
+</span><span class='line'><span class="go">data                  2012-02-29 21:18:11</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>在預設下，是以ISO標準格式來表示日期時間。</p>
+
+<figure class='code'><figcaption><span>example from [Date-Time Classes]</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+>>>>>>> 5afb1eadb1564e496566c3cd14312d47fadbe9a1
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<<<<<<< HEAD
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="cp">#include &lt;Rcpp.h&gt;</span>
+</span><span class='line'><span class="n">RcppExport</span> <span class="n">SEXP</span> <span class="n">foo</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">Rcpp</span><span class="o">::</span><span class="n">IntegerVector</span> <span class="n">retval</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+</span><span class='line'>  <span class="n">retval</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">retval</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">Rcpp</span><span class="o">::</span><span class="n">wrap</span><span class="p">(</span> <span class="n">retval</span> <span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>比較上面兩段語法後，我基於以下的理由比較喜歡Rcpp的語法:</p>
+
+<ol>
+<li><p>Rcpp的語法比較簡潔。尤其是在比較<code>INTEGER_POINTER(retval)[0]</code>和<code>retval[0]</code>，
+這種在真正寫功能時最常用到的語法，我比較喜歡使用後者。雖然你也可以再宣告一個指標:<code>int* retval_ptr = INTEGER_POINTER(retval)</code>
+來達到類似的效果，但是對我來說, 明明都是代表<code>retval</code>這個物件，卻需要宣告兩個變數就是彆扭。</p></li>
+<li><p>Rcpp可以使用更精確的型態。我認為比起<code>SEXP</code>或<code>NEW_INTEGER</code>，
+<code>IntegerVector</code>是更清楚的，而且也更簡潔。除了<code>IntegerVector</code>外，Rcpp之中也定義了許許多多的型態，
+甚至連<code>Matrix</code>、<code>Robj</code>(S4 object)和<code>environment</code>都有呢!</p></li>
+<li><p>在物件導向的語法中我就可以依循<b>RAII(<a href="http://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization">Resource Acquisition Is Initialization</a>)</b>的原則來寫code，
+降低了memory leak等資源洩漏的可能，也免除了使用<code>PROTECT</code>、<code>UNPROTECT</code>的困擾。</p></li>
+</ol>
+
+
+<p>除了語法上吸引我之外，Rcpp還可以還可以和inline套件結合，直接在R內進行即時編譯；還可以和另一個套件sugar一起使用，再增加程式的執行效能。</p>
+
+<h3 id="install"> 安裝 </h3>
+
+
+<p>Rcpp的安裝非常簡單，和一般的R套件相同。有興趣的使用者還可以額外安裝inline或sugar來玩。
+Windows的使用者請額外安裝能編譯R的工具庫: <a href="http://cran.r-project.org/bin/windows/Rtools/">Rtools</a> ，並且記得到Rcpp的目錄中不要包含空白，否則用R CMD SHLIB編譯的時候會有錯誤。</p>
+
+<h3 id="compile"> 編譯 </h3>
+
+
+<ol>
+<li>使用inline，這也是最簡單的方式。以下是一個取自<a href="http://dirk.eddelbuettel.com/code/rcpp/Rcpp-FAQ.pdf">Frequently Asked Questions about Rcpp</a>的範例:</li>
+</ol>
+
+
+<figure class='code'><figcaption><span>Compile with R package &#8220;inline&#8221;</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='r'><span class='line'>fx <span class="o">&lt;-</span> cxxfunction<span class="p">(</span>signature<span class="p">(</span> x <span class="o">=</span> <span class="s">&quot;numeric&quot;</span> <span class="p">),</span> <span class="s">&#39;</span>
+</span><span class='line'><span class="s">  NumericVector xx(x);</span>
+</span><span class='line'><span class="s">  return wrap( std::accumulate( xx.begin(), xx.end(), 0.0));&#39;</span><span class="p">,</span>
+</span><span class='line'>  plugin <span class="o">=</span> <span class="s">&quot;Rcpp&quot;</span><span class="p">)</span>
+</span><span class='line'>res <span class="o">&lt;-</span> fx<span class="p">(</span> seq<span class="p">(</span> <span class="m">1</span><span class="p">,</span> <span class="m">10</span><span class="p">,</span> by <span class="o">=</span> <span class="m">0.5</span> <span class="p">)</span> <span class="p">)</span>
+</span><span class='line'>res
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ol>
+<li>使用R CMD SHLIB的話則需要調整compiler的參數。以下的範例是在bash底下執行，是透過修改環境變數的方式。</li>
+</ol>
+
+
+<figure class='code'><figcaption><span>Compile with R CMD SHLIB </span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">export </span><span class="nv">PKG_LIBS</span><span class="o">=</span><span class="s1">&#39;Rscript -e &quot;Rcpp:::LdFlags()&quot;&#39;</span>
+</span><span class='line'><span class="nb">export </span><span class="nv">PKG_CXXFLAGS</span><span class="o">=</span><span class="s1">&#39;Rscript -e &quot;Rcpp::CxxFlags()&quot;&#39;</span>
+</span><span class='line'>R CMD SHLIB myfile.cpp
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ol>
+<li>在R內呼叫Rcpp的函數<code>Rcpp:::SHLIB</code>來編譯。</li>
+</ol>
+
+
+<figure class='code'><figcaption><span>Compile with Rcpp:::SHLIB</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='r'><span class='line'>Rcpp<span class="p">:::</span>SHLIB<span class="p">(</span><span class="s">&quot;mysource.cpp&quot;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>在windows底下，方法2.我花了很久才測出來(網路上找到資料是說只要Rcpp和他的父目錄名稱有空白就會出錯)!後來我大部分是用方法1和3了。</p>
+
+<h3 id="reference"> 參考資料 </h3>
+
+
+<ul>
+<li><a href="http://dirk.eddelbuettel.com/papers/Rcpp-introduction.pdf">Rcpp: Seamless R and C++ Interface</a></li>
+<li><a href="http://dirk.eddelbuettel.com/code/rcpp/Rcpp-FAQ.pdf">Frequently Asked Questions about Rcpp</a></li>
+</ul>
+=======
+</pre></td><td class='code'><pre><code class='r'><span class='line'><span class="o">&gt;</span> file_time <span class="o">&lt;-</span> file.info<span class="p">(</span>dir<span class="p">())[,</span> <span class="s">&quot;mtime&quot;</span><span class="p">,</span> drop<span class="o">=</span><span class="kc">FALSE</span><span class="p">]</span>
+</span><span class='line'><span class="o">&gt;</span> file_time
+</span><span class='line'>data                  <span class="m">2012</span><span class="o">-</span><span class="m">02</span><span class="o">-</span><span class="m">29</span> <span class="m">21</span>:<span class="m">18</span>:<span class="m">11</span>
+</span><span class='line'><span class="o">&gt;</span> format<span class="p">(</span>file_time<span class="p">,</span> format<span class="o">=</span><span class="s">&quot;%x %X&quot;</span><span class="p">)</span>
+</span><span class='line'>data                  <span class="m">2012</span><span class="o">/</span><span class="m">2</span><span class="o">/</span><span class="m">29</span> 下午 <span class="m">09</span>:<span class="m">18</span>:<span class="m">11</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>另外再列了幾個[Date-Time Classes]內的範例</p>
+
+<h2 id="functions"> 函數心得 </h2>
+
+
+
+
+<h3 id="Sys.time"> Sys.time </h3>
+
+
+
+
+<figure class='code'><figcaption><span>Sys.time</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='r'><span class='line'><span class="kr">function</span> <span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>回傳<code>POSIXct</code>物件來表示現在的時間</p>
+
+<h3 id="Sys.Date"> Sys.Date</h3>
+
+
+
+
+<figure class='code'><figcaption><span>Sys.time</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='r'><span class='line'><span class="kr">function</span> <span class="p">()</span> <span class="p">{</span>as.Date<span class="p">(</span>as.POSIXlt<span class="p">(</span>Sys.time<span class="p">()))}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>回傳<code>Date</code>物件來表示現在的日期</p>
+
+<h3 id="trunc"> trunc </h3>
+
+
+
+
+<figure class='code'><figcaption><span>trunc.POSIXt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='r'><span class='line'><span class="kr">function</span> <span class="p">(</span>x<span class="p">,</span> units <span class="o">=</span> c<span class="p">(</span><span class="s">&quot;secs&quot;</span><span class="p">,</span> <span class="s">&quot;mins&quot;</span><span class="p">,</span> <span class="s">&quot;hours&quot;</span><span class="p">,</span> <span class="s">&quot;days&quot;</span><span class="p">),</span> <span class="m">...</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>將<code>x</code>的時間格式轉換為以<code>units</code>為單位</p>
+
+<h2 id="reference"> 參考資料 </h3>
+
+[Date-Time Classes]: http://www.r-project.org/doc/Rnews/Rnews_2001-2.pdf
+[locale]: http://en.wikipedia.org/wiki/Locale
+[UTC]: http://en.wikipedia.org/wiki/Coordinated_Universal_Time
+>>>>>>> 5afb1eadb1564e496566c3cd14312d47fadbe9a1
+
+]]></content>
+  </entry>
+  
+</feed>

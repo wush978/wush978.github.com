@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>
+    <url>
+<<<<<<< HEAD
+        <loc>http://wush978.github.com/blog/2012/02/28/rcpp/</loc>
+        <lastmod>2012-02-28T21:45:41+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://wush978.github.com/</loc>
+        <lastmod>2012-02-28T21:45:41+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://wush978.github.com/blog/archives/</loc>
+        <lastmod>2012-02-28T21:45:41+08:00</lastmod>
+=======
+        <loc>http://wush978.github.com/blog/2012/02/29/rdatetime/</loc>
+        <lastmod>2012-03-01T02:07:50+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://wush978.github.com/blog/archives/</loc>
+        <lastmod>2012-03-01T02:07:50+08:00</lastmod>
+    </url>
+    <url>
+        <loc>http://wush978.github.com/</loc>
+        <lastmod>2012-03-01T02:07:50+08:00</lastmod>
+>>>>>>> 5afb1eadb1564e496566c3cd14312d47fadbe9a1
+    </url>
+</urlset>
