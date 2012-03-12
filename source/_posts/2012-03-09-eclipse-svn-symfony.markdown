@@ -74,7 +74,17 @@ categories:
 		  branches/
 		  tags/
 		  trunk/
-*	
+*	複製Symfony資料夾至myproject內
+*	更改Symfony資料夾的名稱為專案名稱(以下仍繼續使用Symfony)
+*	右鍵點選Symfony/src -> Team -> Add to Version Control
+*	忽略下列檔案:
+		vendor
+		app/內的bootstrap*
+		app/config/內的 parameters.ini
+		app/cache/內的 *
+		app/logs/內的 *
+		web/內的 bundles
+
 <h1>參考資料</h1>
 
 *	[How to Create and store a Symfony2 Project in Subversion](http://symfony.com/doc/current/cookbook/workflow/new_project_svn.html)
