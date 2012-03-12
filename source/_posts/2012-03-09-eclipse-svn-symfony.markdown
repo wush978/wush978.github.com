@@ -68,6 +68,10 @@ categories:
 *	Mark Resolved...
 *	送交
 
+<h2>清除暫存的登入帳號密碼</h2>
+*	Windows -> Preference -> Team -> SVN 檢查Client Adapter
+*	依照[Subclipse Wiki FAQ](http://subclipse.tigris.org/wiki/PluginFAQ#head-d507c29676491f4419997a76735feb6ef0aa8cf8)的指示清除對應的資料夾
+
 <h1>Symfony和svn</h1>
 *	於Repository內建立三個資料夾:
 		myproject/
