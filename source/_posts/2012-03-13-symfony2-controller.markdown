@@ -92,7 +92,7 @@ hello:
 
 關於更詳細的Routing資訊請參考[Routing](http://symfony.com/doc/current/book/routing.html)
 
-<h2>傳遞參數</h2>
+<h2 id="pass_arguments">傳遞參數</h2>
 
 仔細看
 ``` php src/Acme/HelloBundle/Controller/HelloController.php
@@ -209,6 +209,266 @@ class HelloController extends Controller
 }
 ```
 
-<h1>參考網頁</h1>
+該基礎物件包含了許多有用的helpers。最快學習使用這個物件的方法是看它的source code。
+
+開發者可以自行決定是否要擴充Controller物件，甚至是定義自己的[Controller服務](http://symfony.com/doc/current/cookbook/controller/service.html)
+
+<h2>Controller常用的功能</h2>
+
+<h3>Redirecting</h3>
+
+如果需要將使用者redirect至其它的網頁，可直接使用`redirect()`方法。
+
+``` php
+<?php
+public function indexAction()
+{
+    return $this->redirect($this->generateUrl('homepage'));
+}
+```
+
+另一個相關的helper function是`generateUrl()`，給它一個route，它會回傳對應的Url。詳情請見[Routing](http://symfony.com/doc/current/book/routing.html)。
+
+如果要修改相關的HTTP header，(例如要使用301，而非預設的302)那可以加上第二個參數:
+
+``` php
+<?php
+public function indexAction()
+{
+    return $this->redirect($this->generateUrl('homepage'), 301);
+}
+```
+
+事實上使用`redirect()`和以下的使用RedirectResponse物件是一樣的:
+
+``` php
+<?php
+use Symfony\Component\HttpFoundation\RedirectResponse;
+
+return new RedirectResponse($this->generateUrl('homepage'));
+```
+
+<h3>Forwarding</h3>
+
+你也可以使用`forward()`在內部偷偷的將Request丟給另一個controller，在這種狀況下使用者的瀏覽器並不知道。
+
+`forward()`會回傳被丟的controller回傳的Response物件，所以我們需要再把它丟回給client。
+
+``` php 
+<?php
+public function indexAction($name)
+{
+    $response = $this->forward('AcmeHelloBundle:Hello:fancy', array(
+        'name'  => $name,
+        'color' => 'green'
+    ));
+
+    // further modify the response or return it directly
+
+    return $response;
+}
+```
+
+請注意forward方法的參數:
+
+*	第一個參數是被丟的Controller的名字。請參考[Controller命名規則](http://symfony.com/doc/current/book/routing.html#controller-string-syntax)
+*	第二個參數是一個array，包含要丟給該controller的參數，這部分類似[傳遞參數](#pass_arguments)。類似的參數傳遞方式也可以在[嵌入Template的Controller](http://symfony.com/doc/current/book/templating.html#templating-embedding-controller)中看到。
+
+被丟的Controller可能長這樣:
+
+``` php
+<?php
+public function fancyAction($name, $color)
+{
+    // ... create and return a Response object
+}
+```
+
+其他的注意事項都類似[傳遞參數](#pass_arguments)內提到的要點。
+
+事實上`forward()`和`http_kernel`服務有關。以下是實際上`forward()`所回傳的Response物件:
+
+``` php
+<?php
+$httpKernel = $this->container->get('http_kernel');
+$response = $httpKernel->forward('AcmeHelloBundle:Hello:fancy', array(
+    'name'  => $name,
+    'color' => 'green',
+));
+```
+
+<h3>使用Template</h3>
+
+大部分的Controller會把產生HTML或其他文件格式的任務交付給一個或數個Template。`renderView()`方法會將任務移交給一個指定的Template，並且回傳產生後的內容。這個內容可以用來產生Response物件:
+
+``` php
+<?php
+$content = $this->renderView('AcmeHelloBundle:Hello:index.html.twig', array('name' => $name));
+
+return new Response($content);
+```
+
+或者也可以使用`render()`方法直接把Template的內容放到Response物件內:
+
+``` php
+<?php
+return $this->render('AcmeHelloBundle:Hello:index.html.twig', array('name' => $name))
+```
+
+上面的例子均引用AcmeHelloBundle來產生`Resources/views/Hello/index.html.twig`。Template具體細節請參閱[Template](http://symfony.com/doc/current/book/templating.html)。
+
+事實上這些方法是使用templating service:
+
+``` php
+<?php
+$templating = $this->get('templating');
+$content = $templating->render('AcmeHelloBundle:Hello:index.html.twig', array('name' => $name));
+```
+
+<h3>存取其他服務</h3>
+
+開發者也可以透過下列定義於base Controller物件的`get()`方法存取其它的資源:
+
+``` php
+<?php
+$request = $this->getRequest();
+
+$templating = $this->get('templating');
+
+$router = $this->get('router');
+
+$mailer = $this->get('mailer');
+```
+
+既有的服務有很多，開發者甚至可以自己定義自己的服務。如果要列出所有的服務，可以使用以下指令:
+
+``` sh
+php app/console container:debug
+```
+
+關於服務請讀[Service Container](http://symfony.com/doc/current/book/service_container.html)。
+
+<h3 id="error_404">處理錯誤和404</h3>
+
+當Url無法被解析或是存取的資源不存在，伺服器應該回傳HTTP 404給Client。在Symfony2中，開發者可以透過丟出一個特定的Exception物件來達到目的，或是使用`createNotFoundException()`方法。
+
+``` php
+<?php
+public function indexAction()
+{
+    $product = // retrieve the object from database
+    if (!$product) {
+        throw $this->createNotFoundException('The product does not exist');
+    }
+
+    return $this->render(...);
+}
+```
+
+該方法會丟出NotFoundHttpException物件。其他的Exception物件會導致HTTP 500錯誤。
+
+通常Symfony2會傳一個錯誤頁面給使用者，或是傳詳細的debug資訊給開發者。想要客製化錯誤頁面，請參考Cook Book內的[客製化錯誤頁面](http://symfony.com/doc/current/cookbook/controller/error_pages.html) 。
+
+
+
+<h3 id="session">Session管理</h3>
+
+Symfony2中使用一個物件來管理Session。底層的實作預設是使用PHP原生Sessions。
+
+存取Session可以透過:
+
+``` php
+<?php
+$session = $this->getRequest()->getSession();
+
+// store an attribute for reuse during a later user request
+$session->set('foo', 'bar');
+
+// in another controller for another request
+$foo = $session->get('foo');
+
+// set the user locale
+$session->setLocale('fr');
+```
+
+<h3 id="flash_message">提示訊息</h3>
+
+開發者可以儲存一次性的提示訊息到使用者的Session內:
+
+``` php
+<?php
+public function updateAction()
+{
+    $form = $this->createForm(...);
+
+    $form->bindRequest($this->getRequest());
+    if ($form->isValid()) {
+        // do some sort of processing
+
+        $this->get('session')->setFlash('notice', 'Your changes were saved!');
+
+        return $this->redirect($this->generateUrl(...));
+    }
+
+    return $this->render(...);
+}
+```
+
+第10行的程式碼儲存了一個等級為`notice`的訊息到使用者的session中。
+
+當執行到以下為例的Template時:
+
+``` css+django
+{% if app.session.hasFlash('notice') %}
+    <div class="flash-notice">
+        {{ app.session.flash('notice') }}
+    </div>
+{% endif %}
+```
+
+使用者就會看到該訊息，而該訊息也將消失(一次性)。
+
+<h2 id="response_obj">Response物件</h2>
+
+Controller必須遵循的條件之一，就是要回傳Response物件。Response物件是代表一個帶著HTTP header的純文字訊息，並且將被送回至Client端:
+
+``` php
+<?php
+// create a simple Response with a 200 status code (the default)
+$response = new Response('Hello '.$name, 200);
+
+// create a JSON-response with a 200 status code
+$response = new Response(json_encode(array('name' => $name)));
+$response->headers->set('Content-Type', 'application/json');
+```
+
+Symfony2中，http header的屬性是透過HeaderBag物件來控制。
+
+<h2 id="request_obj">Request物件</h2>
+
+Controller可以透過base Controller物件的方法來存取Request物件:
+
+``` php
+<?php
+$request = $this->getRequest();
+
+$request->isXmlHttpRequest(); // is it an Ajax request?
+
+$request->getPreferredLanguage(array('en', 'fr'));
+
+$request->query->get('page'); // get a $_GET parameter
+
+$request->request->get('page'); // get a $_POST parameter
+```
+
+http header的屬性也是可透過HeaderBag物件來存取。
+
+<h1 id="final">結尾</h1>
+
+Controller包含的邏輯是「接到Request並回傳Response」。
+
+接下來開發者還可以學到如何在Controller中使用database、處理form或是Cache...等等更多技術。
+
+<h1 id="reference">參考網頁</h1>
 
 *	[Symfony2 Book Controller](http://symfony.com/doc/current/book/controller.html)
