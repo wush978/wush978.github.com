@@ -6,9 +6,32 @@ comments: true
 categories: 
 ---
 
-<h1>Template</h1>
+*	[Template](#template)
+	*	[PHP Template](#template_php)
+	*	[Twig](#template_twig)
+	*	[Twig Template快取](#twig_cache)
+*	[Template繼承和Layout](#template_inheritance)
+*	[命名和位置](#naming)
+*	[副檔名](#suffix)
+*	[Tags和Helpers](#tags_helpers)
+	*	[匯入其他的Template](#include)
+	*	[嵌入Controller](#include_controller)
+	*	[連結頁面](#link)
+	*	[其他資源的連結](#asset)
+*	[嵌入CSS和Javascript](#css_js)
+*	[Template的全域變數](#global)
+*	[設定和使用Templating服務](#config)
+*	[客製化第三方Bundle Template](#bundle_template)
+*	[三層繼承](#3-inheritance)
+*	[跳脫輸出](#escaping)
+*	[除錯](#debug)
+*	[不同的Format](#diff_format)
+*	[參考資料](#reference)
 
-<h2>PHP Template</h2>
+
+<h1 id="template">Template</h1>
+
+<h2 id="template_php">PHP Template</h2>
 
 Template是一個用於產生某種文字格示(HTML、XML、CSV、LaTeX...)的檔案。在Symfony1.4中主要是使用PHP template，例如:
 
@@ -36,7 +59,7 @@ Template是一個用於產生某種文字格示(HTML、XML、CSV、LaTeX...)的�
 
 Symfony2中還多了另一種選項:
 
-<h2>Twig</h2>
+<h2 id="template_twig">Twig</h2>
 
 而Symfony2中額外引進Twig引擎來處理Template。同樣的寫法改成Twig後變成:
 
@@ -102,13 +125,13 @@ Symfony的作者[Fabien Potencier](http://fabien.potencier.org/)捨棄既有的p
 
 詳細的解說請參閱[Twig的官方網站](http://twig.sensiolabs.org/)。
 
-<h2>Twig Template快取</h2>
+<h1 id="twig_cache">Twig Template快取</h2>
 
 Twig template會被編譯為原生的php物件。這些物件會被放置於`app/cache/{environment}/twig`底下。
 
 若環境是除錯模式，則twig會自動去更新生成的物件;反之，開發者就需要去清除快取的資料夾。
 
-<h1>Template繼承和Layout</h1>
+<h1 id="template_inheritance">Template繼承和Layout</h1>
 
 除了在罕見的情況之外，template都會共用一些元素，如:
 
@@ -212,7 +235,7 @@ child template的例子為:
 	*	開一個新的template並做[include]
 *	如果需要使用parent template的內容，使用語法`{{ parent() }}`
 
-<h1>命名和位置</h1>
+<h1 id="naming">命名和位置</h1>
 
 Template預設會出現在以下兩種地方:
 
@@ -227,7 +250,7 @@ Symfony2中使用_bundle:controller:template_的字串來表命名template檔案
 
 這樣的命名準則和Controller的類似。
 
-<h2>副檔名</h2>
+<h2 id="suffix">副檔名</h2>
 
 *	`AcmeBlogBundle:Blog:index.html.twig`表示用twig語法產生HTML文件的template。
 *	`AcmeBlogBundle:Blog:index.html.php`表示用PHP語法產生HTML文件的template。
@@ -235,11 +258,11 @@ Symfony2中使用_bundle:controller:template_的字串來表命名template檔案
 
 開發者也可以使用其他語法，請參考[設定Template](http://symfony.com/doc/current/book/templating.html#template-configuration)。
 
-<h1>Tags和Helpers</h1>
+<h1 id="tags_helpers">Tags和Helpers</h1>
 
 Symfony2中使用了一些特製化的tag:
 
-<h2>匯入其他的Template</h2>
+<h2 id="include">匯入其他的Template</h2>
 
 有時候開發者需要在一個template內匯入其他template的內容。例如要展示的最新的部落格文章。
 
@@ -277,7 +300,7 @@ Symfony2中使用了一些特製化的tag:
 *	Symfony2中可以使用`{% include ... with ... %}`語法來匯入其它的template。
 *	`{'article': article}` 語法是twig中的array，等同PHP中的`array("article" => $article)`。如果要放多個元素，使用:`{'foo': foo, 'bar': bar}`。
 
-<h2>嵌入Controller</h2>
+<h2 id="include_controller">嵌入Controller</h2>
 
 有時候要引入哪個template也牽涉到較為複雜的邏輯，這時候可以嵌入Controller來做。例如你要展示的不是固定一篇文章或是所有文章，而是是最新的文章。
 
@@ -326,7 +349,7 @@ Controller所呼叫的Template:
 2.	`ArticleController.php`整理`$articles`變數(可能是找出最新的`max`篇)後呼叫`recentList.html.twig`產生對應的HTML。
 3.	`recentList.html.twig`產生的HTML最後會被放到`base.html.twig`中`<div id="sidebar">`內。
 
-<h2>連結頁面</h2>
+<h2 id="link">連結頁面</h2>
 
 產生連結可以使用twig function: `path`。
 
@@ -371,7 +394,7 @@ article_show:
 
 同時也可以使用另一個twig function: `url`。用法一樣，但是回傳的是絕對路徑，而非`path`回傳的相對路徑。
 
-<h2>其他資源的連結</h2>
+<h2 id="asset">其他資源的連結</h2>
 
 使用twig function:`asset`可以產生連結到圖片、CSS或javascript等外部資源。
 
@@ -386,7 +409,7 @@ article_show:
 1.	讓整個專案的移動更方便
 2.	防止瀏覽器快取
 
-<h1>嵌入CSS和Javascript</h1>
+<h1 id="css_js">嵌入CSS和Javascript</h1>
 
 看起來簡單的例子:
 
@@ -433,7 +456,7 @@ php app/console assets:install target [--symlink]
 ```
 來把Bundle內部的assets資源放到對的資料夾(預設是`web`)
 
-<h1>Template的全域變數</h1>
+<h1 id="global">Template的全域變數</h1>
 
 如果在Template內想要使用和整個專案設定相關的變數，可以直接使用:
 
@@ -456,7 +479,7 @@ php app/console assets:install target [--symlink]
 
 自訂全域變數請參考[全域變數](http://symfony.com/doc/current/cookbook/templating/global_variables.html)
 
-<h1>設定和使用Templating服務</h1>
+<h1 id="config">設定和使用Templating服務</h1>
 
 Symfony2中的Template底層核心是這些分析templte的引擎。它們負責把開發者寫的twig語法最終轉換成目標HTML或其他格式的文件。只要是使用template，事實上就是在呼叫這些引擎服務。
 
@@ -488,7 +511,7 @@ framework:
 
 要更改設定的話，請閱讀[Configuration Appendix](http://symfony.com/doc/current/reference/configuration/framework.html)
 
-<h1>Overriding Bundle Template</h1>
+<h1 id="bundle_template">客製化第三方Bundle Template</h1>
 
 Symfony2社群已經有許多Bundle供開發者取用。([knpbundles.com](http://knpbundles.com/))。有時候開發者在使用時會想要替換這些Bundle所使用著Template。
 
@@ -522,17 +545,17 @@ Symfony2本身也是一個Bundle，所以所有Symfony2預設的Template都可�
 
 例如把TwigBundle中的`Resources/views/Exception`頁面複製到`app/Resources/TwigBundle/views/Exception`。
 
-<h1>三層繼承</h1>
+<h1 id="3-inheritance">三層繼承</h1>
 
 1.	整個專案共用的部分: `app/Resources/views/base.html.twig`
 2.	Bundle內共用的部分: `src/Acme/BlogBundle/Resources/views/layout.html.twig`繼承1.
 3.	其他: `src/Acme/BlogBundle/Resources/views/Blog/index.html.twig`繼承2.
 
-<h1>跳脫輸出</h1>
+<h1 id="escaping">跳脫輸出</h1>
 
 要避免輸出特殊字元在twig非常簡單。除非開發者額外使用`raw` filter，否則twig自動會將諸如`<script>`改成`&lt;script&gt;`以避免被注入奇怪的程式碼而造成安全性問題。
 
-<h1>除錯</h1>
+<h1 id="debug">除錯</h1>
 
 只用在`config`中打開除錯服務:
 
@@ -547,7 +570,7 @@ services:
 
 則Twig中的變數就會被倒出來。
 
-<h1>不同的Format</h1>
+<h1 id="diff_format">不同的Format</h1>
 
 Controller:
 
@@ -569,6 +592,6 @@ link:
 </a>
 ```
 
-<h1>參考資料</h1>
+<h1 id="reference">參考資料</h1>
 
 *	本篇文章大部分來自官方文件[Creating and using Templates](http://symfony.com/doc/current/book/templating.html)
