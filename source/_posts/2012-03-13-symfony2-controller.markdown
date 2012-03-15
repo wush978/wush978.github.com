@@ -132,6 +132,7 @@ public function indexAction($first_name, $last_name, $color)
 ```
 
 使用時請注意以下的規則:
+
 *	順序不重要
 
 ``` php
@@ -155,6 +156,7 @@ public function indexAction($first_name, $last_name, $color, $foo)
 ```
 
 ``` php 使用預設值就沒有問題
+<?php
 public function indexAction($first_name, $last_name, $color, $foo = "bar")
 {
 	// ...
@@ -163,6 +165,7 @@ public function indexAction($first_name, $last_name, $color, $foo = "bar")
 
 *	Controller「接」的參數可以少於Routing「丟」的參數
 ``` php 不接參數也沒問題
+<?php
 public function indexAction($first_name, $last_name)
 {
 	// ...
