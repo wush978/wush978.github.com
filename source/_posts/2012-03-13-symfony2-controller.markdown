@@ -6,7 +6,28 @@ comments: true
 categories: 
 ---
 
-<h1>簡介</h1>
+*	[簡介](#introduction)
+*	[Request、Controller和Response的處理程序](#life_cycle)
+*	[一些簡單的範例](#simple_example)
+*	[建立URL到Controller的對應](#url_to_controller)
+	*	[簡介](#url_to_controller_introduction)
+	*	[傳遞參數](#url_to_controller_pass_arguments)
+	*	[用Request當參數](#url_to_controller_request)
+*	[base Controller物件](#base_controller)
+	*	[Controller常用的功能](#base_controller_feature)
+		*	[Redirecting](#base_controller_feature_redirecting)
+		*	[Forwarding](#base_controller_feature_forwarding)
+		*	[使用Template](#base_controller_feature_template)
+		*	[存取其他服務](#base_controller_feature_other_service)
+		*	[處理錯誤和404](#base_controller_feature_error_404)
+		*	[Session管理](#base_controller_feature_session)
+		*	[提示訊息](#base_controller_feature_flash)
+	*	[Response物件](#base_controller_response_obj)
+	*	[Request物件](#base_controller_request_obj)
+*	[結尾](#final)
+*	[參考網頁](#reference)
+
+<h1 id="introduction">簡介</h1>
 
 Controller就是處理接收到的request中的information後，找出適當的response並回傳給client。
 
@@ -28,20 +49,18 @@ public function helloAction()
 }
 ```
 
-<h1>Request、Controller和Response的處理程序</h1>
+<h1 id="life_cycle">Request、Controller和Response的處理程序</h1>
 
 以下是每一個到Symfony2專案的request的處理程序:
 
-*	來自Client的Request是先由front controller來處理(例如: `app.php`或是`app_dev.php)
+*	來自Client的Request是先由front controller來處理(例如: `app.php`或是`app_dev.php`)
 *	Router從request中擷取資訊，找到能處理的Controller
 *	執行Controller並回傳Response物件
 *	回傳Response物件到Client
 
-```
 Front Controller指的是在web/資料夾內的app.php和app_dev.php。開發者可以不去關心這些檔案。
-```
 
-<h1>一些簡單的範例</h1>
+<h1 id="simple_example">一些簡單的範例</h1>
 
 Controller事實上可以是所有的PHP callable，但是在Symfony2中通常是一個controller物件中的方法。Controller也叫做_actions_。
 
@@ -68,9 +87,9 @@ class HelloController
 *	第7行, 這也是慣用的命名規則；`$name`則是從routing.yml中的`{name}`來的。
 *	第9行，這個Controller建立並回傳一個Response物件。
 
-<h1>建立URL到Controller的對應</h1>
+<h1 id="url_to_controller">建立URL到Controller的對應</h1>
 
-<h2>簡介</h2>
+<h2 id="url_to_controller_introduction>簡介</h2>
 
 若要瀏覽剛剛建立的Controller，我們必須建立對應的routing.yml
 
@@ -92,7 +111,7 @@ hello:
 
 關於更詳細的Routing資訊請參考[Routing](http://symfony.com/doc/current/book/routing.html)
 
-<h2 id="pass_arguments">傳遞參數</h2>
+<h2 id="url_to_controller_pass_arguments">傳遞參數</h2>
 
 仔細看
 ``` php src/Acme/HelloBundle/Controller/HelloController.php
@@ -174,7 +193,7 @@ public function indexAction($first_name, $last_name)
 
 事實上每個Routing還會丟一個`$_route`參數代表該Routing的名稱。
 
-<h2>用Request當參數</h2>
+<h2 id="url_to_controller_request">用Request當參數</h2>
 
 事實上，Controller也可以直接把整個Request物件當成參數。(我在Symfony 1.4都是這樣用的)
 
@@ -191,7 +210,7 @@ public function updateAction(Request $request)
 }
 ```
 
-<h1>base Controller物件</h1>
+<h1 id="base_controller">base Controller物件</h1>
 
 Symfony2已經先定義一個基礎物件公開發者繼承使用。
 
@@ -216,9 +235,9 @@ class HelloController extends Controller
 
 開發者可以自行決定是否要擴充Controller物件，甚至是定義自己的[Controller服務](http://symfony.com/doc/current/cookbook/controller/service.html)
 
-<h2>Controller常用的功能</h2>
+<h2 id="base_controller_feature">Controller常用的功能</h2>
 
-<h3>Redirecting</h3>
+<h3 id="base_controller_feature_redirecting">Redirecting</h3>
 
 如果需要將使用者redirect至其它的網頁，可直接使用`redirect()`方法。
 
@@ -251,7 +270,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 return new RedirectResponse($this->generateUrl('homepage'));
 ```
 
-<h3>Forwarding</h3>
+<h3 id="base_controller_feature_forwarding">Forwarding</h3>
 
 你也可以使用`forward()`在內部偷偷的將Request丟給另一個controller，在這種狀況下使用者的瀏覽器並不知道。
 
@@ -300,7 +319,7 @@ $response = $httpKernel->forward('AcmeHelloBundle:Hello:fancy', array(
 ));
 ```
 
-<h3>使用Template</h3>
+<h3 id="base_controller_feature_template">使用Template</h3>
 
 大部分的Controller會把產生HTML或其他文件格式的任務交付給一個或數個Template。`renderView()`方法會將任務移交給一個指定的Template，並且回傳產生後的內容。這個內容可以用來產生Response物件:
 
@@ -328,7 +347,7 @@ $templating = $this->get('templating');
 $content = $templating->render('AcmeHelloBundle:Hello:index.html.twig', array('name' => $name));
 ```
 
-<h3>存取其他服務</h3>
+<h3 id="base_controller_feature_other_service">存取其他服務</h3>
 
 開發者也可以透過下列定義於base Controller物件的`get()`方法存取其它的資源:
 
@@ -351,7 +370,7 @@ php app/console container:debug
 
 關於服務請讀[Service Container](http://symfony.com/doc/current/book/service_container.html)。
 
-<h3 id="error_404">處理錯誤和404</h3>
+<h3 id="base_controller_feature_error_404">處理錯誤和404</h3>
 
 當Url無法被解析或是存取的資源不存在，伺服器應該回傳HTTP 404給Client。在Symfony2中，開發者可以透過丟出一個特定的Exception物件來達到目的，或是使用`createNotFoundException()`方法。
 
@@ -374,7 +393,7 @@ public function indexAction()
 
 
 
-<h3 id="session">Session管理</h3>
+<h3 id="base_controller_feature_session">Session管理</h3>
 
 Symfony2中使用一個物件來管理Session。底層的實作預設是使用PHP原生Sessions。
 
@@ -394,7 +413,7 @@ $foo = $session->get('foo');
 $session->setLocale('fr');
 ```
 
-<h3 id="flash_message">提示訊息</h3>
+<h3 id="base_controller_feature_flash">提示訊息</h3>
 
 開發者可以儲存一次性的提示訊息到使用者的Session內:
 
@@ -431,7 +450,7 @@ public function updateAction()
 
 使用者就會看到該訊息，而該訊息也將消失(一次性)。
 
-<h2 id="response_obj">Response物件</h2>
+<h2 id="base_controller_response_obj">Response物件</h2>
 
 Controller必須遵循的條件之一，就是要回傳Response物件。Response物件是代表一個帶著HTTP header的純文字訊息，並且將被送回至Client端:
 
@@ -447,7 +466,7 @@ $response->headers->set('Content-Type', 'application/json');
 
 Symfony2中，http header的屬性是透過HeaderBag物件來控制。
 
-<h2 id="request_obj">Request物件</h2>
+<h2 id="base_controller_request_obj">Request物件</h2>
 
 Controller可以透過base Controller物件的方法來存取Request物件:
 
