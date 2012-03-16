@@ -739,6 +739,50 @@ Doctrine包含許多第三方套件讓開發者可以簡單的完成某些常用
 	*	array	(CLOB)
 詳細內容請參閱Doctrine的官方文件[Mapping Types documentation](http://docs.doctrine-project.org/projects/doctrine-orm/en/2.1/reference/basic-mapping.html#doctrine-mapping-types)
 
+<h1 id="field_option">欄位設定選項</h1>
+
+Doctrine在轉換物件欄位到資料庫欄位的選項:
+
+*	@Column
+	*	type(預設為string)，詳情請參考[索引:Doctrine欄位型態](doctrine_field_type_reference)
+	*	name(預設為欄位名稱)
+	*	length(預設為255)
+	*	unique(預設為FALSE)
+	*	nullable(預設為FALSE)
+	*	precision(預設為0)，僅用於decimal型態
+	*	scale(預設為0), 僅用於decimal型態
+*	@Id 在指定某欄位為Identity可以加上`@Id`，如:
+
+		<?php
+		class MyPersistentClass
+		{
+    		/** @Id @Column(type="integer") */
+    		private $id;
+    		//...
+		}
+*	@GeneratedValue 自動生成@Id
+	*	strategy(預設為"AUTO")
+		*	AUTO (portable)根據資料庫挑選: 
+			*	IDENTITY: MySQL, SQLite, MsSQL
+			*	SEQUENCE: Oracle, PostgreSQL
+		*	SEQUENCE (non-portable)
+
+				<?php
+				class User
+				{
+    				/**
+     				* @Id
+     				* @GeneratedValue(strategy="SEQUENCE")
+     				* @SequenceGenerator(sequenceName="tablename_seq", initialValue=1, allocationSize=100)
+     				*/
+    				protected $id = null;
+				}
+
+		*	IDENTITY (non-portable)
+		*	TABLE (portable but not implemented)
+		*	NONE 由程式碼決定, 等同不使用@GeneratedValue
+
+
 <h1 id="reference">參考網頁</h1>
 
 本文為我閱讀[Symfony2 - Doctrine](http://symfony.com/doc/current/book/doctrine.html)的心得。
