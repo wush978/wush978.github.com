@@ -125,7 +125,7 @@ Symfony的作者[Fabien Potencier](http://fabien.potencier.org/)捨棄既有的p
 
 詳細的解說請參閱[Twig的官方網站](http://twig.sensiolabs.org/)。
 
-<h1 id="twig_cache">Twig Template快取</h2>
+<h2 id="twig_cache">Twig Template快取</h2>
 
 Twig template會被編譯為原生的php物件。這些物件會被放置於`app/cache/{environment}/twig`底下。
 

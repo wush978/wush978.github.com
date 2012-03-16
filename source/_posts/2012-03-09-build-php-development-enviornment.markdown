@@ -14,12 +14,14 @@ categories:
 	*	[匯入既有的SVN Repository](#import-svn)
 	*	[安裝Xdebug](#xdebug)
 	*	[設定遠端除錯環境](#remote-debug)
+	*	[設定php和MSSQL的連線](#database)
 *	[參考網頁](#reference)
 
 	
 <h1 id="env">環境</h1>
 *	server: windows 2008 R2
 *	client: windows 7
+*	database: MSSQL 2008 R2 Express
 
 <h1 id="dev-tool">開發工具</h1>
 *	[eclipse-PDT](http://www.eclipse.org/projects/project.php?id=tools.pdt)
@@ -97,6 +99,30 @@ ps.	jre和eclipse-PDT必須同時為x86或x64
 		xdebug.remote_port=9000
 		xdebug.remote_host="YOUR.IP.GOES.HERE"
 		xdebug.remote_log=/path/to/xdebug_remote_log
+
+<h2 id="database">設定php和MSSQL的連線</h2>
+
+*	下載並安裝[VC++ 2008 Redistributable Package(x86)](http://www.microsoft.com/download/en/details.aspx?id=29)
+*	下載[MS Driver 3.0 for SQL Server for PHP](http://www.microsoft.com/download/en/details.aspx?id=20098#system-requirements)
+*	修改php.ini，新增:
+
+``` ini php.ini
+;...
+extension=c:\php\ext\php_pdo_sqlsrv_53_nts_vc9.dll
+;...
+```
+
+*	檢查能否讀取
+
+``` sh
+c:\php\php -m
+```
+
+看看有無`pdo_sqlsrv`
+
+*	還要安裝其他相依套件，請參考[`http://go.microsoft.com/fwlink/?LinkId=163712`](http://go.microsoft.com/fwlink/?LinkId=163712)。
+
+ps. 由於我本來就已經有VC9版本的ODBC Client、pdo_sqlsrv VC9版本，所以我安裝這些版本沒問題，但是在安裝新下載的3.0版本卻問題一堆。等到之後我有和它奮鬥後再把心得Po上來吧。
 
 <h1 id="reference">參考網頁</h1>
 *	[設定FastCGI以裝載PHP應用程式(IIS7)]("http://technet.microsoft.com/zh-tw/library/dd239230(v=ws.10).aspx")
