@@ -35,28 +35,27 @@ categories:
 
 Template是一個用於產生某種文字格示(HTML、XML、CSV、LaTeX...)的檔案。在Symfony1.4中主要是使用PHP template，例如:
 
+``` html+php php template
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Welcome to Symfony!</title>
+    </head>
+    <body>
+        <h1><?php echo $page_title ?></h1>
 
-	<!DOCTYPE html>
-	<html>
-	    <head>
-	        <title>Welcome to Symfony!</title>
-	    </head>
-	    <body>
-	        <h1><?php echo $page_title ?></h1>
-	
-	        <ul id="navigation">
-	            <?php foreach ($navigation as $item): ?>
-	                <li>
-	                    <a href="<?php echo $item->getHref() ?>">
-	                        <?php echo $item->getCaption() ?>
-	                    </a>
-	                </li>
-	            <?php endforeach; ?>
-	        </ul>
-	    </body>
-	</html>
-
-
+        <ul id="navigation">
+            <?php foreach ($navigation as $item): ?>
+                <li>
+                    <a href="<?php echo $item->getHref() ?>">
+                        <?php echo $item->getCaption() ?>
+                    </a>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    </body>
+</html>
+```
 
 Symfony2中還多了另一種選項:
 
@@ -64,24 +63,23 @@ Symfony2中還多了另一種選項:
 
 而Symfony2中額外引進Twig引擎來處理Template。同樣的寫法改成Twig後變成:
 
+``` css+django twig template
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Welcome to Symfony!</title>
+    </head>
+    <body>
+        <h1>{{ page_title }}</h1>
 
-	<!DOCTYPE html>
-	<html>
-	    <head>
-	        <title>Welcome to Symfony!</title>
-	    </head>
-	    <body>
-	        <h1>{{ page_title }}</h1>
-	
-	        <ul id="navigation">
-	            {% for item in navigation %}
-	                <li><a href="{{ item.href }}">{{ item.caption }}</a></li>
-	            {% endfor %}
-	        </ul>
-	    </body>
-	</html>
-
-
+        <ul id="navigation">
+            {% for item in navigation %}
+                <li><a href="{{ item.href }}">{{ item.caption }}</a></li>
+            {% endfor %}
+        </ul>
+    </body>
+</html>
+```
 
 以下簡略的介紹Twig。有興趣的開發者可以自行前往[Twig的官方網站](http://twig.sensiolabs.org/)。
 
@@ -91,10 +89,9 @@ Symfony2中還多了另一種選項:
 
 Twig內建filter，例如:
 
-
-	{{ title|upper }}
-
-
+``` css+django filter
+{{ title|upper }}
+```
 
 如此在輸出之前，Twig會過濾掉特殊符號。
 
@@ -102,14 +99,13 @@ Twig內建filter，例如:
 
 Twig也支援function語法:
 
-
-	{% for i in 0..10 %}
-	    <div class="{{ cycle(['odd', 'even'], i) }}">
-	      <!-- some HTML here -->
-	    </div>
-	{% endfor %}
-
-
+``` css+django twig function
+{% for i in 0..10 %}
+    <div class="{{ cycle(['odd', 'even'], i) }}">
+      <!-- some HTML here -->
+    </div>
+{% endfor %}
+```
 
 Symfony的作者[Fabien Potencier](http://fabien.potencier.org/)捨棄既有的php template轉而開發Twig的理由是:
 
@@ -149,31 +145,30 @@ _有些Template裝飾其他的Template_
 
 這是一個 base layout file 的例子:
 
+``` css+django base template
+{# app/Resources/views/base.html.twig #}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>{% block title %}Test Application{% endblock %}</title>
+    </head>
+    <body>
+        <div id="sidebar">
+            {% block sidebar %}
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/blog">Blog</a></li>
+            </ul>
+            {% endblock %}
+        </div>
 
-	{# app/Resources/views/base.html.twig #}
-	<!DOCTYPE html>
-	<html>
-	    <head>
-	        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	        <title>{% block title %}Test Application{% endblock %}</title>
-	    </head>
-	    <body>
-	        <div id="sidebar">
-	            {% block sidebar %}
-	            <ul>
-	                <li><a href="/">Home</a></li>
-	                <li><a href="/blog">Blog</a></li>
-	            </ul>
-	            {% endblock %}
-	        </div>
-	
-	        <div id="content">
-	            {% block body %}{% endblock %}
-	        </div>
-	    </body>
-	</html>
-
-
+        <div id="content">
+            {% block body %}{% endblock %}
+        </div>
+    </body>
+</html>
+```
 
 上述twig內有3個block:
 
@@ -183,49 +178,47 @@ _有些Template裝飾其他的Template_
 
 child template的例子為:
 
+``` css+django child template
+{# src/Acme/BlogBundle/Resources/views/Blog/index.html.twig #}
+{% extends '::base.html.twig' %}
 
-	{# src/Acme/BlogBundle/Resources/views/Blog/index.html.twig #}
-	{% extends '::base.html.twig' %}
-	
-	{% block title %}My cool blog posts{% endblock %}
-	
-	{% block body %}
-	    {% for entry in blog_entries %}
-	        <h2>{{ entry.title }}</h2>
-	        <p>{{ entry.body }}</p>
-	    {% endfor %}
-	{% endblock %}
+{% block title %}My cool blog posts{% endblock %}
 
-
+{% block body %}
+    {% for entry in blog_entries %}
+        <h2>{{ entry.title }}</h2>
+        <p>{{ entry.body }}</p>
+    {% endfor %}
+{% endblock %}
+```
 
 如果去render child template，可能(結果和`blog_entries`有關)會得到以下的結果:
 
+``` html result
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>My cool blog posts</title>
+    </head>
+    <body>
+        <div id="sidebar">
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/blog">Blog</a></li>
+            </ul>
+        </div>
 
-	<!DOCTYPE html>
-	<html>
-	    <head>
-	        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	        <title>My cool blog posts</title>
-	    </head>
-	    <body>
-	        <div id="sidebar">
-	            <ul>
-	                <li><a href="/">Home</a></li>
-	                <li><a href="/blog">Blog</a></li>
-	            </ul>
-	        </div>
-	
-	        <div id="content">
-	            <h2>My first post</h2>
-	            <p>The body of the first post.</p>
-	
-	            <h2>Another post</h2>
-	            <p>The body of the second post.</p>
-	        </div>
-	    </body>
-	</html>
+        <div id="content">
+            <h2>My first post</h2>
+            <p>The body of the first post.</p>
 
-
+            <h2>Another post</h2>
+            <p>The body of the second post.</p>
+        </div>
+    </body>
+</html>
+```
 
 觀察上述的三個例子可以發現:
 
@@ -277,32 +270,30 @@ Symfony2中使用了一些特製化的tag:
 
 以下是一個準備要被重複使用的template:
 
+``` css+django reused template
+{# src/Acme/ArticleBundle/Resources/views/Article/articleDetails.html.twig #}
+<h2>{{ article.title }}</h2>
+<h3 class="byline">by {{ article.authorName }}</h3>
 
-	{# src/Acme/ArticleBundle/Resources/views/Article/articleDetails.html.twig #}
-	<h2>{{ article.title }}</h2>
-	<h3 class="byline">by {{ article.authorName }}</h3>
-	
-	<p>
-	    {{ article.body }}
-	</p>
-
-
+<p>
+    {{ article.body }}
+</p>
+```
 
 以下式匯入它的例子:
 
+``` css+django 
+{# src/Acme/ArticleBundle/Resources/Article/list.html.twig #}
+{% extends 'AcmeArticleBundle::layout.html.twig' %}
 
-	{# src/Acme/ArticleBundle/Resources/Article/list.html.twig #}
-	{% extends 'AcmeArticleBundle::layout.html.twig' %}
-	
-	{% block body %}
-	    <h1>Recent Articles<h1>
-	
-	    {% for article in articles %}
-	        {% include 'AcmeArticleBundle:Article:articleDetails.html.twig' with {'article': article} %}
-	    {% endfor %}
-	{% endblock %}
+{% block body %}
+    <h1>Recent Articles<h1>
 
-
+    {% for article in articles %}
+        {% include 'AcmeArticleBundle:Article:articleDetails.html.twig' with {'article': article} %}
+    {% endfor %}
+{% endblock %}
+```
 
 說明:
 
@@ -315,45 +306,42 @@ Symfony2中使用了一些特製化的tag:
 
 一樣先看例子。以下是要被嵌入的Controller:
 
+``` php src/Acme/ArticleBundle/Controller/ArticleController.php
+<?php
+// src/Acme/ArticleBundle/Controller/ArticleController.php
 
-	<?php
-	// src/Acme/ArticleBundle/Controller/ArticleController.php
-	
-	class ArticleController extends Controller
-	{
-	    public function recentArticlesAction($max = 3)
-	    {
-	        // make a database call or other logic to get the "$max" most recent articles
-	        $articles = ...;
-	
-	        return $this->render('AcmeArticleBundle:Article:recentList.html.twig', array('articles' => $articles));
-	    }
-	}
+class ArticleController extends Controller
+{
+    public function recentArticlesAction($max = 3)
+    {
+        // make a database call or other logic to get the "$max" most recent articles
+        $articles = ...;
 
-
+        return $this->render('AcmeArticleBundle:Article:recentList.html.twig', array('articles' => $articles));
+    }
+}
+```
 
 Controller所呼叫的Template:
 
-
-	{# src/Acme/ArticleBundle/Resources/views/Article/recentList.html.twig #}
-	{% for article in articles %}
-	    <a href="/article/{{ article.slug }}">
-	        {{ article.title }}
-	    </a>
-	{% endfor %}
-
-
+``` css+django src/Acme/ArticleBundle/Resources/views/Article/recentList.html.twig
+{# src/Acme/ArticleBundle/Resources/views/Article/recentList.html.twig #}
+{% for article in articles %}
+    <a href="/article/{{ article.slug }}">
+        {{ article.title }}
+    </a>
+{% endfor %}
+```
 
 要嵌入Controller的Template:
 
-
-	{# app/Resources/views/base.html.twig #}
-	...
-	<div id="sidebar">
-	    {% render "AcmeArticleBundle:Article:recentArticles" with {'max': 3} %}
-	</div>
-
-
+``` css+django app/Resources/views/base.html.twig
+{# app/Resources/views/base.html.twig #}
+...
+<div id="sidebar">
+    {% render "AcmeArticleBundle:Article:recentArticles" with {'max': 3} %}
+</div>
+```
 
 這個例子較為複雜，解說如下:
 
@@ -369,40 +357,36 @@ Controller所呼叫的Template:
 
 如果有一個routing.yml:
 
-
-	_welcome:
-	    pattern:  /
-	    defaults: { _controller: AcmeDemoBundle:Welcome:index }
-
-
+``` yaml routing.yml
+_welcome:
+    pattern:  /
+    defaults: { _controller: AcmeDemoBundle:Welcome:index }
+```
 
 要連結到這個頁面，可以使用:
 
-
-	<a href="{{ path('_welcome') }}">Home</a>
-
-
+``` css+django
+<a href="{{ path('_welcome') }}">Home</a>
+```
 
 有參數的例子:
 
-
-	article_show:
-	    pattern:  /article/{slug}
-	    defaults: { _controller: AcmeArticleBundle:Article:show }
-
-
+``` yaml routing.yml
+article_show:
+    pattern:  /article/{slug}
+    defaults: { _controller: AcmeArticleBundle:Article:show }
+```
 
 連結:
 
-
-	{# src/Acme/ArticleBundle/Resources/views/Article/recentList.html.twig #}
-	{% for article in articles %}
-	    <a href="{{ path('article_show', { 'slug': article.slug }) }}">
-	        {{ article.title }}
-	    </a>
-	{% endfor %}
-
-
+``` css+django
+{# src/Acme/ArticleBundle/Resources/views/Article/recentList.html.twig #}
+{% for article in articles %}
+    <a href="{{ path('article_show', { 'slug': article.slug }) }}">
+        {{ article.title }}
+    </a>
+{% endfor %}
+```
 
 所以可以歸納出:
 
@@ -414,12 +398,11 @@ Controller所呼叫的Template:
 
 使用twig function:`asset`可以產生連結到圖片、CSS或javascript等外部資源。
 
+``` css+django
+<img src="{{ asset('images/logo.png') }}" alt="Symfony!" />
 
-	<img src="{{ asset('images/logo.png') }}" alt="Symfony!" />
-	
-	<link href="{{ asset('css/blog.css') }}" rel="stylesheet" type="text/css" />
-
-
+<link href="{{ asset('css/blog.css') }}" rel="stylesheet" type="text/css" />
+```
 
 使用的好處有:
 
@@ -430,50 +413,47 @@ Controller所呼叫的Template:
 
 看起來簡單的例子:
 
+``` css+django
+{# 'app/Resources/views/base.html.twig' #}
+<html>
+    <head>
+        {# ... #}
 
-	{# 'app/Resources/views/base.html.twig' #}
-	<html>
-	    <head>
-	        {# ... #}
-	
-	        {% block stylesheets %}
-	            <link href="{{ asset('/css/main.css') }}" type="text/css" rel="stylesheet" />
-	        {% endblock %}
-	    </head>
-	    <body>
-	        {# ... #}
-	
-	        {% block javascripts %}
-	            <script src="{{ asset('/js/main.js') }}" type="text/javascript"></script>
-	        {% endblock %}
-	    </body>
-	</html>
+        {% block stylesheets %}
+            <link href="{{ asset('/css/main.css') }}" type="text/css" rel="stylesheet" />
+        {% endblock %}
+    </head>
+    <body>
+        {# ... #}
 
-
+        {% block javascripts %}
+            <script src="{{ asset('/js/main.js') }}" type="text/javascript"></script>
+        {% endblock %}
+    </body>
+</html>
+```
 
 但是如果child template還要新增額外的CSS或javascript呢?
 
 可以使用:
 
+``` css+django
+{# src/Acme/DemoBundle/Resources/views/Contact/contact.html.twig #}
+{% extends '::base.html.twig' %}
 
-	{# src/Acme/DemoBundle/Resources/views/Contact/contact.html.twig #}
-	{% extends '::base.html.twig' %}
-	
-	{% block stylesheets %}
-	    {{ parent() }}
-	
-	    <link href="{{ asset('/css/contact.css') }}" type="text/css" rel="stylesheet" />
-	{% endblock %}
-	
-	{# ... #}
+{% block stylesheets %}
+    {{ parent() }}
 
+    <link href="{{ asset('/css/contact.css') }}" type="text/css" rel="stylesheet" />
+{% endblock %}
 
+{# ... #}
+```
 
 嵌入Bundle內的`Resources/public`的assets也可以，記得要使用
-
-	php app/console assets:install target [--symlink]
-
-
+``` sh
+php app/console assets:install target [--symlink]
+```
 來把Bundle內部的assets資源放到對的資料夾(預設是`web`)
 
 <h1 id="global">Template的全域變數</h1>
@@ -489,14 +469,13 @@ Controller所呼叫的Template:
 
 例子:
 
-
-	<p>Username: {{ app.user.username }}</p>
-	{% if app.debug %}
-	    <p>Request method: {{ app.request.method }}</p>
-	    <p>Application Environment: {{ app.environment }}</p>
-	{% endif %}
-
-
+``` css+django
+<p>Username: {{ app.user.username }}</p>
+{% if app.debug %}
+    <p>Request method: {{ app.request.method }}</p>
+    <p>Application Environment: {{ app.environment }}</p>
+{% endif %}
+```
 
 自訂全域變數請參考[全域變數](http://symfony.com/doc/current/cookbook/templating/global_variables.html)
 
@@ -506,32 +485,29 @@ Symfony2中的Template底層核心是這些分析templte的引擎。它們負責
 
 例如
 
-
-	<?php
-	return $this->render('AcmeArticleBundle:Article:index.html.twig');
-
-
+``` php
+<?php
+return $this->render('AcmeArticleBundle:Article:index.html.twig');
+```
 
 其實就是
 
+``` php
+<?php
+$engine = $this->container->get('templating');
+$content = $engine->render('AcmeArticleBundle:Article:index.html.twig');
 
-	<?php
-	$engine = $this->container->get('templating');
-	$content = $engine->render('AcmeArticleBundle:Article:index.html.twig');
-	
-	return $response = new Response($content);
-
-
+return $response = new Response($content);
+```
 
 Symfony2中預設自動使用這些引擎，而這當然是可以更改的:
 
-
-	# app/config/config.yml
-	framework:
-	    # ...
-	    templating: { engines: ['twig'] }
-
-
+``` yaml app/config/config.yml
+# app/config/config.yml
+framework:
+    # ...
+    templating: { engines: ['twig'] }
+```
 
 要更改設定的話，請閱讀[Configuration Appendix](http://symfony.com/doc/current/reference/configuration/framework.html)
 
@@ -541,16 +517,15 @@ Symfony2社群已經有許多Bundle供開發者取用。([knpbundles.com](http:/
 
 假設開發者想要改寫部落格中的`list`頁面:
 
+``` php
+<?php
+public function indexAction()
+{
+    $blogs = // some logic to retrieve the blogs
 
-	<?php
-	public function indexAction()
-	{
-	    $blogs = // some logic to retrieve the blogs
-	
-	    $this->render('AcmeBlogBundle:Blog:index.html.twig', array('blogs' => $blogs));
-	}
-
-
+    $this->render('AcmeBlogBundle:Blog:index.html.twig', array('blogs' => $blogs));
+}
+```
 
 Symfony2在看到`AcmeBlogBundle:Blog:index.html.twig`後會依序搜尋:
 
@@ -584,15 +559,14 @@ Symfony2本身也是一個Bundle，所以所有Symfony2預設的Template都可�
 
 只用在`config`中打開除錯服務:
 
-
-	# app/config/config.yml
-	services:
-	    acme_hello.twig.extension.debug:
-	        class:        Twig_Extension_Debug
-	        tags:
-	             - { name: 'twig.extension' }
-
-
+``` yaml app/config/config.yml
+# app/config/config.yml
+services:
+    acme_hello.twig.extension.debug:
+        class:        Twig_Extension_Debug
+        tags:
+             - { name: 'twig.extension' }
+```
 
 則Twig中的變數就會被倒出來。
 
@@ -600,25 +574,23 @@ Symfony2本身也是一個Bundle，所以所有Symfony2預設的Template都可�
 
 Controller:
 
+``` php
+<?php
+public function indexAction()
+{
+    $format = $this->getRequest()->getRequestFormat();
 
-	<?php
-	public function indexAction()
-	{
-	    $format = $this->getRequest()->getRequestFormat();
-	
-	    return $this->render('AcmeBlogBundle:Blog:index.'.$format.'.twig');
-	}
-
-
+    return $this->render('AcmeBlogBundle:Blog:index.'.$format.'.twig');
+}
+```
 
 link:
 
-
-	<a href="{{ path('article_show', {'id': 123, '_format': 'pdf'}) }}">
-	    PDF Version
-	</a>
-
-
+``` css+django
+<a href="{{ path('article_show', {'id': 123, '_format': 'pdf'}) }}">
+    PDF Version
+</a>
+```
 
 <h1 id="reference">參考資料</h1>
 
