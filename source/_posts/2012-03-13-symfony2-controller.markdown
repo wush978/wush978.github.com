@@ -346,7 +346,6 @@ return $this->render('AcmeHelloBundle:Hello:index.html.twig', array('name' => $n
 $templating = $this->get('templating');
 $content = $templating->render('AcmeHelloBundle:Hello:index.html.twig', array('name' => $name));
 ```
-
 <h3 id="base_controller_feature_other_service">存取其他服務</h3>
 
 開發者也可以透過下列定義於base Controller物件的`get()`方法存取其它的資源:
@@ -390,8 +389,6 @@ public function indexAction()
 該方法會丟出NotFoundHttpException物件。其他的Exception物件會導致HTTP 500錯誤。
 
 通常Symfony2會傳一個錯誤頁面給使用者，或是傳詳細的debug資訊給開發者。想要客製化錯誤頁面，請參考Cook Book內的[客製化錯誤頁面](http://symfony.com/doc/current/cookbook/controller/error_pages.html) 。
-
-
 
 <h3 id="base_controller_feature_session">Session管理</h3>
 
@@ -440,7 +437,7 @@ public function updateAction()
 
 當執行到以下為例的Template時:
 
-``` css+django
+``` 
 {% if app.session.hasFlash('notice') %}
     <div class="flash-notice">
         {{ app.session.flash('notice') }}
@@ -494,3 +491,5 @@ Controller包含的邏輯是「接到Request並回傳Response」。
 <h1 id="reference">參考網頁</h1>
 
 *	[Symfony2 Book Controller](http://symfony.com/doc/current/book/controller.html)
+
+
