@@ -1,0 +1,126 @@
+---
+layout: post
+title: "Rcpp-2"
+date: 2012-06-04 13:56
+comments: true
+categories: R C++
+---
+
+本文延續[Rcpp-1](/blog/2012/02/28/rcpp/)。
+
+# 從R傳遞資料到C++ #
+
+## 傳遞到對應的物件 ##
+
+### Vector ###
+
+在R的底層之中，最基礎的資料型態就是某六種型態的向量(詳情請見下表)。傳遞這六種資料型態的向量到C++並不難，只要宣告對應的Rcpp class以及把透過`.Call`傳遞進來的SEXP丟到Rcpp class的constructor內就好了。
+
+ps. 在R中，幾乎所有物件都是向量
+
+atomic type|Rcpp Class
+-----------|------------
+logical|LogicalVector
+integer|IntegerVector
+double|NumericVector
+complex|ComplexVector
+character|CharacterVector
+raw|RawVector
+
+
+
+以`integer`為例子:
+
+``` cpp test-rcpp.cpp
+#include <Rcpp.h>
+
+using namespace Rcpp;
+
+RcppExport SEXP R2CppInteger(SEXP RIntegerVec);
+
+SEXP R2CppInteger(SEXP r_int_vec) {
+	IntegerVector int_vec(r_int_vec);
+	for (R_len_t i(0);i < int_vec.length();i++) {
+		Rprintf("%d ", int_vec[i]);
+	}
+	Rprintf("\n length: %d \n", int_vec.length());
+	return R_NilValue;
+}
+
+```
+
+編譯後，在R底下執行
+
+``` r test.R
+dyn.load("test-rcpp.so")
+a <- 1L:10L
+.Call("R2CppInteger", a)
+dyn.unload("test-rcpp.so")
+```
+
+就會看到輸出
+
+    1 2 3 4 5 6 7 8 9 10 
+     length: 10 
+    NULL
+
+如果需要使用上的細節，只需要查閱[Rcpp Reference中關於Vector](http://dirk.eddelbuettel.com/code/rcpp/html/classVector.html)的部分。
+
+而Rcpp還有許多可以直接傳遞其他進階的R物件的C++物件。
+
+### Matrix ###
+
+所有上述的xxxVector物件也都有xxxMatrix物件。使用上也非常類似。只是要注意，在C++裡面取出來的row或column在C++裡的型態會是`Rcpp::xxxMatrix::Row`或`Rcpp::xxxMatrix::Column`。
+
+``` r test-rcpp.cpp
+#include <Rcpp.h>
+
+using namespace Rcpp;
+
+RcppExport SEXP R2CppInteger(SEXP RIntegerVec);
+
+SEXP R2CppInteger(SEXP r_int_mat) {
+	IntegerMatrix int_mat(r_int_mat);
+	Rprintf("print the matrix\n");
+	for(int i(0);i < int_mat.nrow();i++) {
+		for(int j(0);j < int_mat.ncol();j++) {
+			Rprintf("%d ", int_mat(i, j));
+		}
+		Rprintf("\n");
+	}
+	Rprintf("print the first column: ");
+	IntegerMatrix::Column int_mat_col( int_mat(internal::NamedPlaceHolder(), 0 ) );
+	for(int i(0);i < int_mat.nrow();i++) {
+		Rprintf("%d ", int_mat_col[i]);
+	}
+	Rprintf("\n");
+	return R_NilValue;	
+}
+```
+
+編譯之後在R底下執行
+``` r
+dyn.load("test-rcpp.so")
+a <- matrix(1L:10L, 2, 5)
+.Call("R2CppInteger", a)
+dyn.unload("test-rcpp.so")
+```
+
+就可以看到輸出
+
+    print the matrix
+    1 3 5 7 9 
+    2 4 6 8 10 
+    print the first column: 1 2 
+    NULL
+
+### List ###
+
+### data.frame ###
+
+## 傳遞到STL物件 ##
+
+
+# 參考資料 #
+
+- [R Language Definition](http://cran.r-project.org/doc/manuals/R-lang.html#Vector-objects)
