@@ -3,7 +3,7 @@ layout: post
 title: "eclipse-svn-symfony"
 date: 2012-03-09 18:36
 comments: true
-categories: 
+categories: PHP symfony2 eclipse svn
 ---
 
 <h1>Subclipse功能簡介</h1>

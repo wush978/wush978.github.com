@@ -3,7 +3,7 @@ layout: post
 title: "php開發建置"
 date: 2012-03-09 11:23
 comments: true
-categories: 
+categories: PHP eclipse svn
 ---
 
 *	[環境](#env)

@@ -3,7 +3,7 @@ layout: post
 title: "R: DateTime格式的心得"
 date: 2012-02-29 21:53
 comments: true
-categories: 
+categories: R
 ---
 
 *	[概述](#overview)

@@ -3,7 +3,7 @@ layout: post
 title: "eclipse-plugin"
 date: 2012-03-12 18:16
 comments: true
-categories: 
+categories: eclipse symfony2 svn
 ---
 
 <h1>相關的Eclipse Plugin</h1>

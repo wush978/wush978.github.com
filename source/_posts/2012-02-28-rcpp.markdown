@@ -3,7 +3,7 @@ layout: post
 title: "Rcpp-1"
 date: 2012-02-28 15:42
 comments: true
-categories: 
+categories: R C++
 ---
 
 Rcpp 心得 -- 簡介
