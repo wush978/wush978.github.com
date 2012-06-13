@@ -14,9 +14,10 @@ categories: R C++
 
 ### Vector ###
 
-在R的底層之中，最基礎的資料型態就是某六種型態的向量(詳情請見下表)。傳遞這六種資料型態的向量到C++並不難，只要宣告對應的Rcpp class以及把透過`.Call`傳遞進來的SEXP丟到Rcpp class的constructor內就好了。
+在R的底層之中，最基礎的資料型態就是某六種型態的vector(詳情請見下表)。
+傳遞這六種資料型態的vector到C++並不難，只要宣告對應的Rcpp class以及把透過`.Call`傳遞進來的SEXP丟到Rcpp class的constructor內就好了。
 
-ps. 在R中，幾乎所有物件都是向量
+表一：  
 
 atomic type|Rcpp Class
 -----------|------------
@@ -28,8 +29,9 @@ character|CharacterVector
 raw|RawVector
 
 
+ps. 在R中，幾乎所有物件都是vector  
 
-以`integer`為例子:
+以`integer`為例子:  
 
 ``` cpp test-rcpp.cpp
 #include <Rcpp.h>
@@ -70,9 +72,11 @@ dyn.unload("test-rcpp.so")
 
 ### Matrix ###
 
-所有上述的xxxVector物件也都有xxxMatrix物件。使用上也非常類似。只是要注意，在C++裡面取出來的row或column在C++裡的型態會是`Rcpp::xxxMatrix::Row`或`Rcpp::xxxMatrix::Column`。
+因為R中的matrix 或 array 物件其實就是加上dimension的vector，所以可以直接用xxxVector物件在C++內處理。
+Rcpp中另外還有更類似R的matrix的xxxMatrix物件。
+只是要注意，在C++裡面取出來的row或column在C++裡的型態會是`Rcpp::xxxMatrix::Row`或`Rcpp::xxxMatrix::Column`。請見以下範例：
 
-``` r test-rcpp.cpp
+``` cpp test-rcpp.cpp
 #include <Rcpp.h>
 
 using namespace Rcpp;
@@ -116,11 +120,60 @@ dyn.unload("test-rcpp.so")
 
 ### List ###
 
+list物件在R也是非常的重要，而且和上述的vector型態已經不一樣了。
+在R中，一個vector內的資料一定只能是相同的atomic type，但是在list中就可以放不同的atomic type。
+說穿了，List物件也只是R物件的vector，這從Rcpp中List的定義：`typedef Vector<VECSXP> List`可窺見一二。
+
+``` cpp test-rcpp.cpp
+#include <Rcpp.h>
+
+using namespace Rcpp;
+
+RcppExport SEXP R2CppList(SEXP RList);
+
+Function show("show");
+
+SEXP R2CppList(SEXP RList) {
+	List list(RList);
+	for (R_len_t i = 0;i < list.size();i++) {
+		show(list[i]);
+	} 
+	return R_NilValue;
+}
+```
+
+ps. 這裡的Function是Rcpp中呼叫R function的方式，之後會再介紹。這裡的用途只是把傳入的東西以R中的`show`函數顯示到console上。
+
+編譯之後在R底下執行
+``` r
+dyn.load("test-rcpp.so")
+a <- list()
+a[[1]] <- 1L:10L
+a[['a']] <- paste("test", 1:10)
+a[[2]] <- factor(sample(1:2, 10, TRUE))
+.Call("R2CppList", a)
+```
+
+就可以看到：
+
+	 [1]  1  2  3  4  5  6  7  8  9 10
+	 [1] 2 2 1 2 2 1 2 1 1 2
+	Levels: 1 2
+	NULL
+
+
 ### data.frame ###
+
+data.frame 其實就只是滿足某些條件的List物件，所以是可以用List物件來做處理的。
+除此之外Rcpp也提供C++物件：DataFrame給使用者。
+但是目前除了提供方便的建立DataFrame物件之外，只有類似List的操作方法。在此就不提供範例了。
 
 ## 傳遞到STL物件 ##
 
+Rcpp可以利用`as<>`函數將R物件轉換成對應的STL物件
+。
 
 # 參考資料 #
 
 - [R Language Definition](http://cran.r-project.org/doc/manuals/R-lang.html#Vector-objects)
+- [Rcpp Quick Reference Guide](http://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-quickref.pdf)
