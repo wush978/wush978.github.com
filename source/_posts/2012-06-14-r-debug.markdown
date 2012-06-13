@@ -6,8 +6,42 @@ comments: true
 categories: 
 ---
 
-# 
+# 簡介
 
+很少人能夠第一次寫程式就能寫對，就連最專業的程式設計師也會花大把大把的時間在除錯。
+所以熟悉除錯的工具也是能夠顯著的提昇寫程式的效率。
+
+其實作者我在寫這篇文章之前也完全沒用過除錯工具！想到又能提昇自己的coding效率又讓我熊熊的燃燒起來！！
+
+# 除錯函數
+
+R 提供了以下的除錯功能:
+
+- `traceback`
+- `browser`
+- `debug`
+- `recover`
+
+就讓我來一個個探索吧！
+
+## traceback
+
+所謂的traceback功能主要的目的，是找出錯誤發生時最後執行的程式碼。試想我們寫了一個函數：
+
+``` r traceback-exp-1
+fail_func <- function(size) {
+	a <- sample(0:1,size,FALSE)
+	a
+}
+```
+
+這個函數會在`size > 2`的時候出錯
+
+	> test(12)
+	錯誤在sample(0:1, size, FALSE) : 
+	  cannot take a sample larger than the population when 'replace = FALSE'
+
+原因是因為`sample`函數在抽到第三次的時候因為`replacement
 
 # Reference
 
