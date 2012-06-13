@@ -1,0 +1,15 @@
+---
+layout: post
+title: "R debug"
+date: 2012-06-14 01:11
+comments: true
+categories: 
+---
+
+# 
+
+
+# Reference
+
+[An Introduction to the Interactive Debugging Tools in R](www.biostat.jhsph.edu/~rpeng/docs/R-debug-tools.pdf)
+[Rdebug](www.math.ncu.edu.tw/chenwc/R_note/reference/debug/Rdebug.pdf)
