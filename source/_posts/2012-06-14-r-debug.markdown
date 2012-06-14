@@ -211,6 +211,41 @@ Browse[1]> c
 可以看到第一次browser是在執行test_func之前，所以`a`不存在。
 第二次則是離開的時候，所以`a`為`3`。
 
+``` r
+test_func <- function() {
+  a <- 1
+  a <- 2
+  a <- 3
+}
+trace(test_func, quote(print(a)), at=3:4) #利用quote直接插入print(a)到程式中
+body(test_func)
+test_func()
+```
+
+``` rconsole
+> body(test_func)
+{
+    a <- 1
+    {
+        .doTrace(print(a), "step 3")
+        a <- 2
+    }
+    {
+        .doTrace(print(a), "step 4")
+        a <- 3
+    }
+}
+> test_func()
+Tracing test_func() step 3 
+[1] 1
+Tracing test_func() step 4 
+[1] 2
+> 
+```
+
+搭配quote使用可以直接更改function的程式碼，好用好用！
+注意at參數所代表的位置！！(讓我滿意外的)
+
 # Reference
 
 [Rdebug](http://www.math.ncu.edu.tw/~chenwc/R_note/reference/debug/Rdebug.pdf)
