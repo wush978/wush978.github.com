@@ -26,24 +26,101 @@ R 提供了以下的除錯功能:
 
 ## traceback
 
-所謂的traceback功能主要的目的，是找出錯誤發生時最後執行的程式碼。試想我們寫了一個函數：
+所謂的traceback功能主要的目的，是找出錯誤發生時最後執行的函數：
 
-``` r traceback-exp-1
-fail_func <- function(size) {
+``` r
+fail_func1 <- function(size) {
+	b <- 5
+	b <- b + size
+	b <- b * 2
+	b <- b^2
+	b
+}
+fail_func2 <- function(size) {
+	b <- fail_func1(size)
 	a <- sample(0:1,size,FALSE)
 	a
 }
+fail_func2(12)
+traceback()
+fail_func2('test')
+traceback()
 ```
 
-這個函數會在`size > 2`的時候出錯
+運行結果：
 
-	> test(12)
-	錯誤在sample(0:1, size, FALSE) : 
-	  cannot take a sample larger than the population when 'replace = FALSE'
+``` rconsole
+> fail_func2(12)
+Error in sample(0:1, size, FALSE) : 
+  cannot take a sample larger than the population when 'replace = FALSE'
+> traceback()
+2: sample(0:1, size, FALSE) at #3
+1: fail_func2(12)
+> fail_func2('test')
+Error in b + size : non-numeric argument to binary operator
+> traceback()
+2: fail_func1(size) at #2
+1: fail_func2("test")
+> 
+```
 
-原因是因為`sample`函數在抽到第三次的時候因為`replacement
+可以看出traceback確實的找出最後一個丟出錯誤的函數。
+
+## browser
+
+traceback只能指出錯誤的發生處，並不能幫助使用者找出程式的錯誤。
+接下來的`browser`指令則提供互動式的除錯功能：
+
+* 暫停程式碼的執行
+* 讓使用者能察看某個時間點的變數狀態，甚至是修改變數狀態
+* 繼續執行
+
+如果運行以下的指令：
+
+``` r
+global_env <- 1
+fail_func1 <- function(size) {
+  fail_func1_env <- 5
+  browser()
+  fail_func1_env
+}
+fail_func2 <- function(size) {
+  fail_func2_env <- 1
+  b <- fail_func1(size)
+  a <- sample(0:1,size,FALSE)
+  a
+}
+fail_func2(12)
+```
+
+應該會看到類似以下的結果：
+
+``` rconsole
+> fail_func2(12)
+Called from: fail_func1(size)
+Browse[1]> global_env
+[1] 1
+Browse[1]> fail_func1_env
+[1] 5
+Browse[1]> fail_func2_env
+Error: object 'fail_func2_env' not found
+Browse[1]> size
+[1] 12
+Browse[1]> 
+Error in sample(0:1, size, FALSE) : 
+  cannot take a sample larger than the population when 'replace = FALSE'
+> 
+```
+
+在程式跑到`browser`時就暫停了。
+因為`browser`是插入在`fail_func1`的第二行，所以變數應該和該時間點相同，
+值得注意的是此時也只能存取該function environment內的變數
+
+## debug
+
+## recover
 
 # Reference
 
-[An Introduction to the Interactive Debugging Tools in R](www.biostat.jhsph.edu/~rpeng/docs/R-debug-tools.pdf)
-[Rdebug](www.math.ncu.edu.tw/chenwc/R_note/reference/debug/Rdebug.pdf)
+[An Introduction to the Interactive Debugging Tools in R](http://www.biostat.jhsph.edu/~rpeng/docs/R-debug-tools.pdf)
+[Rdebug](http://www.math.ncu.edu.tw/~chenwc/R_note/reference/debug/Rdebug.pdf)
