@@ -29,7 +29,7 @@ R 提供了以下的除錯功能:
 
 所謂的traceback功能主要的目的，是找出錯誤發生時最後執行的函數：
 
-``` r
+``` r traceback-example-1
 fail_func1 <- function(size) {
 	b <- 5
 	b <- b + size
@@ -50,7 +50,7 @@ traceback()
 
 運行結果：
 
-``` rconsole
+``` rconsole traceback-example-1-output
 > fail_func2(12)
 Error in sample(0:1, size, FALSE) : 
   cannot take a sample larger than the population when 'replace = FALSE'
@@ -84,7 +84,7 @@ ps. 如果在中斷期間要查詢名稱為`c`、`n`、`Q`的變數內容，請�
 
 如果運行以下的指令：
 
-``` r
+``` r browser-example-1
 global_env <- 1
 fail_func1 <- function(size) {
   fail_func1_env <- 5
@@ -104,7 +104,7 @@ fail_func2(12)
 
 應該會看到類似以下的結果：
 
-``` rconsole
+``` rconsole browser-example-1-output
 > fail_func2(12)
 Called from: fail_func1(size)
 Browse[1]> global_env
@@ -139,12 +139,12 @@ Browse[2]> fail_func1_env
 而`debug`函數則可以幫一個函數的每一行加入中斷點。
 在對內建函數除錯的時候非常有用：
 
-``` r
+``` r debug-example-1
 debug(lm)
 lm(Sepal.Length~Species,iris)
 ```
 
-``` rconsole
+``` rconsole debug-example-1-output
 > lm(Sepal.Length~Species,iris)
 debugging in: lm(Sepal.Length ~ Species, iris)
 debug: {
@@ -169,7 +169,7 @@ debug: cl <- match.call()
 `trace`函數能在除錯時插入程式碼到某個函數，
 並在`untrace`後還原該函數。
 
-``` rconsole
+``` rconsole str(trace)
 > str(trace)
 function (what, tracer, exit, at, print, signature, where = topenv(parent.frame()), 
     edit = FALSE)  
@@ -183,7 +183,7 @@ function (what, tracer, exit, at, print, signature, where = topenv(parent.frame(
 其他的參數請參閱trace的說明。  
 
 測試一下：
-``` r
+``` r trace-example-1
 test_func <- function() {
   a <- 1
   a <- 2
@@ -193,7 +193,7 @@ trace(test_func, browser, browser)
 test_func()
 ```
 
-``` rconsole
+``` rconsole trace-example-1-output
 > test_func()
 Tracing test_func() on entry 
 Called from: eval(expr, envir, enclos)
@@ -211,7 +211,7 @@ Browse[1]> c
 可以看到第一次browser是在執行test_func之前，所以`a`不存在。
 第二次則是離開的時候，所以`a`為`3`。
 
-``` r
+``` r trace-example-2
 test_func <- function() {
   a <- 1
   a <- 2
@@ -222,7 +222,7 @@ body(test_func)
 test_func()
 ```
 
-``` rconsole
+``` rconsole trace-example-2-output
 > body(test_func)
 {
     a <- 1
