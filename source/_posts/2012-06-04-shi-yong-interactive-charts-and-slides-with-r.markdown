@@ -76,6 +76,6 @@ browseURL(paste('file://', file.path(getwd(),'test.html'), sep='')) # open file 
 
 # 參考資料 #
 
-[Interactive charts and slides with R, googleVis and knitr](https://gist.github.com/2816027)
-[R-blogger: Interactive HTML presentation with R, googleVis, knitr, pandoc and slidy](http://www.r-bloggers.com/interactive-html-presentation-with-r-googlevis-knitr-pandoc-and-slidy/)
-[How to convert R Markdown to HTML? I.e., What does “Knit HTML” do in Rstudio 0.96?](http://stackoverflow.com/questions/10646665/how-to-convert-r-markdown-to-html-i-e-what-does-knit-html-do-in-rstudio-0-9)
+- [Interactive charts and slides with R, googleVis and knitr](https://gist.github.com/2816027)
+- [R-blogger: Interactive HTML presentation with R, googleVis, knitr, pandoc and slidy](http://www.r-bloggers.com/interactive-html-presentation-with-r-googlevis-knitr-pandoc-and-slidy/)
+- [How to convert R Markdown to HTML? I.e., What does “Knit HTML” do in Rstudio 0.96?](http://stackoverflow.com/questions/10646665/how-to-convert-r-markdown-to-html-i-e-what-does-knit-html-do-in-rstudio-0-9)
