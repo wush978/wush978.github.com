@@ -90,28 +90,92 @@ R CMD Rprof method2.out
 R CMD Rprof method3.out
 ```
 
-以`method1.out`的output為例：
+以`R CMD Rprof method1.out`的結果為例：
 
 	Each sample represents 0.02 seconds.
-	Total run time: 1.3 seconds.
+	Total run time: 168.98 seconds.
 
 	Total seconds: time spent in function and callees.
 	Self seconds: time spent in function alone.
 
 	   %       total       %        self
 	 total    seconds     self    seconds    name
-	 100.0      1.30       4.6      0.06     fun1
-	  93.8      1.22      93.8      1.22     rbind
-	   1.5      0.02       1.5      0.02     any
+	 100.0    168.98       0.4      0.74     fun1
+	  99.4    167.98      99.4    167.98     rbind
+	   0.1      0.20       0.1      0.20     any
+	   0.0      0.04       0.0      0.04     is.na
+	   0.0      0.02       0.0      0.02     !
 
 
 	   %        self       %      total
 	  self    seconds    total   seconds    name
-	  93.8      1.22      93.8      1.22     rbind
-	   4.6      0.06     100.0      1.30     fun1
-	   1.5      0.02       1.5      0.02     any
+	  99.4    167.98      99.4    167.98     rbind
+	   0.4      0.74     100.0    168.98     fun1
+	   0.1      0.20       0.1      0.20     any
+	   0.0      0.04       0.0      0.04     is.na
+	   0.0      0.02       0.0      0.02     !
 
-這份報告顯示`fun1`所花得時間(1.30秒, 100%)中`rbind`佔了(1.22秒, 93.8%)、`any`佔了(0.02秒, 1.5%)。由這份報告可以很明顯的看出效能的問題出在rbind這個函數上。
+這份報告共有兩個表格：
+
+- 表格一：
+  - `fun1`(進入到退出之間)總共花了168.98秒，佔總時間的100%，但是本身(扣除可以分割的部份)只花了0.74秒，佔0.4%
+  - `rbind`(進去到退出之間)花了167.98秒，佔總時間的99.4%，但是本身花了167.98秒，佔整體的99.4%
+- 表格二則和表格一類似，只是表格一是依照進入和退出間所佔的時間來排序，而表格二是依照本身的執行時間來排序。
+
+由此可知，我們只要能夠針對表格二的前面數列的函數進行優化，就可以大幅度改進程式效能。
+
+接下來看`R CMD Rprof method2.out`的結果：
+
+
+	Each sample represents 0.02 seconds.
+	Total run time: 0.58 seconds.
+
+	Total seconds: time spent in function and callees.
+	Self seconds: time spent in function alone.
+
+	   %       total       %        self
+	 total    seconds     self    seconds    name
+	 100.0      0.58      69.0      0.40     fun2
+	  13.8      0.08      13.8      0.08     any
+	  10.3      0.06      10.3      0.06     is.na
+	   3.4      0.02       3.4      0.02     !
+	   3.4      0.02       3.4      0.02     matrix
+
+
+	   %        self       %      total
+	  self    seconds    total   seconds    name
+	  69.0      0.40     100.0      0.58     fun2
+	  13.8      0.08      13.8      0.08     any
+	  10.3      0.06      10.3      0.06     is.na
+	   3.4      0.02       3.4      0.02     !
+	   3.4      0.02       3.4      0.02     matrix
+
+
+這裡使用`matrix`來取代`rbind`之後，剩下效能的瓶頸就落在`any`上。
+所以`fun3`更進一步的不使用`any`，得到：
+
+
+	Each sample represents 0.02 seconds.
+	Total run time: 0.12 seconds.
+
+	Total seconds: time spent in function and callee
+	Self seconds: time spent in function alone.
+
+	   %       total       %        self
+	 total    seconds     self    seconds    name
+	 100.0      0.12      16.7      0.02     fun3
+	  66.7      0.08      66.7      0.08     |
+	  16.7      0.02      16.7      0.02     is.na
+
+
+	   %        self       %      total
+	  self    seconds    total   seconds    name
+	  66.7      0.08      66.7      0.08     |
+	  16.7      0.02     100.0      0.12     fun3
+	  16.7      0.02      16.7      0.02     is.na
+
+
+可以看到效能又好了近5倍(0.12 : 0.58)！
 
 # 參考資料
 
