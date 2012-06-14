@@ -52,7 +52,30 @@ Rmd --> Markdown --> HTML
         $$
 - 跳脫字元
     - 要跳脫`$latex`，使用HTML的語法: `&#36;latex`
+    
+# 全命令列環境
+
+根據stackoverflow裏的某位大大提示，其實knitr套件提供了直接在R中轉換.Rmd至.md的語法：
+
+``` r rmd2md
+require(knitr) # required for knitting from rmd to md
+require(markdown) # required for md to html 
+knit('test.rmd', 'test.md') # creates md file
+markdownToHTML('test.md', 'test.html') # creates html file
+browseURL(paste('file://', file.path(getwd(),'test.html'), sep='')) # open file in browser
+```
+
+理解了這件事情後，就可以寫出Makefile來在命令列編譯。
+
+# 我自己的擴充
+
+我都是透過php + R 來拼湊出下面這耶東西，環境都是Ubuntu
+
+* [knitr2octopress](https://github.com/wush978/knitr2octopress) : 將Rmd轉換出來的.md檔案內的圖片連結，轉換為使用[Data URI scheme](http://en.wikipedia.org/wiki/Data_URI_scheme)的格式。
+* [yml2rmd](https://github.com/wush978/yml2rmd) : 利用yml格式來產生大量圖表的.Rmd檔案，這個文件我還沒空寫, 以後慢慢補...
+
 # 參考資料 #
 
 [Interactive charts and slides with R, googleVis and knitr](https://gist.github.com/2816027)
 [R-blogger: Interactive HTML presentation with R, googleVis, knitr, pandoc and slidy](http://www.r-bloggers.com/interactive-html-presentation-with-r-googlevis-knitr-pandoc-and-slidy/)
+[How to convert R Markdown to HTML? I.e., What does “Knit HTML” do in Rstudio 0.96?](http://stackoverflow.com/questions/10646665/how-to-convert-r-markdown-to-html-i-e-what-does-knit-html-do-in-rstudio-0-9)
