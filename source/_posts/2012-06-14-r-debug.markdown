@@ -3,7 +3,7 @@ layout: post
 title: "R debug"
 date: 2012-06-14 01:11
 comments: true
-categories: 
+categories: R
 ---
 
 # 簡介
