@@ -1,0 +1,18 @@
+---
+layout: post
+title: "Cormen Chp6"
+date: 2012-06-18 22:53
+comments: true
+categories: Algorithm C++
+---
+
+
+# Ch6 Heapsort
+
+- sorts $$n$$ elements in $$O(nlog(n))$$
+- in place
+	ps. _in place_ : only used $O(1)$ additional memory to store data
+- heat definition
+- heat property: $$ \mbox{Parent[PARENT(i)] } \leq \mbox{ A[i]}$$
+
+
