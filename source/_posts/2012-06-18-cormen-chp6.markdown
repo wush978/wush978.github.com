@@ -7,12 +7,58 @@ categories: Algorithm C++
 ---
 
 
-# Ch6 Heapsort
-
-- sorts $$n$$ elements in $$O(nlog(n))$$
+# Heapsort
+## 6.1 Heaps
+### Heap Introduction
+- sorts $n$ elements in $O(nlog(n))$
 - in place
 	ps. _in place_ : only used $O(1)$ additional memory to store data
-- heat definition
-- heat property: $$ \mbox{Parent[PARENT(i)] } \leq \mbox{ A[i]}$$
+- heat property: $$\mbox{Parent[PARENT(i)] } \leq \mbox{ A[i]}$$
+
+### My own implementation
+{% include_code Heap.hpp lang:cpp cormen/sorting/Heap.hpp %}
+
+### Exercise
+
+#### 6.1-1
+
+min: $2 ^ h$  
+max: $2 ^ h - 1$
+
+#### 6.1-2
+Mathematical Induction
+
+#### 6.1-3
+Trivial
+
+#### 6.1-4
+Leaf
+
+#### 6.1-5
+Yes, it is
+
+#### 6.1-6
+No, $6 < 7$
+
+#### 6.1-7
+
+Proof:
+$$
+\begin{eqnarray}
+& & k \mbox{-th element is a leaf iff } 2k > n \newline
+&\Rightarrow& k \geq \lfloor n/2 \rfloor + 1
+\end{eqnarray}
+$$
+
+## 6.2 Maintaining the heap property
+
+`MaxHeapify(A,i)` convert a heap that the subtree rooted at $2 i$ and 
+$2 i + 1$ are max-heaps, but $A[i]$ might be smaller than one of its 
+child, thus violating the max-heap property.  
+
+The idea is to float-down $A[i]$.
 
 
+
+# Reference
+See my github repository: [cormen](https://github.com/wush978/cormen) for details of the code.
