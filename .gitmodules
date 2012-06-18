@@ -1,3 +1,6 @@
 [submodule "source/_posts/knitr2octopress"]
 	path = source/_posts/knitr2octopress
 	url = git@github.com:wush978/knitr2octopress.git
+[submodule "source/downloads/code/cormen"]
+	path = source/downloads/code/cormen
+	url = git@github.com:wush978/cormen.git
