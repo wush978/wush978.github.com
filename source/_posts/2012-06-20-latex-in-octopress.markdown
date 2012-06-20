@@ -3,7 +3,7 @@ layout: post
 title: "Latex in Octopress"
 date: 2012-06-20 13:01
 comments: true
-categories: 
+categories: Latex Octopress
 ---
 
 大致上參考[在Octopress中使用Latex](http://chen.yanping.me/cn/blog/2012/03/10/octopress-with-latex/)即可。
