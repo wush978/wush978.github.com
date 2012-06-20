@@ -15,8 +15,6 @@ categories: Algorithm C++
 	ps. _in place_ : only used $O(1)$ additional memory to store data
 - heat property: $$\mbox{Parent[PARENT(i)] } \leq \mbox{ A[i]}$$
 
-### My own implementation
-{% include_code Heap.hpp lang:cpp cormen/sorting/Heap.hpp %}
 
 ### Exercise
 
@@ -58,6 +56,33 @@ child, thus violating the max-heap property.
 
 The idea is to float-down $A[i]$.
 
+### Exercise
+
+#### 6.2-6
+
+Give a special case such as root 0 and node 1.
+
+## 6.3 Building a heap
+
+Do `MaxHeapify(A,i)` from the leaf to the root.
+
+- Initial: leaf is a valid subtree with heap property
+- Maintain: for each step of heapify, heap property is maintained
+- Termination: 
+
+### Exercise
+
+#### 6.3-2
+
+Because `MaxHeapify(A,i)` needs `left(i)` and `right(i)` are subtree
+with heap property.
+
+## 6.4 The heapsort algorithm
+
+# My own implementation
+
+{% include_code Heap.hpp lang:cpp cormen/data_structure/Heap.hpp %}
+{% include_code HeapSort.hpp lang:cpp cormen/sorting/HeapSort.hpp %}
 
 
 # Reference
