@@ -1,0 +1,24 @@
+---
+layout: post
+title: "R closure"
+date: 2012-08-14 22:27
+comments: true
+categories: R
+---
+
+R 中_function_也可以是一種物件型態，或稱做叫作_closure_:
+
+``` rconsole
+> typeof(rnorm)
+[1] "closure"
+```
+
+要比較兩個function物件，則可透過`body`這個函數：
+
+``` rconsole
+> body(rnorm) == body(rexp)
+[1] FALSE
+> body(rnorm) == body(temp)
+[1] TRUE
+```
+
