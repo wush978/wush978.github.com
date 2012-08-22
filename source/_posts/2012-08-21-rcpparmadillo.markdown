@@ -14,6 +14,23 @@ Here is the note for myself.
 
 Note these functions are only my understanding of these operators and methods. I didn't check the source code of Armadillo and RcppArmadillo.
 
+# Basic Elements and Methods
+
+``` cpp mat
+arma::mat a(5, 5); // Initialize a 5 x 5 matrix.
+
+a.fill(0); // fill it with 0
+a.n_rows;    //!< number of rows in the matrix (read-only)
+a.n_cols;    //!< number of columns in the matrix (read-only)
+a.n_elem;    //!< number of elements in the matrix (read-only)
+a.vec_state; //!< 0: matrix layout; 1: column vector layout; 2: row vector layout
+a.mem;	     //!< pointer to memory used by the matrix (memory is read-only)
+
+a.min();
+a.max();
+```
+
+
 # Feature
 
 ## Matrix Multiplication
