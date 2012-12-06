@@ -246,6 +246,23 @@ Tracing test_func() step 4
 搭配quote使用可以直接更改function的程式碼，好用好用！
 注意at參數所代表的位置！！(讓我滿意外的)
 
+## 自動debug
+
+輸入
+```r
+options(error = browser)
+```
+可以在發生錯誤時候進入browser
+
+更強大的debug設定是
+
+```r
+options(error = recover)
+```
+
+在錯誤發生時候會印出stack，並且可以選擇要進入哪層stack來`browser`
+
 # Reference
 
 [Rdebug](http://www.math.ncu.edu.tw/~chenwc/R_note/reference/debug/Rdebug.pdf)
+[Shiny Tutorial](http://rstudio.github.com/shiny/tutorial/#run-and-debug)
