@@ -34,6 +34,55 @@ Rcpp 是一個整合R和C++的library。通常我使用Rcpp不外乎是：
 
 以下我將由淺入深，依序來介紹如何使用Rcpp。有加速需求的朋友只需要看前面，而對R底層更有興趣的朋友，或是想要投身Opensource願意撞大R的朋友，也很歡迎繼續看下去。
 
+# 加速R
 
+## 範例一
 
+我們先來看一個stackoverflow上的例子吧：
 
+<http://stackoverflow.com/questions/14494964/how-to-find-nearby-integers-efficiently/14496071#14496071>
+
+先看看他寫的R script:
+
+```r
+for(i in 1:length(centers)){
+	data2 <- data1
+	data2[,1] <- data2[,1] - centers[i] + ncol(score_matrix)/2
+	region_scores <- subset(data2,data2[,1] > 0 & data2[,1] <= ncol(score_matrix))
+	score_matrix[i,region_scores[,1]]<-region_scores[,2]
+}
+```
+
+這個Script滿足以下幾個條件，所以改起來非常容易，加速的效果也很顯著(作者說Rcpp的版本快了70倍)：
+
+- 迴圈：R語言的回圈很慢。
+- 簡單的演算法邏輯：取值，加減乘除和比較。最複雜的是`subset`函數。
+
+R有優化許多數值演算法，例如矩陣乘法。使用Rcpp來自己寫矩陣乘法，通常會比R原生的還慢喔！所以在優化之前記得要先審時度勢，判斷要不要花力氣下去改寫。
+
+那再來看看我改的Rcpp code:
+
+```cpp
+src <- '
+  // R物件和C++物件的轉換
+  NumericMatrix data1(Rdata1); 
+  NumericVector centers(Rcenters);
+  NumericMatrix score_matrix(Rscore_matrix);
+  NumericVector data2(data1.nrow());
+  // 改寫演算法
+  for(int i = 0;i < centers.size();i++) {
+    data2 = data1.column(0); // data2 = data1[,1]
+    data2 = data2 - centers(i) + score_matrix.ncol() / 2; // data2 = data2 - centers[i] + ncol(score_matrix) / 2
+    for(int j = 0, k = 0;j < data2.size();j++) { // subset 的部份。
+      if (data2(j) <= 0)
+        continue;
+      if (data2(j) > score_matrix.ncol())
+        continue;
+      score_matrix(i, data2(j) - 1) = data1(j,1);
+    }
+  }
+  return score_matrix;
+'
+```
+
+從這個範例來看，扣除`subset`的部份，Rcpp的語法是不是和R差不多呢？這都是由於Rcpp的作者群已經在Rcpp的原始碼中把各種複雜的物件轉換邏輯給包裝起來了，所以我們才可以用如此近似R的語法來大幅提速。
