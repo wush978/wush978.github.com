@@ -143,9 +143,80 @@ f <- function (x0, rs, N) {
 所以只要能熟悉Rcpp API，那寫C++就和寫R 差不多，但是效能可是差很多的呢！
 這個例子中，我自己測出來的結果是快了140倍。
 
+## 安裝和使用Rcpp
+
+為了能讓讀者動手嘗試，這裡我只介紹一種最簡單的使用Rcpp的方法。
+
+- 在Windows的讀者請先安裝`Rtools`。
+- 接著在R底下安裝Rcpp套件和inline套件。它們目前都在CRAN上，應該可以輕鬆安裝。
+
+接著我們來測試看看能不能正常使用Rcpp:
+
+```r
+library(Rcpp)
+library(inline)
+f <- cxxfunction(sig=c(), plugin="Rcpp", body='
+  Rcout << "Hello World!" << std::endl;               
+')
+f()
+```
+
+如果設定正常的話，就可以在R console上看到：
+
+```
+> f()
+Hello World!
+NULL
+```
+
 ## 物件的轉換
 
 接下來我們來仔細的看看上述兩個範例中所使用的Rcpp API:
 
 - NumericVector
-- 
+- NumericMatrix
+
+這兩個物件分別代表著R之中的`numeric`型態的向量和矩陣。
+
+向量的例子有：
+
+- `pi`
+- `rnorm(10)`
+
+矩陣的例子則是：
+
+- `matrix(rnorm(100), 10, 10)`
+
+具體寫成Code則是：
+
+```r
+library(Rcpp)
+library(inline)
+f <- cxxfunction(sig=c(Ra = "numeric"), plugin="Rcpp", body='
+  NumericVector a(Ra);
+  Rcout << a[0] << std::endl;
+')
+f(pi)
+```
+
+首先我們仔細的看sig=c(Ra = "numeric") 這行，他的意思就是：*第一個參數在C++裡面叫作`Ra`，而且在R中丟給`class`後需要回傳`numeric`*
+
+至於在C++中，這類物件一律都是`SEXP`型態。對於讀者來說，只要知道`SEXP`是一個指標就夠了，他的意義則已經超出這章的範圍了。不需要知道SEXP的意義，仍然可以使用Rcpp API。千律一篇的作法就是：
+
+```cpp
+NumericVector a(Ra);
+```
+
+這短短一行code做了以下的事情：
+
+- 告訴C++: `a`是一個型態為`NumericVector`的物件。對R的使用者來說，型態的概念可能不清楚，所以我這裡簡單解釋。在C++的世界中，所有物件的型態都要非常清楚，常見的基礎型態是整數(`int`)、小數(`double`)、字串(`std::string`)或boolean(`bool`)。所有的物件，最終就是電腦中的0和1，而這些0和1要怎麼解釋呢？一樣的0和1，如果是字串，最後電腦會把他解讀為代表`0`這個文字，但若是整數，那可能變成`30`這個數字了。
+- `a`的值和Ra有關。即使我們知道`a`是一個`NumericVector`，具體來說`a`的內容還是沒有說清楚。而`a(Ra)`告訴電腦，`a`這個`NumericVector`是一個和`Ra`建立關係的`NumericVector`。
+
+所以當R執行`f(pi)`的時候，`Ra`就是`pi`，然後`a`就是一個值是`pi`的`NumericVector`。
+
+那什麼是`NumericVector`呢？
+
+讀著們暫時就把它想像成一個R中數值向量在C++中的代表就可以了！
+
+
+
