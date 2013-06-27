@@ -63,7 +63,6 @@ for(i in 1:length(centers)){
 接著再來看看我改的Rcpp code。看不懂細節沒關係，我們之後會再說明。這裡主要先讓讀者了解一個Rcpp code的樣式：
 
 ```cpp
-src <- '
   // R物件和C++物件之間的轉換
   NumericMatrix data1(Rdata1); 
   NumericVector centers(Rcenters);
@@ -84,7 +83,6 @@ src <- '
   }
   // 回傳資料
   return score_matrix;
-'
 ```
 
 從這個範例來看，扣除`subset`的部份，Rcpp的語法是不是和R差不多呢？這都是由於Rcpp的作者群已經在Rcpp的原始碼中把各種複雜的物件轉換邏輯給包裝起來了，所以我們才可以用簡單的Rcpp API來大幅提速。
@@ -123,7 +121,6 @@ f <- function (x0, rs, N) {
 所以這段Rcpp code改起來也很快：
 
 ```cpp
-f1 <- cxxfunction(sig=c(Rx0="numeric", Rrs="numeric"), plugin="Rcpp", body='
   double x0 = as<double>(Rx0);
   NumericVector rs(Rrs);
   int N = rs.size();
@@ -136,7 +133,6 @@ f1 <- cxxfunction(sig=c(Rx0="numeric", Rrs="numeric"), plugin="Rcpp", body='
   }
   lambda /= N;
   return wrap(lambda);
-  ')
 ```
 
 仔細看一下，是不是整個Rcpp code的部份也只是：
