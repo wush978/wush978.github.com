@@ -84,8 +84,17 @@ ps. 由於`IntegerVector`是Rcpp提供的物件，所以可以回傳到R之中�
 
 所以請讀者務必要清楚對應的物件關係。
 
-## C++ Constructor
+就如同一般C/C++中有`SEXP`處理所有的R物件，Rcpp之中也可以使用`RObject`(注意：第二個字母也是大寫！)型態來處理所有的R物件。而除了`Vector`，Rcpp 也提供了`Matrix`類型的物件型態(如`NumericMatrix`)。使用起來和`Vector`類似並且多了row, column和dimension的API。這類的應用比較深，在本章節就先介紹了，留到後頭的範例再跟讀者介紹它們的用法。
 
+## *Rcpp物件的繼承
+
+不懂繼承的讀者可以跳過這一節。
+
+Rcpp中所有的物件都是繼承自`RObject`。我們可以從Rcpp的官方[Reference](http://dirk.eddelbuettel.com/code/rcpp/html/index.html)中看到Rcpp中物件的繼承結構。
+
+而`Matrix`類型也繼承自對應的`Vector`類型，就像是在R之中`matrix`物件本質上也是`vector`是一樣的。
+
+## C++ Constructor
 
 接下來我們該解釋之前例子中的：
 
@@ -116,6 +125,8 @@ ps. 由於`IntegerVector`是Rcpp提供的物件，所以可以回傳到R之中�
 ```
 <C++型態名稱> <物件名稱>(<對應的SEXP名稱>);
 ```
+
+所以讀者要記得，當從R傳遞物件進入C++的時候，第一步就是正確的呼叫對應的Rcpp物件的constructor，才能使用C++函數對R物件做更進一步的操作。
 
 ## *其他的constructor用法
 

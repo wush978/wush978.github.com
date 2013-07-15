@@ -1,18 +1,8 @@
-RMDFILE := $(wildcard *.Rmd)
+RMD = $(wildcard *.Rmd)
+MD = $(RMD:.Rmd=.md)
 
-MDFILE := $(RMDFILE:.Rmd=.md)
+all: $(MD)
 
-MARKDOWNFILE := $(RMDFILE:.Rmd=.markdown)
 
-all : $(MARKDOWNFILE)
-
-$(MARKDOWNFILE) : $(MDFILE)
-	php knitr2octopress/md2markdown.php $(@:.markdown=.md)
-
-$(MDFILE) : $(RMDFILE)
-	R --slave --vanilla --args $(@:.md=.Rmd) < knitr2octopress/Rmd2md.R
-
-clean:
-	-rm *.md
-	-rm -rf figure
-	-rm NA
+%.md: %.Rmd
+	Rscript -e "require(knitr);knit('$<', '$@')"
