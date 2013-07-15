@@ -1,0 +1,124 @@
+# 物件的轉換
+
+是時候來仔細的看看前面兩個範例中所使用的Rcpp 物件了:
+
+- `NumericVector`
+- `NumericMatrix`
+
+以及一個泛用的轉換函數：
+
+- `as`
+
+這些是和物件轉換相關的Rcpp API。`as`的情況比較複雜，所以我們先解釋`NumericVector`和`NumericMatrix`。
+如名稱所述，這兩個物件分別代表著R之中的`numeric`型態的向量和矩陣。
+
+Rcpp中物件的名稱是經過設計的，讀者在累積足夠的知識後，應該從名稱就可以猜到Rcpp物件是對應到哪一種類型的R物件了。
+
+在更進一步解釋之前，我們需要先了解*物件的型態*。
+
+## 物件的型態(type)
+
+由於使用R的時候，R會自動判斷物件的型態，所以R的使用者可能不清楚什麼是*型態*。
+
+所有物件的資料，最終就是電腦記憶體中的0和1(又稱做bit)，而電腦要怎麼解釋這些0和1的意義？
+
+舉例來說，`00110000`這8個bit可以解釋為文字符號`"0"`，也可以解釋為整數`48`。
+
+而型態就是電腦解釋這些bit的方式。
+
+如果對應到實際的世界：如果有一匹馬的名稱叫作小明，那小明的型態就是馬，而小明則是小明這隻馬的名稱。
+
+在程式中常見的基礎型態是整數、數值(實數)、字串或boolean，而他們在R和C++中有不一樣的名字：
+
+- 整數型態在R叫`integer`，C++叫`int`
+- 數值型態在R叫`numeric`，C++叫`double`
+- 字串型態在R叫`character`，C++叫`std::string`*。先不要管那個`::`，就把`std::string`當成一個型態的名稱就好！
+- boolean型態在R叫`logical`，C++叫`bool`
+
+在R 之中還另外有一種稱為`raw`的向量，主要是用於儲存特殊格式的資料。它的概念近似於一般資料庫系統中的`BLOB`(Binary Large OBject)物件。
+
+備註: 字串型態在C++中有點複雜，詳細解釋的話超過本章節的範圍了。所以簡單起見，我一律用`std::string`來代表。
+
+在R 的世界中，R 會自動判斷物件的型態，所以使用者並不需要有這方面的知識，就可以用R了。
+
+但是在C++的世界中，所有物件的型態都要非常清楚。所以在用Rcpp的時候，我們需要初步的了解R 物件的型態。實際上，只要熟悉上面提到的4個型態，就可以將Rcpp應用在很廣泛的問題了！所以讀者不用感到害怕。
+
+## 從R 到 C++
+
+不透過Rcpp的話，在C++中，所有R的物件都是型態為`SEXP`的物件，這物件包含了另外三種pointer來供R處理各種型態。因此我們不能直接對SEXP做操作，必須要透過Rcpp所提供的物件和API。而且對於不同的R型態，必須要透過對應的Rcpp物件才能正確的處理。
+
+而Rcpp中對於物件的命名也是有下一番心思的。舉例來說，讀者在R執行：
+
+```{r character-class}
+class(letters)
+```
+
+可以了解`letters`的型態是`character`，所以它在Rcpp中的就是用`CharacterVector`來處理。規則就是：把R的型態名稱改成大寫開頭，後面接上`Vector`即可。這裡`Vector`表示這是一個向量物件。在R中，所有物件都是向量，所以這就是R最基本的型態。
+
+同樣的道理：
+
+```{r integer-class}
+class(1:5)
+```
+
+所以`1:5`這個物件在Rcpp中就是透過`IntegerVector`來處理。
+
+我要再次強調，唯有透過對應的Rcpp物件才能正確的在C++中處理R物件。我們用`inline`來跑個簡單的Demo：
+
+```{r r-to-rcpp}
+library(Rcpp);library(inline)
+f <- cxxfunction(sig=c(Rx="integer"), plugin="Rcpp", body='
+  IntegerVector x(Rx);
+  return x;
+')
+f(1:5)
+f(pi)
+f(letters)
+```
+
+ps. 由於`IntegerVector`是Rcpp提供的物件，所以可以回傳到R之中。
+
+- `1:5` 本身就是`r class(1:5)`，所以進入`f`沒有任何問題。
+- `pi`本身是`r class(pi)`，所以進入`f`後變成了`3`。當物件型態不吻合`IntegerVector`時，Rcpp會先嘗試呼叫`as.integer`來做型態轉換，再把他轉成`IntegerVector`。所以這裡`pi`就變成`r as.integer(pi)`了。
+- `letters`是無法轉換為`integer`的`r class(letters)`型態的物件。所以Rcpp直接拋出錯誤給R。
+
+所以請讀者務必要清楚對應的物件關係。
+
+## C++ Constructor
+
+
+接下來我們該解釋之前例子中的：
+
+```cpp
+  NumericVector rs(Rrs);
+```
+
+以及剛剛例子中的：
+
+```cpp
+  CharacterVector x(Rx);
+```
+
+這種語法的意義了。
+
+在C++中，一個物件要透過constructor建構後才會有實際的資料。詳細解釋constructor的概念已經超出本章範圍，所以我建議讀者如果有興趣的話，可以自行google `C++ constructor` 或 `C++ 建構子`。
+
+而Rcpp中，如果要承接來自R的物件，我們只要遵循以下的格式*宣告*和呼叫constructor即可：
+
+```
+<C++型態名稱> <物件名稱>(<對應的SEXP名稱>);
+```
+
+上述的例子都是遵循這個規則的。`NumericVector`和`CharacterVector`都是Rcpp中定義的一種C++型態。`rs`和`x`分別是變數的名稱。而`Rx`和`Rrs`是來自R的`SEXP`物件的名稱。`SEXP`物件的名稱是來自於整個Rcpp函數的定義，以及R如何傳遞。我們在*物件的傳遞*的章節在仔細說明。
+
+而Rcpp在執行constructor的同時，還會檢查附加的`SEXP`參數的型態，若型態不對還會補上轉換。這麼多複雜的動作通通都被濃縮在短短的一行之中：
+
+```
+<C++型態名稱> <物件名稱>(<對應的SEXP名稱>);
+```
+
+## *其他的constructor用法
+
+## *記憶體的管理
+
+
