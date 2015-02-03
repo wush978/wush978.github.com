@@ -9,3 +9,5 @@ RUN git clone https://github.com/wush978/wush978.github.com.git -b source && \
     cd /root/wush978.github.com && \
     bundle install
 
+WORKDIR /root/wush978.github.com
+CMD["rake", "preview"]
