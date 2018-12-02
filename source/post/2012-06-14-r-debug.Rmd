@@ -1,0 +1,268 @@
+---
+layout: post
+title: "R debug"
+date: 2012-06-14 01:11
+comments: true
+categories: R
+---
+
+# 簡介
+
+很少人能夠第一次寫程式就能寫對，就連最專業的程式設計師也會花大把大把的時間在除錯。
+所以熟悉除錯的工具也是能夠顯著的提昇寫程式的效率。
+
+其實作者我在寫這篇文章之前也完全沒用過除錯工具！想到又能提昇自己的coding效率又讓我熊熊的燃燒起來！！
+
+# 除錯函數
+
+R 提供了以下的除錯功能:
+
+- `traceback`
+- `browser`
+- `debug`
+- `trace`
+
+
+就讓我來一個個探索吧！
+
+## traceback
+
+所謂的traceback功能主要的目的，是找出錯誤發生時最後執行的函數：
+
+``` r traceback-example-1
+fail_func1 <- function(size) {
+	b <- 5
+	b <- b + size
+	b <- b * 2
+	b <- b^2
+	b
+}
+fail_func2 <- function(size) {
+	b <- fail_func1(size)
+	a <- sample(0:1,size,FALSE)
+	a
+}
+fail_func2(12)
+traceback()
+fail_func2('test')
+traceback()
+```
+
+運行結果：
+
+``` rconsole traceback-example-1-output
+> fail_func2(12)
+Error in sample(0:1, size, FALSE) : 
+  cannot take a sample larger than the population when 'replace = FALSE'
+> traceback()
+2: sample(0:1, size, FALSE) at #3
+1: fail_func2(12)
+> fail_func2('test')
+Error in b + size : non-numeric argument to binary operator
+> traceback()
+2: fail_func1(size) at #2
+1: fail_func2("test")
+> 
+```
+
+可以看出traceback確實的找出最後一個丟出錯誤的函數。
+
+## browser
+
+traceback只能指出錯誤的發生處，並不能幫助使用者找出程式的錯誤。
+接下來的`browser`指令則提供互動式的除錯功能：
+
+* 暫停程式碼的執行
+* 讓使用者能察看某個時間點的變數狀態，甚至是修改變數狀態。此時以下的指令變成有特殊意義：
+  * `c` 讓程式繼續進行
+  * `n` 執行下一行
+  * `Q` 中斷
+* 繼續執行  
+
+ps. 如果在中斷期間要查詢名稱為`c`、`n`、`Q`的變數內容，請用`print`指令。
+但是我個人是認為不應該把變數取這類名稱！！
+
+如果運行以下的指令：
+
+``` r browser-example-1
+global_env <- 1
+fail_func1 <- function(size) {
+  fail_func1_env <- 5
+  browser()
+  fail_func1_env <- 6
+  fail_func1_env <- 7
+  fail_func1_env
+}
+fail_func2 <- function(size) {
+  fail_func2_env <- 1
+  b <- fail_func1(size)
+  a <- sample(0:1,size,FALSE)
+  a
+}
+fail_func2(12)
+```
+
+應該會看到類似以下的結果：
+
+``` rconsole browser-example-1-output
+> fail_func2(12)
+Called from: fail_func1(size)
+Browse[1]> global_env
+[1] 1
+Browse[1]> fail_func1_env
+[1] 5
+Browse[1]> fail_func2_env
+Error: object 'fail_func2_env' not found
+Browse[1]> size
+[1] 12
+Browse[1]> n
+debug at #4: fail_func1_env <- 6
+Browse[2]> fail_func1_env
+[1] 5
+Browse[2]> n
+debug at #5: fail_func1_env <- 7
+Browse[2]> fail_func1_env
+[1] 6
+Browse[2]> n
+debug at #6: fail_func1_env
+Browse[2]> fail_func1_env
+[1] 7 
+```
+
+在程式跑到`browser`時就暫停了。
+因為`browser`是插入在`fail_func1`的第二行，所以變數應該和該時間點相同，
+值得注意的是此時也只能存取該function environment內的變數  
+
+## debug
+
+我們可以把上一節的`browser`視為一種_中斷點_，
+而`debug`函數則可以幫一個函數的每一行加入中斷點。
+在對內建函數除錯的時候非常有用：
+
+``` r debug-example-1
+debug(lm)
+lm(Sepal.Length~Species,iris)
+```
+
+``` rconsole debug-example-1-output
+> lm(Sepal.Length~Species,iris)
+debugging in: lm(Sepal.Length ~ Species, iris)
+debug: {
+    ret.x <- x
+    ret.y <- y
+... 略 ...
+    z
+}
+Browse[2]> n
+debug: ret.x <- x
+Browse[2]> n
+debug: ret.y <- y
+Browse[2]> n
+debug: cl <- match.call()
+```
+
+除錯完畢後可用`undebug`來將中斷點移除。
+
+## trace
+
+有時候只是檢視或修改變數並不夠。
+`trace`函數能在除錯時插入程式碼到某個函數，
+並在`untrace`後還原該函數。
+
+``` rconsole str(trace)
+> str(trace)
+function (what, tracer, exit, at, print, signature, where = topenv(parent.frame()), 
+    edit = FALSE)  
+```
+
+* `what`: 要修改的函數名稱
+* `tracer`: 要插入的函數或expression。`trace`會在`at`給的行數之前執行，或是`what`開始之前執行。
+* `exit`: 當`what`結束之後執行的函數或expression
+* `at`: `trace`執行的行數。 
+
+其他的參數請參閱trace的說明。  
+
+測試一下：
+``` r trace-example-1
+test_func <- function() {
+  a <- 1
+  a <- 2
+  a <- 3
+}
+trace(test_func, browser, browser)
+test_func()
+```
+
+``` rconsole trace-example-1-output
+> test_func()
+Tracing test_func() on entry 
+Called from: eval(expr, envir, enclos)
+Browse[1]> a
+Error: object 'a' not found
+Browse[1]> c
+Tracing test_func() on exit 
+Called from: eval(expr, envir, enclos)
+Browse[1]> a
+[1] 3
+Browse[1]> c
+>
+```
+
+可以看到第一次browser是在執行test_func之前，所以`a`不存在。
+第二次則是離開的時候，所以`a`為`3`。
+
+``` r trace-example-2
+test_func <- function() {
+  a <- 1
+  a <- 2
+  a <- 3
+}
+trace(test_func, quote(print(a)), at=3:4) #利用quote直接插入print(a)到程式中
+body(test_func)
+test_func()
+```
+
+``` rconsole trace-example-2-output
+> body(test_func)
+{
+    a <- 1
+    {
+        .doTrace(print(a), "step 3")
+        a <- 2
+    }
+    {
+        .doTrace(print(a), "step 4")
+        a <- 3
+    }
+}
+> test_func()
+Tracing test_func() step 3 
+[1] 1
+Tracing test_func() step 4 
+[1] 2
+> 
+```
+
+搭配quote使用可以直接更改function的程式碼，好用好用！
+注意at參數所代表的位置！！(讓我滿意外的)
+
+## 自動debug
+
+輸入
+```r
+options(error = browser)
+```
+可以在發生錯誤時候進入browser
+
+更強大的debug設定是
+
+```r
+options(error = recover)
+```
+
+在錯誤發生時候會印出stack，並且可以選擇要進入哪層stack來`browser`
+
+# Reference
+
+[Rdebug](http://www.math.ncu.edu.tw/~chenwc/R_note/reference/debug/Rdebug.pdf)
+[Shiny Tutorial](http://rstudio.github.com/shiny/tutorial/#run-and-debug)
