@@ -1,5 +1,5 @@
 ---
-title: KDD 2015 Keynote：「Online Controlled Experiments:  Lessons from Running A/B/n Tests for 12 years」聽後感
+title: "KDD 2015 Keynote：「Online Controlled Experiments:  Lessons from Running A/B/n Tests for 12 years」聽後感"
 slug: kdd-2015
 date: 2015-08-28 13:32
 ---
