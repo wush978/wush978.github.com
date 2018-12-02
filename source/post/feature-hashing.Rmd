@@ -1,0 +1,17 @@
+---
+title: Feature Hashing
+date: 2015-10-25 11:29
+slug: feature-hashing
+---
+
+今天早上，我透過網路在[第八届中国R语言会议（南昌）暨江西财经大学第一届金融大数据论坛](http://china-r.org/lectures/##)上宣傳自己的套件[FeatureHashing](https://cran.r-project.org/web/packages/FeatureHashing/index.html)。
+
+由於用中華電信連中國實在是不穩，所以我就預錄了影片請馮帥（原本都稱馮兄的，視頻過後真的要改口說馮帥了！這才是科學的態度阿，不人云亦云）。現場聽講的老師因為中途加入，還以為我是實際連線跟他們報告呢，哈哈。
+
+事實上，我錄了兩個版本。第一個版本因為講解的太仔細了，結果超過時間的兩倍。我覺得刪除還是太可惜了，所以就上傳到Youtube上：
+
+[![Introduction to FeatureHashing （第八屆中國R 語言會議預錄版本）](http://img.youtube.com/vi/gpchIirvvS8/0.jpg)](http://www.youtube.com/watch?v=gpchIirvvS8)
+
+如果有朋友要在R 裡面處理大量的文字相關的資料，可以看看這個套件。如果想要知道相關技術的細節，以及想知道為什麼大數據的環境之下，Feature hashing trick 會這麼泛用的朋友，也可以看看這個預錄。影片中我也介紹了0.10版本中和jiebaR的整合功能。
+
+有任何問題都歡迎到<https://github.com/wush978/FeatureHashing/issues>上找我討論。

@@ -1,8 +1,8 @@
 baseurl = "/"
-languageCode = "zh-tw"
-title = "Wush <- '儒爸'"
+languageCode = "en-us"
+title = "A Hugo website"
 theme = "hugo-lithium"
-googleAnalytics = "UA-130199267-1"
+googleAnalytics = ""
 disqusShortname = ""
 ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
 
@@ -14,19 +14,10 @@ ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
     url = "/about/"
 [[menu.main]]
     name = "GitHub"
-    url = "https://github.com/wush978"
+    url = "https://github.com/rstudio/blogdown"
 [[menu.main]]
-    name = "My LinkedIn Profile"
-    url = "https://www.linkedin.com/in/wush978/"
-[[menu.main]]
-    name = "R語言翻轉教室"
-    url = "https://datascienceandr.org"
-[[menu.main]]
-    name = "Hahow R語言入門"
-    url = "https://hahow.in/cr/r-hands-on"
-[[menu.main]]
-    name = "聊天室"
-    url = "https://gitter.im/wush978/DataScienceAndR"
+    name = "Twitter"
+    url = "https://twitter.com/rstudio"
 
 [params]
     description = "A website built through Hugo and blogdown."
@@ -41,10 +32,8 @@ ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
     MathJaxVersion = "2.7.5"
 
     [params.logo]
-    url = "meme.jpg"
+    url = "logo.png"
     width = 50
     height = 50
     alt = "Logo"
-
-    author = "Wush Wu"
 

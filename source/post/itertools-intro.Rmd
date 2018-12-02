@@ -1,0 +1,333 @@
+---
+title: itertools 簡介
+slug: itertools-intro
+date: 2017-03-10 00:00
+---
+
+最近在ptt R_Language版上看到許多跟迴圈有關的文章，所以一時興起想跟大家分享寫迴圈或apply等函數好用的套件:itertools
+
+
+```r
+library(itertools)
+```
+
+```
+## Loading required package: iterators
+```
+
+講itertools之前，要先介紹iterator的概念：這是把迴圈的功能更精鍊出來的概念。
+我們先看一個迴圈的範例：
+
+
+```r
+for(i in 1:3) {
+  print(i)
+}
+```
+
+```
+## [1] 1
+## [1] 2
+## [1] 3
+```
+
+這段迴圈的靈魂，在於變數`i`。透過`i in 1:3`，R 就知道`i`的值有以下規則:
+
+- 從`1`開始
+- 每次遞增1
+- 到`3`結束
+
+更一般來說，R 的迴圈是透過一個Vector物件，告訴R要如何執行迴圈。舉例來說，`i in x`即代表:
+
+- 從`x[1]`開始
+- `x[i]`結束之後執行`x[i+1]`
+- 到`x[length(x)]`結束
+
+但是我們可以再更精鍊這樣的概念。而許多工具中，就會設計`iterator`這樣的物件，並且讓他具備以下兩種功能
+
+- 有沒有下一個值
+- 取出下一個值，並且往前推進
+
+有這兩個概念即可建立一個迴圈。
+
+舉例來說，以下兩個迴圈是等價的:
+
+
+```r
+for(i in 1:3) {
+  print(i)
+}
+```
+
+```
+## [1] 1
+## [1] 2
+## [1] 3
+```
+
+```r
+i <- 0
+while(i < 3) {
+  i <- i + 1
+  print(i)
+}
+```
+
+```
+## [1] 1
+## [1] 2
+## [1] 3
+```
+
+這裡的`i < 3`代表`有沒有下一個值`的邏輯判斷，而`i <- i + 1`則代表`取出下一個值，並且往前推進`。
+
+itertools套件會建立符合上述概念的物件，並稱之為`iterator`。
+
+透過iterator之間的運算，我們可以輕鬆寫出複雜的迴圈結構
+
+## 範例一：雙層迴圈
+
+有時候當我們需要走遍整個矩陣時，我們可能會寫出類似以下程式碼的迴圈結構:
+
+
+```r
+for(i in 1:3) {
+  for(j in 1:3) {
+    print(paste(i, j))
+  }
+}
+```
+
+```
+## [1] "1 1"
+## [1] "1 2"
+## [1] "1 3"
+## [1] "2 1"
+## [1] "2 2"
+## [1] "2 3"
+## [1] "3 1"
+## [1] "3 2"
+## [1] "3 3"
+```
+
+
+運用itertools時，我們可以透過`product`來產生相同的效果:
+
+
+```r
+it <- ihasNext(product(i = 1:3, j = 1:3))
+while(hasNext(it)) {
+  x <- nextElem(it)
+  print(paste(x$i, x$j))
+}
+```
+
+```
+## [1] "1 1"
+## [1] "1 2"
+## [1] "1 3"
+## [1] "2 1"
+## [1] "2 2"
+## [1] "2 3"
+## [1] "3 1"
+## [1] "3 2"
+## [1] "3 3"
+```
+
+itertools產生的iterator不能直接在for之中使用，必須要搭配`ihasNext`、`hasNext`與`nextElem`來做出上述概念的程式碼。
+
+但是我們可以直接拿iterator與`lapply`搭配:
+
+
+```r
+result <- lapply(product(i = 1:3, j = 1:3), function(x) {
+  print(paste(x$i, x$j))
+})
+```
+
+```
+## [1] "1 1"
+## [1] "1 2"
+## [1] "1 3"
+## [1] "2 1"
+## [1] "2 2"
+## [1] "2 3"
+## [1] "3 1"
+## [1] "3 2"
+## [1] "3 3"
+```
+
+## 範例二: 合併迴圈
+
+有時候我們有兩個vector要一起做迴圈，這時候只能透過對座標做迴圈來達成。舉例來說:
+
+
+```r
+x <- 1:3
+y <- 4:6
+for(i in seq_along(x)) {
+  print(paste(x[i], y[i]))
+}
+```
+
+```
+## [1] "1 4"
+## [1] "2 5"
+## [1] "3 6"
+```
+
+但是這種程式碼在x, y 長度不同時不一定會出錯。
+
+運用itertools時，我們可以透過`izip`來產生相同的效果:
+
+
+```r
+it <- ihasNext(izip(x = 1:3, y = 4:6))
+while(hasNext(it)) {
+  x <- nextElem(it)
+  print(paste(x$x, x$y))
+}
+```
+
+```
+## [1] "1 4"
+## [1] "2 5"
+## [1] "3 6"
+```
+
+## 範例三: data.frame
+
+在使用data.frame時，我們常常想要把data.frame的row走一遍:
+
+
+```r
+df <- iris[1:3,]
+for(i in seq_len(nrow(df))) {
+  x <- df[i,]
+  print(paste(x$Sepal.Length, x$Sepal.Width, x$Petal.Length, x$Petal.Width, x$Species))
+}
+```
+
+```
+## [1] "5.1 3.5 1.4 0.2 setosa"
+## [1] "4.9 3 1.4 0.2 setosa"
+## [1] "4.7 3.2 1.3 0.2 setosa"
+```
+
+而itertools可以直接指定走的方向:
+
+
+```r
+it <- ihasNext(iter(iris[1:3,], by = "row"))
+while(hasNext(it)) {
+  x <- nextElem(it)
+  print(paste(x$Sepal.Length, x$Sepal.Width, x$Petal.Length, x$Petal.Width, x$Species))
+}
+```
+
+```
+## [1] "5.1 3.5 1.4 0.2 setosa"
+## [1] "4.9 3 1.4 0.2 setosa"
+## [1] "4.7 3.2 1.3 0.2 setosa"
+```
+
+## 範例四: 批次迴圈
+
+itertools也可以建立批次處理的迴圈:
+
+
+```r
+it <- ihasNext(ichunk(1:10, 3))
+while (hasNext(it)) {
+  print(unlist(nextElem(it)))
+}
+```
+
+```
+## [1] 1 2 3
+## [1] 4 5 6
+## [1] 7 8 9
+## [1] 10
+```
+
+## 範例四: 截斷迴圈
+
+itertools也可以控制讓迴圈提早中止:
+
+
+```r
+mkfinished <- function(time) {
+  starttime <- proc.time()[3]
+  function() proc.time()[3] > starttime + time
+}
+f <- mkfinished(1) # 這是個函數，當時間比這個瞬間晚1秒時，f就會回傳FALSE, 迴圈會中止
+# 看看1秒內，迴圈可以跑多少
+length(lapply(ibreak(iter(1:1000000), f), function(x) {
+  # do something
+}))
+```
+
+```
+## [1] 25499
+```
+
+為了更簡單的使用時間限制的功能，itertools提供了`timeout`
+
+
+```r
+it <- ihasNext(timeout(iter(1:1000000), 1))
+count <- 0
+while(hasNext(it)) {
+  x <- nextElem(it)
+  count <- count + 1
+}
+count
+```
+
+```
+## [1] 17932
+```
+
+也可以給定長度，截斷迴圈
+
+
+```r
+length(lapply(ilimit(iter(1:1000000), 100), function(x) {
+  # do something
+}))
+```
+
+```
+## [1] 100
+```
+
+## 範例五: 重複迴圈
+
+我們也可以重複一個iterator若干次，甚至是無限次
+
+
+```r
+it <- ihasNext(recycle(iter(1:3), 2))
+while(hasNext(it)) {
+  x <- nextElem(it)
+  print(x)
+}
+```
+
+```
+## [1] 1
+## [1] 2
+## [1] 3
+## [1] 1
+## [1] 2
+## [1] 3
+```
+
+## 總結
+
+以上我們展示了一些itertools提供的部份功能。它還有其他有趣的功能可以探索。
+
+總之，當R友們在寫迴圈時，如果遇到比較複雜的迴圈情境，建議可以看看itertools這個套件有沒有提供幫助。
+
+
+

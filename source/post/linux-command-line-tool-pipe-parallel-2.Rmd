@@ -1,0 +1,176 @@
+---
+title: Linux command line tool + pipe 學習筆記之二：平行運算
+slug: linux-command-line-tool-pipe-parallel-2
+date: 2016-05-08 10:31
+---
+
+上一篇：[Linux command line tool + pipe 學習筆記之一：讓R 加入pipe的一環](https://wush.ghost.io/linux-command-line-tool-pipe-xue-xi-bi-ji-zhi-yi-rang-r-jia-ru-pipede-yi-huan/)中，雖然提到了pipe就會自動用多個Process來平行跑每一個pipe的步驟的檔案，但有時候這還是不夠快。尤其是當我在pipe中混用了R或nodejs的程序時，最後效能都卡在這些笨重的直譯式語言工具。
+
+我在開發RTB系統時，遇到的情境是，必須要用nodejs（這是工程師用來開發RTB伺服器的工具）來將JSON物件轉換成sparse vector。舉例來說，我可能收到一系列如下的request:
+
+```
+{"user_id":"1","website_id":"b"}
+{"user_id":"2","website_id":"c"}
+{"user_id":"1","website_id":"c"}
+{"user_id":"3","website_id":"b"}
+{"user_id":"2","website_id":"a"}
+{"user_id":"1","website_id":"a"}
+```
+
+為了要套用某些ML演算法做預測，通常需要先把上述的JSON物件轉換成對應的sparse vectors:
+
+```
+{"i":[0,1,5],"x":[1,1,1]}
+{"i":[0,2,6],"x":[1,1,1]}
+{"i":[0,1,6],"x":[1,1,1]}
+{"i":[0,3,5],"x":[1,1,1]}
+{"i":[0,2,4],"x":[1,1,1]}
+{"i":[0,1,4],"x":[1,1,1]}
+```
+
+這個轉換的過程因為要嵌入到工程師撰寫的線上服務的伺服器邏輯中，所以必須採用nodejs比較簡單。
+
+但是在跑實驗的時候，這樣的nodejs程式往往會是處理資料的瓶頸。而我基於維護的理由，不願意用C、R或是其他更方便工具來重複做相同的功能。
+
+為了加速，就只好用平行化運算來處理。目前就我所知，在linux command line中有兩種方式可以來平行化處理，而且剛好對應到我熟悉的兩種R中的平行化技術。
+
+## 開發命令列介面
+
+為了要跟linux command line tools做串接，所以我可以用nodejs的套件開發命令列介面。這裡我是參考其他介面的方式，寫了兩種輸入資料的介面：
+
+1. 給路徑，讀取檔案輸入
+2. 從stdin輸入
+
+事後看，這兩種方式我都有用到。以下我還是以R的命令列應用為例。
+
+舉例來說：
+
+```
+#! /usr/bin/env Rscript --vanilla
+args <- commandArgs(TRUE)
+if (length(args) == 0) {
+  f <- file("stdin")
+} else {
+  f <- file(args[1])
+}
+open(f)
+# do something...
+```
+
+換句話說，我們可以在命令列中，輸入：
+
+```
+Rscript example.R target.json
+```
+
+來從路徑中讀取檔案。或是使用：
+
+```
+Rscript example.R < target.json
+```
+
+從stdin輸入檔案內容。
+
+## Single Program Multiple Data(SPMD)
+
+這種方式的平行化運算，是我比較喜歡的方式，但是卻比較冷門的方式。
+
+和snow、parallel等知名平行化的R套件比較，這種方式的平行化可以達到：
+
+1. 高效。因為這種模式寫得好的話，不需要Master，所以可以省一個core來做更高效的運算。另一個觀點是在資料的傳遞上，可能可以節省的更多，所以效率就更高。
+2. 簡單。因為SPMD的關係，在Rstudio中開發只要放Single Data，寫出來的程式碼到真實的SPMD環境時，幾乎不會出問題。反觀snow、parallel的master/slave架構，導致我們要抓slave上的錯誤時，都要隔靴抓癢。如果想要寫一些更複雜的應用時，如果發生錯誤，要除錯則更是痛苦。
+
+因此，在學會這套平行化算法後，在R中，除非是要隨手測試的情境，大部分我都是用這種觀點來寫平行化程式了。
+
+舉例來說，假如有四個檔案要處理，而且他們都在目錄`todo`中：
+
+```
+bids.20160401.json.gz
+bids.20160402.json.gz
+bids.20160403.json.gz
+bids.20160404.json.gz
+```
+
+我們可以這樣子寫：
+
+### 列出要處理的檔案
+
+`ls`可以列出檔案，搭配參數`-1`可以一行列出一個檔案，參數`-d`可以取得完整的路徑：
+
+```
+ls -1 -d todo/* | xargs -P 4 -L 1 Rscript example.R
+```
+
+這樣bash就會先列出所有要處理的檔案清單後，將檔案名稱以參數的方式傳遞到R。
+
+如果`ls -1 -d todo/*`會得到：
+
+```
+todo/bids.20160401.json.gz
+todo/bids.20160402.json.gz
+todo/bids.20160403.json.gz
+todo/bids.20160404.json.gz
+```
+
+則透過`|`後，`xargs`的stdin就會吃到四行檔名。而`xargs`會把從stdin讀取的內容與它的參數結合，執行：
+
+```
+Rscript example.R todo/bids.20160401.json.gz
+```
+
+這個指令。
+
+其中參數`-P 4`表示最多同時開4個process。參數`-L 1`則是告訴`xargs`每一行都是一個單獨的指令。因此，`ls -1 -d todo/* | xargs -P 4 -L 1 Rscript example.R`等價同時於執行：
+
+```
+Rscript example.R todo/bids.20160401.json.gz
+Rscript example.R todo/bids.20160402.json.gz
+Rscript example.R todo/bids.20160403.json.gz
+Rscript example.R todo/bids.20160404.json.gz
+```
+
+如果我們想要在xargs建立的指令中也運用pipe的話，可以寫：
+
+```
+ls -1 -d todo/* | xargs -P 4 -L 1 -I % bash -c "zcat < % | Rscript example.R"
+```
+
+`bash -c`就是要把後面的指令當成新的command line指令，類似用R 產生R script的味道。`xargs`的參數`-I %`的意思是，用xargs從stdin讀取的資料取代後面的`%`。因此，以上的指令就等價於平行跑：
+
+```
+zcat < todo/bids.20160401.json.gz | Rscript example.R
+zcat < todo/bids.20160402.json.gz | Rscript example.R
+zcat < todo/bids.20160403.json.gz | Rscript example.R
+zcat < todo/bids.20160404.json.gz | Rscript example.R
+```
+
+這裡的方式之所以是SPMD，是因為我們在平行化時，唯一有修改的就是輸入的檔案，而處理檔案的程式邏輯是一模一樣的。
+
+## Split the File Content
+
+有時候，我們可能只拿到一個大檔案，linux command line tools也可以依照行數平均的切割檔案到若干的程序，然後平行處理。
+
+強大的`awk`可以保留特定行數的資料。舉例來說：
+
+```
+zcat < todo/bids.20160401.json.gz | awk "NR%4==0"
+```
+
+經過上述程式處理後，stdout就只剩下第4、8、12...行（除4餘0）的資料。
+
+`tee`則可以將stdin的資料複製到若干個程式的stdout。所以只要搭配`tee`與`awk`，我們就可以切割檔案：
+
+```
+zcat < todo/bids.20160401.json.gz | tee >(awk "NR%4==0" | Rscript example.R) >(awk "NR%4==1" | Rscript example.R) >(awk "NR%4==2" | Rscript example.R) | awk "NR%4==3" | Rscript example.R
+```
+
+以上指令會先解壓縮後，透過`tee`把檔案內容複製到以下四個程式：
+
+- `awk "NR%4==0" | Rscript example.R`
+- `awk "NR%4==1" | Rscript example.R`
+- `awk "NR%4==2" | Rscript example.R`
+- `awk "NR%4==3" | Rscript example.R`
+
+awk 會對行數作過濾，只留下約1/4的資料後，交給後續的R來做進一步的處理。
+
+透過這種方式，就可以在很節省記憶體的方式，用R平行處理數據。

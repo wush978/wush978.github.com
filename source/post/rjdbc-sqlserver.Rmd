@@ -1,0 +1,178 @@
+---
+title: R 和 Microsoft SQL Server
+slug: rjdbc-sqlserver
+date: 2015-08-25 16:34
+---
+
+今天我想要跟大家介紹如何用R 連接Microsoft SQL Server。由於我自己比較習慣走JDBC的路線，所以要先請讀者安裝jdk、rJava和RJDBC。由於這件事情牽涉到R的版本、java的版本和SQL Server的版本，所以即使照著網路上的介紹走，仍然很容易遇到錯誤。這部分，只能仰賴微軟的官方文件了。
+
+
+## 安裝rJava
+
+R上要安裝rJava和RJDBC其實有一點學問。主要的關鍵在於：*rJava編譯時使用的java*
+
+如果使用CRAN編譯的binary，那java的版本就要透過以下的指令來查詢（出處：<http://stackoverflow.com/q/26948777/1182304>）：
+
+```
+library(rJava)
+.jinit()
+jvm = .jnew("java.lang.System")
+jvm.props = jvm$getProperties()$toString()
+jvm.props <- strsplit(gsub("\\{(.*)}", "\\1", jvm.props), ", ")[[1]]
+jvm.props
+```
+
+在落落長的訊息中，應該會看到如：`java.version=1.6.0_65`之類的文字，我們就知道目前電腦上使用的java版本是1.6。
+
+### 自行編譯rJava（Ubuntu & Mac）
+
+如果要自行編譯rJava好配合電腦上的java版本，請先安裝對應的jdk。在安裝jdk過後，請先打開command line輸入：
+
+```sh
+sudo R CMD javareconf
+```
+
+在mac上應該會出現如：
+
+```
+Java interpreter : /usr/bin/java
+Java version     : 1.7.0_75
+Java home path   : /Library/Java/JavaVirtualMachines/jdk1.7.0_75.jdk/Contents/Home/jre
+Java compiler    : /usr/bin/javac
+Java headers gen.: /usr/bin/javah
+Java archive tool: /usr/bin/jar
+Non-system Java on OS X
+
+trying to compile and link a JNI program
+detected JNI cpp flags    : -I$(JAVA_HOME)/../include -I$(JAVA_HOME)/../include/darwin
+detected JNI linker flags : -L$(JAVA_HOME)/lib/server -ljvm
+clang -I/Library/Frameworks/R.framework/Resources/include -DNDEBUG -I/Library/Java/JavaVirtualMachines/jdk1.7.0_75.jdk/Contents/Home/jre/../include -I/Library/Java/JavaVirtualMachines/jdk1.7.0_75.jdk/Contents/Home/jre/../include/darwin -I/usr/local/include -I/usr/local/include/freetype2 -I/opt/X11/include    -fPIC  -Wall -mtune=core2 -g -O2  -c conftest.c -o conftest.o
+clang -dynamiclib -Wl,-headerpad_max_install_names -undefined dynamic_lookup -single_module -multiply_defined suppress -L/Library/Frameworks/R.framework/Resources/lib -L/usr/local/lib -o conftest.so conftest.o -L/Library/Java/JavaVirtualMachines/jdk1.7.0_75.jdk/Contents/Home/jre/lib/server -ljvm -F/Library/Frameworks/R.framework/.. -framework R -Wl,-framework -Wl,CoreFoundation
+
+
+JAVA_HOME        : /Library/Java/JavaVirtualMachines/jdk1.7.0_75.jdk/Contents/Home/jre
+Java library path: $(JAVA_HOME)/lib/server
+JNI cpp flags    : -I$(JAVA_HOME)/../include -I$(JAVA_HOME)/../include/darwin
+JNI linker flags : -L$(JAVA_HOME)/lib/server -ljvm
+Updating Java configuration in /Library/Frameworks/R.framework/Resources
+Done.
+```
+
+等畫面。這是R在設定java環境的輸出。如果有錯誤，可能就要重新檢查一下java或jdk的安裝有沒有問題。
+
+如果沒問題，就可以進入下一階段安裝rJava和RJDBC的部分：
+
+```r
+install.packages(c('rJava', 'RJDBC'), type = 'source')
+```
+
+設定完java和R之後，我們還要依據SQL Server的版本從以下兩個連結選一個下載：
+
+- [Microsoft JDBC Drivers 4.1 and 4.0 for SQL Server](https://www.microsoft.com/zh-tw/download/details.aspx?id=11774)
+- [Microsoft SQL Server JDBC 驅動程式 3.0](https://www.microsoft.com/zh-tw/download/details.aspx?id=21599)
+
+在點選下載以後，請參考下圖點選紅框框圈起來的位置：
+
+![下載示意圖](http://i.imgur.com/rXDuXJ0.png?1)
+
+下載後可以解壓縮得到：`sqljdbc.jar`、`sqljdbc4.jar`、`sqljdbc41.jar`和`sqljdbc42.jar`。
+
+## RJDBC
+
+RJDBC是一個比較底層的套件。
+
+首先，我們要先載入剛剛下載的driver：
+
+```r
+library(RJDBC)
+drv <- JDBC("com.microsoft.sqlserver.jdbc.SQLServerDriver", <path to driver>)
+```
+
+根據[JDBC 驅動程式的系統需求](https://msdn.microsoft.com/zh-tw/library/ms378422(v=sql.110).aspx_)的說法，這裡的driver是根據java版本所得到的。請依照[安裝rJava](#安裝rJava)中介紹檢查rJava所使用的java版本，選擇要使用的driver。總結來說：
+
+<table>
+  <tr>
+    <th>
+      <p>JAR</p>
+    </th>
+    <th>
+      <p>JDBC 版本</p>
+    </th>
+    <th>
+      <p>JRE (可以執行)</p>
+    </th>
+    <th>
+      <p>JDK (可以編譯)</p>
+    </th>
+  </tr>
+  <tr>
+    <td>
+      <p>sqljdbc.jar</p>
+    </td>
+    <td>
+      <p>3</p>
+    </td>
+    <td>
+      <p>5</p>
+    </td>
+    <td>
+      <p>5</p>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <p>sqljdbc4.jar</p>
+    </td>
+    <td>
+      <p>4</p>
+    </td>
+    <td>
+      <p>7 6</p>
+    </td>
+    <td>
+      <p>6 5</p>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <p>sqljdbc41.jar</p>
+    </td>
+    <td>
+      <p>4</p>
+    </td>
+    <td>
+      <p>7</p>
+    </td>
+    <td>
+      <p>7 6 5</p>
+    </td>
+  </tr>
+</table>
+
+## 連接SQL Server
+
+在取得driver之後，我們可以建立與SQL Server的連線：
+
+```
+con <- RJDBC::dbConnect(drv, paste0("jdbc:sqlserver://", ip), user, password)
+```
+
+這裡第二個參數的字串，是可以參考[使用 JDBC 驅動程式](https://msdn.microsoft.com/zh-tw/library/ms378526(v=SQL.110).aspx)的說明來調整的。
+
+總結來說，可以參考以下的連線字串：
+
+```
+paste0(
+  "jdbc:sqlserver://localhost:1433;", 
+  "databaseName=AdventureWorks;user=MyUserName;password=*****;")
+```
+
+最後要解決的問題，就是driver版本是否和SQL Server符合。舉例來說：
+
+```
+Error in .jcall(drv@jdrv, "Ljava/sql/Connection;", "connect", as.character(url)[1],  :
+  com.microsoft.sqlserver.jdbc.SQLServerException: 此驅動程式不支援 SQL Server 版本 8。 ClientConnectionId:1c67c8b6-78e1-4ad4-9ea0-b0fab73a9609
+```
+
+如果讀者克服了上述的困難，就可以嘗試透過`DBI`，甚至是`dplyr`來取得SQL Server中的資料了。
+

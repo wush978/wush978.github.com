@@ -1,0 +1,193 @@
+---
+title: 在伺服器上跑R 的上手須知
+slug: r-server-tutorial
+date: 2016-06-27 10:27
+---
+
+在伺服器上跑R, 要了解更多作業系統的運作的知識，而不只是R 的知識。
+以下假設你用的是Linux伺服器，那你應該一步一步的照以下的步驟檢查伺服器
+
+## Hello World
+
+第一件事情，我們應該要確定你的R 能正確的在命令列上執行
+所以我建議你先寫一個`test.R`的檔案，裡面只有:
+
+```
+print('hello world')
+```
+
+接著你要切換到存放`test.R`的目錄下，輸入:
+
+```
+Rscript test.R
+```
+
+如果你可以在螢幕上看到hello world，那這階段就通過了。
+如果沒有，那有以下幾種可能的錯誤:
+
+### 沒有安裝R
+
+有權限就自己裝，或是找管理員安裝吧。
+
+沒有權限，也可以自己編譯後安裝在家目錄之下，只是這比較高級，就先跳過囉。有機會再分享。
+
+### 環境變數理面沒有R的執行檔路徑
+
+如果你知道R 的路徑，例如: `/usr/bin/R`
+
+或是 Rscript 的路徑，例如: `/usr/bin/Rscript`
+
+請輸入 `echo $PATH` 看看 `/usr/bin` 有沒有在顯示在營幕中。
+
+$PATH的內容應該是: `<目錄1>:<目錄2>:...`
+
+例如我的某台伺服器，登入後的$PATH是:
+
+```
+/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+```
+
+那當我們輸入`Rscript test`之後，作業系統就會依序找:
+
+- `/usr/local/sbin/Rscript`
+- `/usr/local/bin/Rscript`
+- ...
+
+先找到哪個，就先用那個執行檔案當成Rscript對應到的執行檔。如果都找不到，就失敗。
+
+ps. 如果你了解上面的說明，你應該就知道怎麼快速切換R 的運行版本
+
+
+### 檔案不存在
+
+你可以試試看執行`ls test.R`或`cat test.R`。如果出現 No such file or directory 的訊息，就是檔案不存在，或是你輸入的路徑錯誤
+
+ex: 把 test.R 打成 tests.R
+
+### 沒有讀取權限
+
+如果你在`cat test.R`的時候看到  Permission denied ，表示你沒有權限讀取內容。正常來說，如果是你編輯的檔案，不會有這樣的錯誤。但是如果你想要用背景執行，或是做一些工作的自動化，甚至是提供web-service或寫成shiny application，那你一定要先去找出，系統是用哪一個使用者的身分來執行程式。
+
+舉例來說，如果你用ssh 登入伺服器後在命令列中跑R，那身分就是你自己，所以在上面的情境中不應該會出問題。但是如果你是用一些外部系統，如jenkins，那自動執行的身分可能不是你，可能是一個專用的機器人帳戶，那就會失敗。如果你是要架網站，在php或shiny-server理面跑R ，那執行的使用者可能是`www-data`或`shiny`，如果你的檔案沒有開讀取權限給這些帳號，那就會執行失敗。
+
+這就是常見的，你自己跑的R沒有錯誤，但是寫成網站服務後跑不起來的原因之一。
+讀取權限的錯誤訊息有時候和`檔案不存在`會一樣，這是因為不只是檔案要有權限讀取，
+放置檔案的目錄、更上層的目錄、更更上層的目錄，也都要有權限，否則可能看到的錯誤
+就是: 檔案不存在，因為權限不足以查詢有哪些檔案在該目錄中。
+
+## 套件
+
+### 找不到套件
+
+有時候，命令列上的R 會找不到套件。這時候，就要跑: `Rscript -e ".libPaths()"`來檢察套件的目錄和你想的一不一樣。
+
+在我的伺服器上，R會show出:
+
+```
+wush@xxx:~$ Rscript -e ".libPaths()"
+[1] "/home/wush/R/x86_64-pc-linux-gnu-library/3.2"
+[2] "/usr/local/lib/R/site-library"
+[3] "/usr/lib/R/site-library"
+[4] "/usr/lib/R/library"
+```
+
+這表示R會去以上的目錄找R 套件，找不到就跟你說套件沒有安裝。
+
+安裝的位置其實會出現在安裝的訊息中。舉例來說:
+
+```
+> install.packages('googlesheets')
+Installing package into ‘/home/wush/R/x86_64-pc-linux-gnu-library/3.2’
+(as ‘lib’ is unspecified)
+also installing the dependency ‘xml2’
+
+trying URL 'http://cran.csie.ntu.edu.tw/src/contrib/xml2_1.0.0.tar.gz'
+Content type 'application/x-gzip' length 100462 bytes (98 KB)
+==================================================
+downloaded 98 KB
+
+trying URL 'http://cran.csie.ntu.edu.tw/src/contrib/googlesheets_0.2.1.tar.gz'
+Content type 'application/x-gzip' length 2172597 bytes (2.1 MB)
+==================================================
+downloaded 2.1 MB
+
+/home/wush
+* installing *source* package ‘xml2’ ...
+** package ‘xml2’ successfully unpacked and MD5 sums checked
+Found pkg-config cflags and libs!
+Using PKG_CFLAGS=-I/usr/include/libxml2
+Using PKG_LIBS=-lxml2
+** libs
+g++ -I/usr/share/R/include -DNDEBUG -I/usr/include/libxml2  -I"/home/wush/R/x86_                                   64-pc-linux-gnu-library/3.2/Rcpp/include" -I"/home/wush/R/x86_64-pc-linux-gnu-li                                   brary/3.2/BH/include"   -fpic  -g -O2 -fstack-protector --param=ssp-buffer-size=                                   4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -g  -c RcppExports.cpp -o                                    RcppExports.o
+g++ -I/usr/share/R/include -DNDEBUG -I/usr/include/libxml2  -I"/home/wush/R/x86_64-pc-linux-gnu-library/3.2/Rcpp/include" -I"/home/wush/R/x86_64-pc-linux-gnu-library/3.2/BH/include"   -fpic  -g -O2 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -g  -c connection.cpp -o connection.o
+g++ -I/usr/share/R/include -DNDEBUG -I/usr/include/libxml2  -I"/home/wush/R/x86_64-pc-linux-gnu-library/3.2/Rcpp/include" -I"/home/wush/R/x86_64-pc-linux-gnu-library/3.2/BH/include"   -fpic  -g -O2 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -g  -c xml2_doc.cpp -o xml2_doc.o
+g++ -I/usr/share/R/include -DNDEBUG -I/usr/include/libxml2  -I"/home/wush/R/x86_64-pc-linux-gnu-library/3.2/Rcpp/include" -I"/home/wush/R/x86_64-pc-linux-gnu-library/3.2/BH/include"   -fpic  -g -O2 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -g  -c xml2_init.cpp -o xml2_init.o
+g++ -I/usr/share/R/include -DNDEBUG -I/usr/include/libxml2  -I"/home/wush/R/x86_64-pc-linux-gnu-library/3.2/Rcpp/include" -I"/home/wush/R/x86_64-pc-linux-gnu-library/3.2/BH/include"   -fpic  -g -O2 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -g  -c xml2_namespace.cpp -o xml2_namespace.o
+g++ -I/usr/share/R/include -DNDEBUG -I/usr/include/libxml2  -I"/home/wush/R/x86_64-pc-linux-gnu-library/3.2/Rcpp/include" -I"/home/wush/R/x86_64-pc-linux-gnu-library/3.2/BH/include"   -fpic  -g -O2 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -g  -c xml2_node.cpp -o xml2_node.o
+g++ -I/usr/share/R/include -DNDEBUG -I/usr/include/libxml2  -I"/home/wush/R/x86_64-pc-linux-gnu-library/3.2/Rcpp/include" -I"/home/wush/R/x86_64-pc-linux-gnu-library/3.2/BH/include"   -fpic  -g -O2 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -g  -c xml2_url.cpp -o xml2_url.o
+g++ -I/usr/share/R/include -DNDEBUG -I/usr/include/libxml2  -I"/home/wush/R/x86_64-pc-linux-gnu-library/3.2/Rcpp/include" -I"/home/wush/R/x86_64-pc-linux-gnu-library/3.2/BH/include"   -fpic  -g -O2 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -g  -c xml2_xpath.cpp -o xml2_xpath.o
+g++ -I/usr/share/R/include -DNDEBUG -I/usr/include/libxml2  -I"/home/wush/R/x86_64-pc-linux-gnu-library/3.2/Rcpp/include" -I"/home/wush/R/x86_64-pc-linux-gnu-library/3.2/BH/include"   -fpic  -g -O2 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -g  -c xml_push.cpp -o xml_push.o
+g++ -shared -L/usr/lib/R/lib -Wl,-Bsymbolic-functions -Wl,-z,relro -o xml2.so RcppExports.o connection.o xml2_doc.o xml2_init.o xml2_namespace.o xml2_node.o xml2_url.o xml2_xpath.o xml_push.o -lxml2 -L/usr/lib/R/lib -lR
+installing to /home/wush/R/x86_64-pc-linux-gnu-library/3.2/xml2/libs
+** R
+** inst
+** preparing package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded
+/tmp/RtmpnDBKnW/R.INSTALL297267ebf7b4/xml2
+* DONE (xml2)
+/home/wush
+* installing *source* package ‘googlesheets’ ...
+** package ‘googlesheets’ successfully unpacked and MD5 sums checked
+** R
+** inst
+** preparing package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded
+/tmp/Rtmp8eo6G9/R.INSTALL29e5449caa3a/googlesheets
+* DONE (googlesheets)
+
+The downloaded source packages are in
+        ‘/tmp/RtmpEVOaBi/downloaded_packages’
+```
+
+上面這串訊息，大家平常都跳過。但是R其實把套件安裝的目的地寫在其中了，位置就寫在長長一串的訊息的第一行: `Installing package into ‘/home/wush/R/x86_64-pc-linux-gnu-library/3.2’`
+
+然後最後還要檢查，有沒有：`* DONE (googlesheets)`，沒有的話就是安裝失敗了。要求救的話，請把`install.packages...`之下的所有訊息都貼上來，網友才有機會救你喔。
+
+自己平常也可以練習看這些訊息，因為通常錯誤的原因都在裡面了。
+
+### S4 出錯
+
+如果R的指令中有用到如`as...`等指令時，用`Rscript`跑的時候很可能出錯。這是因為`R`預設會載入`methods`，但是`Rscript`不會。
+
+## 其他疑難雜症
+
+我的經驗中，還遇到過許多其他的錯誤。比較有印象的一個，是Linux crontab裡面的locale與一般使用時不同([Z > b 還是 Z < b ](http://programmermagazine.github.io/201405/htm/article6.html))。還有一個是時區設定不同。另一次痛的是，多台伺服器的時間不一致導致的錯誤。
+
+網路的錯誤就更多了，而且更容易發生了。通常我伺服器上的程式，都必須要撰寫額外的邏輯處理網路不通的狀況。
+
+另一個就是racing condition，當一個檔案被多個程式讀寫的時候發生的錯誤。
+
+這些都不是R，是作業系統上的錯誤，但是最後都害我在跑R的時候發生不預期的結果。所以在伺服器上除錯，只找R的錯誤通常是不夠的，還必須要多學學作業系統相關的知識。很多時候，錯誤則和環境有關，所以真的找不到原因的時候，仔細比對`sessionInfo()`的內容、甚至在R理面把`system('env')`的結果輸出，一個一個仔細比對差異，往往是最終手段。這招確實幫我解決了不少，如locale不同的錯誤。
+
+目前我知道的，能在R中輸出做頁系統相關環境的指令:
+
+```
+sessionInfo()
+Sys.getlocale()
+system('env') # Linux
+.libPaths() # Package
+getwd() # working directory
+dir() # list existed files
+file.info()
+Sys.time()
+```
+
+就提供給大家做參考了。

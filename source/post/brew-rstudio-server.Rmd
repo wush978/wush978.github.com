@@ -1,0 +1,37 @@
+---
+title: 透過homebrew/linuxbrew安裝Rstudio Server
+date: 2017-12-24 00:00
+slug: brew-rstudio-server
+---
+
+![](http://linuxbrew.sh/images/linuxbrew-256x256.png)
+
+現在在[homebrew](https://brew.sh)/[linuxbrew](http://linuxbrew.sh)專案中，已經有Rstudio-server 的 formula讓我們可以直接安裝rstudio server在mac 或是沒有root權限的linux server之上：
+
+```sh
+brew update 
+brew tap homebrew/science
+brew install r openssl ant
+brew install homebrew/science/rstudio-server
+```
+
+與一般安裝不同的是，這種安裝方法不會預設開啟rstudio-server的背景執行程式。
+
+所以我們可以透過：
+
+```sh
+rserver --server-daemonize=0 \
+  --www-address=127.0.0.1 \
+  --www-port=8787
+```
+
+這個指令開啟rstudio-server的程序。如果想要在關閉ssh/terminal之後讓rstudio-server繼續執行，可以在screen或tmux底下執行。
+
+開啟rstudio-server之後，還可以直接透過`ssh`的port forwarding技術，不用找網管開防火牆即可使用了：
+
+```
+ssh -fNL <local port>:localhost:8787 <server-address>
+```
+
+接著只要在瀏覽器打開`http://localhost:<local port>`就可以連到server上的rstudio server。
+

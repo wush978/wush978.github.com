@@ -1,0 +1,168 @@
+---
+title: `dplyr::group_by`的進階運用
+date: 2015-10-05 15:26
+slug: dplyr-group-by
+---
+
+大家好，今天想跟大家介紹一個使用`dplyr`時的一個小撇步。他可以讓我們在使用`group_by`之後，有更多的彈性，並會更理解`group_by`這好用功能的原理。
+
+## 背景簡介
+
+我由於工作上要研究網路廣告，常常要比較各種不同方法間的數據。舉例來說，我可能手上有一大筆看起來像這樣的資料：
+
+
+<!-- html table generated in R 3.2.2 by xtable 1.7-4 package -->
+<!-- Tue Oct  6 00:24:24 2015 -->
+<table border=1>
+<tr> <th>  </th> <th> 廣告 </th> <th> 網站 </th> <th> 點擊 </th>  </tr>
+  <tr> <td align="right"> 1 </td> <td> 廣告D </td> <td> 網站C </td> <td align="right">   0 </td> </tr>
+  <tr> <td align="right"> 2 </td> <td> 廣告A </td> <td> 網站C </td> <td align="right">   0 </td> </tr>
+  <tr> <td align="right"> 3 </td> <td> 廣告A </td> <td> 網站C </td> <td align="right">   0 </td> </tr>
+  <tr> <td align="right"> 4 </td> <td> 廣告B </td> <td> 網站C </td> <td align="right">   1 </td> </tr>
+  <tr> <td align="right"> 5 </td> <td> 廣告B </td> <td> 網站B </td> <td align="right">   0 </td> </tr>
+  <tr> <td align="right"> 6 </td> <td> 廣告B </td> <td> 網站B </td> <td align="right">   0 </td> </tr>
+   </table>
+
+
+而我想要知道各種廣告在`網站A`上的表現。透過`dplyr`，這並不困難：
+
+
+```r
+filter(sample, 網站 == "網站A") %>%
+  group_by(廣告) %>%
+  summarise(曝光 = length(點擊), 點擊數 = sum(點擊))
+```
+
+
+<!-- html table generated in R 3.2.2 by xtable 1.7-4 package -->
+<!-- Tue Oct  6 00:25:23 2015 -->
+<table border=1>
+<tr> <th>  </th> <th> 廣告 </th> <th> 曝光 </th> <th> 點擊數 </th>  </tr>
+  <tr> <td align="right"> 1 </td> <td> 廣告A </td> <td align="right"> 329 </td> <td align="right">   0 </td> </tr>
+  <tr> <td align="right"> 2 </td> <td> 廣告B </td> <td align="right"> 588 </td> <td align="right">   4 </td> </tr>
+  <tr> <td align="right"> 3 </td> <td> 廣告C </td> <td align="right">  81 </td> <td align="right">   0 </td> </tr>
+  <tr> <td align="right"> 4 </td> <td> 廣告D </td> <td align="right">  71 </td> <td align="right">   0 </td> </tr>
+   </table>
+
+然而，以這個資料來說，我並不確定`廣告C`和`廣告D`的成效是不是明顯的不同。我想大家能同意，廣告的點擊是有機率在背後的，所以我們必須要透過一些計算才能知道，數據上顯示的：「`廣告B`比其他廣告好」，是運氣比較好，還是真的比較好。
+
+R 有一個製作95%信賴區間很方便的套件：`binom`。只要簡單利用`binom.confint`，就可以快速算出各種方法的confidence interval。
+以下就是一個簡單的範例，我們使用預設的95%信心水準（可以使用參數`conf.level`來調整），統計方法是`"exact"`（由Clopper and Pearson (1934)所設計出來的方法）。`binom`套件提供了10種方法給使用者計算信賴區間。
+
+
+```r
+library(binom)
+channel.a.summary <- filter(sample, 網站 == "網站A") %>%
+  group_by(廣告) %>%
+  summarise(曝光 = length(點擊), 點擊數 = sum(點擊))
+binom.confint(x = channel.a.summary$點擊數, n = channel.a.summary$曝光, methods = "exact")
+```
+
+
+<!-- html table generated in R 3.2.2 by xtable 1.7-4 package -->
+<!-- Tue Oct  6 00:25:23 2015 -->
+<table border=1>
+<tr> <th>  </th> <th> method </th> <th> x </th> <th> n </th> <th> mean </th> <th> lower </th> <th> upper </th>  </tr>
+  <tr> <td align="right"> 1 </td> <td> exact </td> <td align="right">   0 </td> <td align="right"> 329 </td> <td align="right"> 0.00 </td> <td align="right"> 0.00 </td> <td align="right"> 0.01 </td> </tr>
+  <tr> <td align="right"> 2 </td> <td> exact </td> <td align="right">   4 </td> <td align="right"> 588 </td> <td align="right"> 0.01 </td> <td align="right"> 0.00 </td> <td align="right"> 0.02 </td> </tr>
+  <tr> <td align="right"> 3 </td> <td> exact </td> <td align="right">   0 </td> <td align="right">  81 </td> <td align="right"> 0.00 </td> <td align="right"> 0.00 </td> <td align="right"> 0.04 </td> </tr>
+  <tr> <td align="right"> 4 </td> <td> exact </td> <td align="right">   0 </td> <td align="right">  71 </td> <td align="right"> 0.00 </td> <td align="right"> 0.00 </td> <td align="right"> 0.05 </td> </tr>
+   </table>
+
+所以根據`binom.confint`的結果，其實這樣的差距很有可能是來自於運氣，因為他們的信賴區間交錯的不少。
+
+## 結合`group_by` + `binom.confint`
+
+然而剛剛的程式碼，其實可以利用`dplyr`的`do`來改進：
+
+
+```r
+filter(sample, 網站 == "網站A") %>%
+  group_by(廣告) %>%
+  do(binom.confint(sum(.$點擊), length(.$點擊), methods = "exact"))
+```
+
+
+<!-- html table generated in R 3.2.2 by xtable 1.7-4 package -->
+<!-- Tue Oct  6 00:25:23 2015 -->
+<table border=1>
+<tr> <th>  </th> <th> 廣告 </th> <th> method </th> <th> x </th> <th> n </th> <th> mean </th> <th> lower </th> <th> upper </th>  </tr>
+  <tr> <td align="right"> 1 </td> <td> 廣告A </td> <td> exact </td> <td align="right">   0 </td> <td align="right"> 329 </td> <td align="right"> 0.00 </td> <td align="right"> 0.00 </td> <td align="right"> 0.01 </td> </tr>
+  <tr> <td align="right"> 2 </td> <td> 廣告B </td> <td> exact </td> <td align="right">   4 </td> <td align="right"> 588 </td> <td align="right"> 0.01 </td> <td align="right"> 0.00 </td> <td align="right"> 0.02 </td> </tr>
+  <tr> <td align="right"> 3 </td> <td> 廣告C </td> <td> exact </td> <td align="right">   0 </td> <td align="right">  81 </td> <td align="right"> 0.00 </td> <td align="right"> 0.00 </td> <td align="right"> 0.04 </td> </tr>
+  <tr> <td align="right"> 4 </td> <td> 廣告D </td> <td> exact </td> <td align="right">   0 </td> <td align="right">  71 </td> <td align="right"> 0.00 </td> <td align="right"> 0.00 </td> <td align="right"> 0.05 </td> </tr>
+   </table>
+
+這裡的`do`是一個很有趣的函數。當我們傳遞一個`group_by`處理過得的table，`do`會依照`group_by`的欄位將原本的table切割成若干的子table，並且運用變數`.`來代表這個子table。然後，再利用`do`的參數函數來個別計算出結果，最後再拼裝成原本的輸出。
+
+`do`和原本`summarise`的差別，就是更有彈性，並且可以一次輸出多欄位。舉例來說，上述的`binom.confint`就一次輸出`mean`、`lower`和`upper`等資訊，而不像summarise，裡面使用的函數一次只能輸出一個值。
+
+## `do`細解
+
+接下來，我簡單說明`do`的用法。請有興趣的朋友執行以下的程式碼：
+
+
+```r
+group_by(iris, Species) %>% do(browser())
+```
+
+由於`browser`的緣故，在`do`處理子table的時候會暫停，所以各位朋友就可以看到：
+
+```r
+Browse[1]> .
+Source: local data frame [50 x 5]
+
+   Sepal.Length Sepal.Width Petal.Length Petal.Width Species
+          (dbl)       (dbl)        (dbl)       (dbl)  (fctr)
+1           5.1         3.5          1.4         0.2  setosa
+2           4.9         3.0          1.4         0.2  setosa
+3           4.7         3.2          1.3         0.2  setosa
+4           4.6         3.1          1.5         0.2  setosa
+5           5.0         3.6          1.4         0.2  setosa
+6           5.4         3.9          1.7         0.4  setosa
+7           4.6         3.4          1.4         0.3  setosa
+8           5.0         3.4          1.5         0.2  setosa
+9           4.4         2.9          1.4         0.2  setosa
+10          4.9         3.1          1.5         0.1  setosa
+..          ...         ...          ...         ...     ...
+Browse[1]> nrow(.)
+[1] 50
+```
+
+第一次暫停的時候，這個`.`就代表所有`Species`等於`"setosa"`的table，也就是`filter(iris, Species == "setosa")`的結果。
+各位可以從`nrow(.)`得到`50`看出。
+
+這樣的暫停會有三次，第二次是`filter(iris, Species == "versicolor")`，第三次是`filter(iris, Species == "virginica")`。
+
+`do`裡面的函數必須輸出`data.frame`讓`dplyr`最後做組裝。舉例來說：
+
+
+```r
+group_by(iris, Species) %>% do(sum(.$Petal.Width))
+```
+
+```
+## Error: Results are not data frames at positions: 1, 2, 3
+```
+
+由於`sum(.$Petal.Width)`不是一個`data.frame`，所以就發生錯誤了。必須要用：
+
+
+```r
+group_by(iris, Species) %>% do(data.frame(sum = sum(.$Petal.Width)))
+```
+
+```
+## Source: local data frame [3 x 2]
+## Groups: Species [3]
+## 
+##      Species   sum
+##       (fctr) (dbl)
+## 1     setosa  12.3
+## 2 versicolor  66.3
+## 3  virginica 101.3
+```
+
+## 結語
+
+透過`group_by` + `do`，我們就可以再簡化程式碼，一次`group_by`就可以輸出信賴區間相關的分析結果，程式碼也簡潔。這一招是我最近學到的密技，今天就簡單跟大家作個說明，希望以上的內容能幫上大家囉。

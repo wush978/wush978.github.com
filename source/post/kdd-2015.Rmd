@@ -1,0 +1,21 @@
+---
+title: KDD 2015 Keynote：「Online Controlled Experiments:  Lessons from Running A/B/n Tests for 12 years」聽後感
+slug: kdd-2015
+date: 2015-08-28 13:32
+---
+
+今年在KDD 2015我聽到的第一場來自微軟的Ron Kohavi的演講就非常精彩。以下節錄一些值得我自己未來做線上AB分流實驗時，一直要謹記在心的要點：
+
+- 取得改善就是一種很大的挑戰。許多看起來很成功的想法，往往最後不但不能改善，還會把事情搞砸。
+    - 實驗跑越多，就會越謙虛
+- 在做大規模的事情之前，一定要先簡單測試自己的想法
+    - To have a great idea, have a lot of them - Thomas Edison
+    - If you have to kiss a lot of frogs to find a prince, find more frogs and kiss them faster and faster - Mike Moran, Do it Wrong Quickly
+- Twyman's Law：實驗的結果如果有令人驚訝的表現，一定要仔細檢視任何和實驗相關的事物。如果發現事情有很大的改善，檢查三次再慶祝。
+- 儘早開始對大家要優化的目的擁有共識。光擁有共識的本身，就是一個很大很大的進步。
+    - 除了標的之外，也要仔細檢視許多相關的指標，來了解為什麼標的被改善了，並且進行未來實驗的規劃
+- 要儘可能的獲得正確的數據。實務上，可以利用A/A Split Test來確認獲得的數據是否正確。取得數字很容易，但是取得可以相信的數字很困難。
+- 為了取得統計的顯著性，必須要在足夠多的使用者上做實驗。
+- 線上環境和線下環境是不同的。跑實驗最重要的是：這個實驗是可以重現的。
+
+對這場演講有興趣的朋友可以到這裡去下載講者的投影片： <http://bit.ly/KDD2015Kohavi>

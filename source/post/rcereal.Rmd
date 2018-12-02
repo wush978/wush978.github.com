@@ -1,0 +1,77 @@
+---
+title: Rcereal 投稿CRAN的心得
+date: 2015-11-06 15:33
+slug: rcereal
+---
+
+上週末，我又突然發神經投了一個CRAN的套件：[Rcereal](https://cran.r-project.org/web/packages/Rcereal/index.html)。這裡想跟各位分享整個投套件的過程，因為這個套件本身是非常簡單的。從我開始接觸cereal專案到投上Rcereal，大概只花了三天，所以整個過程就是很單純處理CRAN Submission的過程。
+
+![](http://i.imgur.com/h4IsZPC.png)
+
+## 投稿動機
+
+在Rcpp裡面有很豐富的功能，可以把C++物件輸出到R中做操作。有興趣踩雷的朋友，歡迎讀讀[Rcpp-modules](http://dirk.eddelbuettel.com/code/rcpp/Rcpp-modules.pdf)，並且開始踩雷之旅。這東西現在應該是充分可用了，所以你應該有很大的機會生還，扯遠了。但是這些C++物件是保存在記憶體中，而且也不是R 的原生物件，所以只要不小心把R 一重開，即使其他的R 原生物件可以透過workspace的存檔保留下來，但是Rcpp Modules的物件會全部消失。要解決這個問題，只能自己做serialization和deserialization。
+
+### 痛苦的 [boost serialization](http://www.boost.org/doc/libs/1_59_0/libs/serialization/doc/index.html)
+
+寫c++的朋友，在宅力達到金牌的時候，都應該會聽過c++ boost這系列c++ libraries。它裡面是有serialization的功能，但是需要使用者安裝boost serialization這個套件才能運作。而這偏偏不是R 可以自己操控的事情，所以如果只是要寫程式給自己跑，這絕對OK。如果想要給別人用（例如投稿CRAN），那就很難解決跨平台的問題。
+
+### 最近還在探索的新歡：[cereal](http://uscilab.github.io/cereal/)
+
+cereal則是一個C++ Header Only的套件。雖然需要C++11，但是目前CRAN對C++11的支援在許多大大的努力之下，已經算可用了。在確認這個套件成功的解決我的問題之後，我就動了把它包一包投稿到CRAN上的念頭，讓**我自己**、以及其他人可以更方便的在Rcpp中使用cereal。
+
+這個動機我覺得很重要，因為根據我的經驗，能解決自己問題的Open Source專案，做起來才比較有動力，也比較有機會做的更好。
+
+## 投稿過程
+
+### License
+
+由於這個套件用到cereal，所以我需要先研究cereal的License是不是CRAN上可接受的License。我的運氣很好，cereal是BSD，是CRAN相容的License。
+
+### 聯繫作者
+
+背著作者，拿著他們的東西去投稿不是什麼好主意。雖然Open Source License可能不禁止這個動作，但是聯繫作者除了避免潛在的麻煩之外，還可以聽聽作者對這件事情的建議，有百利而無一害。
+
+參考cereal官網上的說明，可以找到他們的[mailing list](https://groups.google.com/forum/#!forum/cerealcpp)。我就在裡面和作者們交換了一點意見。
+
+### 決定功能
+
+所有的專案都需要說明文件，所以我就簡單寫了個錯字連篇的README... （強力徵求Open Source英文文件互助會成員）
+
+ps. 投稿上的隔天，就收到Hadley的兩個PR... 他大概也覺得我的英文很扯爛吧... 哈哈哈！不過多虧他，Rcereal很快的收到了一點點的星星。
+
+然後我就開始「參考」Dirk的BH套件。這也是一個包著C++ Boost Library的R 套件。看到他有提供選擇Boost版本的功能，我就用git2r寫了一個從Github上下載cereal指定版本的原始碼的功能。
+
+### 建立Unit Test + CI
+
+由於我寫了切換版本的功能，所以就需要寫測試來保證功能是可以跨平台的。
+
+在感染了**不做CI就會死掉的病**之後，我就開始設定travis-ci和appveyor上的服務。而我總共花了一天多做這個東西。沒錯！這步驟最花時間。
+
+第一個雷是travis-ci在呼叫github API上很容易超過上限而失敗（Github應該是把整個travis-ci上的CI都算到呼叫次數中了...）
+
+第二個雷是appveyor上的CI不支援C++11。
+
+#### 幫[r-appveyor](https://github.com/krlmlr/r-appveyor)改編譯器的版本
+
+感謝R_Language神威副版主給我的提醒，最新的Rtools已經包含支援C++11的gcc版本，所以我就和r-appveyor的作者詢問有沒有可能更改gcc的版本。結果... 所有的open source作者都是挖坑王。他希望我能幫他上個PR，新增控制gcc版本，然後在我改出來之後，又問我能不能順便改R 的版本... （平常出來挖坑，腳底也是很容易踩空的）
+
+基於「解決自己問題優先」的心態，我只好先婉拒了第二個坑，然後第一個坑目前也只填了我腳底下的部份。
+
+**要解決我手上的問題之前，先找Open Source專案的作者們溝通**是很好的習慣。一來是他可以直接告訴你門路，二來是你有機會成為貢獻者，讓你解決的問題可以反饋給Open Source社群。這就是「我餵人人，人人餵我」的實現阿！（難怪最近一直瘦不下來...）
+
+### 上CRAN
+
+等到事情都準備好了，最後就是要上CRAN了。
+
+1. 用`R CMD build`把套件包成Rcereal_xxx.tar.gz
+1. 在自己的電腦上先用 `R CMD check Rcereal_xxx.tar.gz --as-cran`進行完整的測試。除了無可避免的狀況外，一個NOTE或WARNING都不能有。一個NOTE或WARNING都不能有。一個NOTE或WARNING都不能有。
+1. 上傳[win-builder](http://win-builder.r-project.org/)做測試。一個NOTE或WARNING都不能有。一個NOTE或WARNING都不能有。一個NOTE或WARNING都不能有。
+1. 把完整測過得.tar.gz檔案上傳到CRAN，並且把整個[CRAN Policy](https://cran.r-project.org/web/packages/policies.html)仔細的讀過。千萬不要因為上次讀過，這次就不讀了，CRAN Policy是活的。
+1. 回信箱做確認
+
+最後我還是跟CRAN的團隊有一個來回，才成功上線。主因是有一個`R CMD check`顯示的NOTE，我以為是「無可避免」的，但是CRAN團隊不這麼認為。
+
+以上就是整個投CRAN的過程，這裡就提供給所有有興趣想回饋給R 社群的朋友做參考囉！
+
+

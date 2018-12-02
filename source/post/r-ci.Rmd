@@ -1,0 +1,55 @@
+---
+title: R 套件在 github 上已經有三種作業系統的CI服務
+slug: r-ci
+date: 2015-08-24 15:10
+---
+
+R 目前在開發套件時，最多人使用的作業系統就是：
+
+- Windows
+- OS X
+- Ubuntu
+
+謎之音：Solaris... 聽說全世界只有那個人在用它跑R的作業系統
+
+![](http://civicio.files.wordpress.com/2013/03/github.png?w=256&h=256)
+
+現在如果在[github](https://github.com)上做R套件的開發，已經可以免費的同時在三種作業系統上進行套件測試了。這樣就應該可以降低那個人的維護負擔吧！
+
+
+## [Travis CI](https://travis-ci.org) 
+
+![](https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcQr5_uYoSD1fj38BNkC2PY5o1pG-8c-y8kBdDlv4VF2-itT2b8Q)
+
+Travis CI目前提供Ubuntu和OS X環境的測試。如果有Github帳號，要註冊Travis CI是非常簡單的。
+
+### Ubuntu
+
+Ubuntu上的測試可以參考[Building an R Project](http://docs.travis-ci.com/user/languages/r/)的說明文件。這部份要感謝許多R界的大大們的努力。
+
+
+### OS X
+
+在OS X上的測試是透過objective-c去改出來的。我fork了[wertion/r-travis-mac](https://github.com/wertion/r-travis-mac)，更新了R的版本，CRAN上只有放最新的binary。如果已經會寫`.travis.yml`的朋友，可以參考[FeatureHashing上給OS X測試的.travis.ci](https://github.com/wush978/FeatureHashing/blob/osx/.travis.yml)，應該很快就會上手了。
+
+我這裡補充一些細節：
+
+- 由於我沒有設定latex環境，所以`R_BUILD_ARGS`和`R_CHECK_ARGS`上都要放`--no-manual`
+- [FeatureHashing](https://github.com/wush978/FeatureHashing)的vignette是透過Rmd寫的，不需要Latex，所以我沒有加`--no-vignette`。如果你的套件的vignette有用latex，可能就要自己再改這邊的測試參數了。
+
+其他的部份，如果大家有問題，歡迎再問我。
+
+## [AppVeyor](https://ci.appveyor.com/) 
+
+![](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRvktlDjDYG0-Z8cSbSmDiDrTDZ4n6aZT0jW_pRGm9Z9EImrVDfe2MXkg)
+
+這個CI服務提供Windows上的測試。只要有Github，要註冊也是非常簡單的。
+
+### Windows
+
+Windows上的測試也是需要透過[krlmlr/r-appveyor](https://github.com/krlmlr/r-appveyor)的專案來達成。
+
+有興趣的讀者可以參考[FeatureHashing上給Windows測試的appveyor.yml](https://github.com/wush978/FeatureHashing/blob/master/appveyor.yml)，我覺得只要熟悉`.travis.yml`的語法的話，應該是不會感到陌生的。
+
+這部份也許還有其他的功能，不過目前我就只有摸索到這了，有機會的話再做筆記。
+

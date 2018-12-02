@@ -1,0 +1,197 @@
+---
+title: Rcpp Modules 的進階筆記
+date: 2016-08-23 17:07
+slug: Rcpp-module-advanced
+---
+
+雖然我Rcpp用很久了，但是一些技巧還是常常忘記。所以這裡列一些我花許多時間摸出來的技術。
+
+## Package 中使用 Rcpp Modules 的命名衝突問題
+
+由於新的Rcpp中已經不建議使用`loadRcppModules`了，所以我想依照警告訊息，改用`loadModule`。
+
+我的C++中已經寫了：
+
+```cpp
+#include <Rcpp.h>
+using namespace Rcpp;
+
+RCPP_MODULE(MemorySparseArray) {
+  
+  class_<MemorySparseArray>("MemeorySparseArray")
+    .constructor<int>()
+    ;
+
+}
+```
+
+根據文件，本來的：
+
+```r
+.onLoad <- function(libname, pkgname) {
+  loadRcppModules()
+}
+```
+
+要改成：
+
+```r
+loadModule("MemorySparseArray")
+```
+
+但是編譯時馬上遇到Linking Error：
+
+```
+Error in .doLoadActions(where, attach) : 
+  error in load action .__A__.1 for package CountingTF: loadModule(module = "Array", what = TRUE, env = ns, loadNow = TRUE): Unable to load module "Array": Failed to initialize module pointer: Error in FUN(X[[i]], ...): no such symbol _rcpp_module_boot_Array in package CountingTF
+```
+
+網路上找不到類似的錯誤。經過思考後，我想到可能是撞名衝突。
+
+就我所知，由於Rcpp和R的連結，還是要回到C，所以C++的function overloading會失效，而症狀就是Linking Error。
+ps. C++編譯器會把參數型態放到編譯後的函數名稱中，但是C不會。所以當撞名時，編譯時有一個名字的版本會被標注要參照C的命名方式，令一個則不會，因此R載入時（R的底層是C)就找不到函數了。所以當C++遇到同名函數時，就有可能編譯沒問題，但是Linking時出錯。
+
+果然，把原始碼改成：
+
+```cpp
+#include <Rcpp.h>
+using namespace Rcpp;
+
+RCPP_MODULE(Array) {
+  
+  class_<MemorySparseArray>("MemorySparseArray")
+    .constructor<int>()
+    ;
+
+}
+```
+
+就沒問題了。
+
+## 載入C Extension後才執行Namespace的輸出
+
+上述的解決方法，在安裝套件後，`MemorySparseArray`並沒有從Namespace中匯出(export)。
+
+舉例來說：
+
+```r
+> library(CountingTF)
+> MemorySparseArray
+Error: object 'MemorySparseArray' not found
+```
+
+我們要在`NAMESPACE`中輸出`MemorySparseArray`：
+
+```r
+#'@useDynLib CountingTF
+#'@importFrom Rcpp loadModule cpp_object_initializer
+#'@export MemorySparseArray
+loadModule("Array", TRUE)
+```
+
+## S4 Method的客製化
+
+我們可以在R中透過S4的API來客製化Rcpp Modules所匯入的C++物件。
+
+舉例來說，我們可以查詢內建的`show`:
+
+```r
+> getMethod("show", MemorySparseArray)
+Error in getMethod("show", MemorySparseArray) : 
+  no method found for function 'show' and signature Rcpp_MemorySparseArray
+```
+
+此時R會直接調用在`.xData`屬性的環境中的`show`。（這應該是R6物件的特性...)
+
+我們可以寫：
+
+```r
+#'@useDynLib CountingTF
+#'@importFrom Rcpp loadModule cpp_object_initializer
+#'@export MemorySparseArray
+loadModule("Array", TRUE)
+
+setMethod("show", MemorySparseArray, definition = function(object) {
+  cat("This is the customized show method\n")
+})
+```
+
+如果你把`setMethod(...)`在console中跑是沒問題的，但是編譯套件時會出錯：
+
+```shell
+Error in matchSignature(signature, fdef, where) : 
+  object 'MemorySparseArray' not found
+Error : unable to load R code in package ‘CountingTF’
+ERROR: lazy loading failed for package ‘CountingTF’
+```
+
+理由是因為`MemorySparseArray`是載入dynamic library時才會建立，所以出錯了。
+
+我們可以用：
+
+```r
+#'@useDynLib CountingTF
+#'@importFrom Rcpp loadModule cpp_object_initializer
+#'@export MemorySparseArray
+loadModule("Array", TRUE)
+
+evalqOnLoad({
+  setMethod("show", MemorySparseArray, definition = function(object) {
+    cat("This is the customized show method\n")
+  })
+})
+```
+
+來延後建立`show`方法的時間點，避開這個錯誤。
+
+## Module method + C++11 Lambda
+
+根據C++11的標準： 不capture外部環境的lambda expression可以轉換為function pointer。
+所以我們可以這樣寫：
+
+```cpp
+class_<MemorySparseArray>("MemorySparseArray")
+.constructor<int>()
+.method("dim", static_cast<IntegerVector(*)(MemorySparseArray*)>([](MemorySparseArray* pmsa) {
+  const auto& reference(*(pmsa->get_pencode_reference()));
+  IntegerVector retval(reference.size(), 0);
+  for(R_len_t i = 0;i < retval.size();i++) {
+    retval[i] = reference[i].size();
+  }
+  return retval;
+}))
+;
+```
+
+
+其中：
+
+```cpp
+[](MemorySparseArray* pmsa) {
+  // ...
+}
+```
+
+是一個lambda expression。接著透過`static_cast`轉換成function pointer後再交給`RCPP_MODULE`去expose。
+
+## Rcpp Module + OOP
+
+Reference: <http://romainfrancois.blog.free.fr/index.php?post/2012/11/05/OOP-with-Rcpp-modules>
+
+但是我的狀況比較複雜。我實做的`SparseArray`是abstract class，所以寫法要改成：
+
+```cpp
+class_<SparseArray>("SparseArray")
+.method("dim", static_cast<SEXP(*)(SparseArray*)>([](SparseArray* pmsa) {
+  return wrap(pmsa->dim());
+}))
+;
+
+class_<MemorySparseArray>("MemorySparseArray")
+.derives<SparseArray>("SparseArray")
+.constructor<int>()
+;
+```
+
+也因為`SparseArray`是Abstract class，所以不能放constructor, 會爆炸。
+

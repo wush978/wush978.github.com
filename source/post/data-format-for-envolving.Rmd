@@ -1,0 +1,52 @@
+---
+title: 能應付變化的資料格式（續）
+date: 2016-12-20 00:00
+slug: data-format-for-envolving
+---
+
+在專案的開始，我們選擇json作為資料的格式後，慢慢的也體驗到這個選擇的問題了。
+
+#### 在其他工具上的效能問題
+
+json雖然在nodejs上非常方便，讀取與寫入的效能也很棒，但是當我切換到其他工具時（例如R或java），json就不這麼方便了。
+
+
+舉例來說，如果我們把[上一篇](http://wush.ghost.io/neng-ying-fu-bian-hua-de-zi-liao-ge-shi/)的範例資料重複10000次之後（產生一個共40000行json的檔案），在我的電腦上使用nodejs讀取只需要1.7秒，但是使用R的`jsonlite::stream_in`卻需要27.2秒，效能差很大。
+
+就我所知，nodejs在處理json資料上做了很多優化，所以效能很高（差不多和protocol buffer一樣快）。但是其他工具處理json就慢多了。
+
+#### 彈性太大導致執行期的錯誤
+
+使用json時，由於格式太自由，常常要在程式碼中處理可能的資料格式不相容的問題。
+舉例來說，如果bid request之中不一定會有使用者的identity。若不小心直接在程式中讀取identity而沒有做保護，就容易發生錯誤，而且是很難除錯的錯誤。
+
+而且當我們想使用第三方的工具時（例如Google Big Query），即使看介紹時對方宣稱接受json，實際上卻往往對json有很多限制，導致我們在串接這些工具時都還是要額外整理資料。老實說，在有包袱後，要完成這樣的任務是挺困難的，寫出來的程式都仍然隨時會出錯。
+
+#### 浪費儲存空間
+
+json都是以純文字來儲存訊息，而這其實是很浪費空間的，尤其是大量的浮點數。記憶體中，一個浮點數只佔用4個位元組，但是如果在json中以`3.1415936`儲存，那就會佔用9個位元組。實務上為了減輕這個問題，我們通常會對json做gzip壓縮。
+
+### 解決方法
+
+為了改善上述的問題，我們後來使用Google的取代json。其中最大的理由是因為，Google有提供OpenRTB 的 protocol buffer的schema。否則的話，我還滿想嘗試這個格式。
+
+現在開發數據相關系統的工程師，在選擇資料格式時，應該都要選擇[protocol buffer](https://developers.google.com/protocol-buffers/)、[avro](https://avro.apache.org/)或其他相似功能的格式了。
+
+protocol buffer 與 avro 都是針對跨工具需求所設計的資料儲存格式，並且處打高效能的存取速度與儲存空間。他們也都會提供主流工具(C / java)的存取套件，開發起來都算方便。
+
+最重要的是他們都具備有「可擴充」的schema，所以可以一邊解決資料格式會一直變化的問題之外，也能在Schema中保護程式對資料的存取。我個人是認為，數據系統中所需要記載的資訊，是會一直演化的。而json雖然可以應付這樣的變化，但是卻太過自由導致許多維護的問題。protocol buffer/avro這類schema可擴充的格式，應當是目前最好的選擇。
+
+另外針對資料科學的用途上，我目前是更推薦avro這個格式。理由是protocol buffer先天上並沒有設計多筆紀錄堆成一個檔案的情境，但是avro是有針對這樣的情境做設計的。我們分析資料時，一定都是分析多筆資料，而不會只有一筆，所以在這點上avro是勝過protocol buffer的。
+
+而我們的專案採用protocol buffer的主因是我找到Google撰寫的OpenRTB的protocol buffer schema。考量到我有限的工程資源，我就不考慮自行開發avro的schema了。
+
+#### 取捨
+
+json還是有比protocol buffer與avro好的優點。
+
+他們唯一不如json的地方就是，要看資料時，json還是比較方便。在改成使用protocol buffer後，我要看log，都得再自己寫工具來解析，而json有`jq`可以直接看，方便多了。
+
+另一個問題是在我們的應用中，json仍然是最根本的資料，而protocol buffer / avro 都需要經過轉換。這個轉換是可能會掉資訊的。因此，在實務上我還是會以很低的機率，將完整的json寫入protocol buffer中，以供除錯用。
+
+
+

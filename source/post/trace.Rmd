@@ -1,0 +1,21 @@
+---
+title: trace函數： 修改既有的R function內容
+date: 2018-05-07 00:00
+slug: trace
+---
+
+今天為了追一個安裝套件的bug，我需要追蹤`tools:::.install_packages`這個程式碼在`if (test_load) {`以後的行為。
+
+在追蹤R語言函數的行為時，我常用的是在原始碼中插入`browser()`與`debug(tools:::.install_packages)`兩種方法。`trace`函式我一直不太懂。有興趣的讀者可以在查閱我過去寫的：[R的除錯功能](http://wush.ghost.io/r-debug/)
+
+在追`tools:::.install_packages`這個函數時，一來我懶的去研究如何修改`tools`這個內建套件的函數原始碼，二來這個函數很複雜，如果用`debug`需要瘋狂的next step...
+
+`trace`這個函數，是用來編輯已經存在的R函數。第一種用法是直接在指定的行數插入給定的expression。這裡的行數，是以`list(body(tools:::.install_packages))`的輸出為準。有興趣的讀者直接查閱`examples(trace)`就可以看到範例了。
+
+另外一種作法，是直接設定`edit = TRUE`，R就會打開預設的編輯器(效果應該等同於`file.edit`)後，讓我們直接編輯原始碼，儲存退出後生效。以我手上的例子，我需要輸入：`trace(".install_packages, where = loadNamespace("tools"), edit = TRUE)`。
+
+以下的附加說明是寫給沒這麼熟R套件系統的讀者。`tools:::.install_packages`是tools套件的內部函數(有三個`:`)，所以即使我`library(tools)`之後，直接在console輸入`.install_packages`，R仍然會回報錯誤：找不到`.install_packages`物件。因此我需要指定`where`參數，告訴R`.install_packages`在哪裡。`tools`套件的內部函數，在R中是放在`<environment: namespace:tools>`這個環境中，我們可以使用`loadNamespace("tools")`的輸出來取得這個環境。
+
+輸入以後，我就可以手動編輯原始碼，直接找到`test_load`這段程式之後，在下一行插入`browser()`，就可以在執行`tools:::.install_packages`時直接中斷在我要的地方。
+
+
