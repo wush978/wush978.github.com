@@ -73,7 +73,7 @@ class(1:5)
 
 我要再次強調，唯有透過對應的Rcpp物件才能正確的在C++中處理R物件。我們用`inline`來跑個簡單的Demo：
 
-```{r r-to-rcpp}
+```{r r-to-rcpp, error = TRUE}
 library(Rcpp);library(inline)
 f <- cxxfunction(sig=c(Rx="integer"), plugin="Rcpp", body='
   IntegerVector x(Rx);
