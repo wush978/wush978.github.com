@@ -5,4 +5,4 @@ local({
   .libPaths(new = .lib)
   Sys.setenv(R_LIBS=.lib)
 })
-options(blogdown.ext = ".Rmd", blogdown.author = "Wush Wu", repos = "http://cran.csie.ntu.edu.tw")
+options(blogdown.ext = ".Rmd", blogdown.author = "Wush Wu", repos = c(CRAN = "http://cran.csie.ntu.edu.tw"))
