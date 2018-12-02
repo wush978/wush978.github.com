@@ -19,7 +19,7 @@ R 目前在開發套件時，最多人使用的作業系統就是：
 
 ## [Travis CI](https://travis-ci.org) 
 
-![](https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcQr5_uYoSD1fj38BNkC2PY5o1pG-8c-y8kBdDlv4VF2-itT2b8Q)
+![](https://i.imgur.com/wPQ1cUW.jpg)
 
 Travis CI目前提供Ubuntu和OS X環境的測試。如果有Github帳號，要註冊Travis CI是非常簡單的。
 
@@ -41,7 +41,7 @@ Ubuntu上的測試可以參考[Building an R Project](http://docs.travis-ci.com/
 
 ## [AppVeyor](https://ci.appveyor.com/) 
 
-![](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRvktlDjDYG0-Z8cSbSmDiDrTDZ4n6aZT0jW_pRGm9Z9EImrVDfe2MXkg)
+![](https://i.imgur.com/rxCbVAM.png)
 
 這個CI服務提供Windows上的測試。只要有Github，要註冊也是非常簡單的。
 
