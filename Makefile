@@ -9,7 +9,7 @@ all : install hugo $(CONTENT_HTML)
 install :
 	Rscript -e "if (!require('pvm')) install.packages('pvm', repos = 'https://wush978.github.io/R', type = 'source')"
 	Rscript -e "pvm::import.packages()"
-	Rscript -e "blogdown::install_hugo()"
+	ls ~/bin/hugo || Rscript -e "blogdown::install_hugo()"
 	
 content/post/%.Rmd : source/post/%.Rmd
 	Rscript R/source2content.R $< $@
