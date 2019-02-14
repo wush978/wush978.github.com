@@ -27,7 +27,6 @@ __version__: 0.2
   mime: 0.6
   KernSmooth: 2.23-15
   stringi: 1.2.4
-  pvm: 0.4.2.2
 2:
   later: 0.7.5
   class: 7.3-14
