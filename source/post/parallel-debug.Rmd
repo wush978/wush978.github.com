@@ -1,0 +1,39 @@
+---
+title: 在parallel的cluster中幫slave除錯
+date: 2019-02-14 12:00
+slug: parallel debug
+---
+
+在R中要平行跑程式的一個方法是使用內建的parallel套件來建立一個cluster。
+
+該cluster會產生若干個slave供R使喚。但是預設的情境之下，slave出錯後的錯誤訊息在R中是看不到的，導致除錯變得困難。
+
+解決方法是在建立cluster時設定參數 `outfile` ：
+
+```
+cl <- parallel::makeCluster(2, outfile = "")
+```
+
+這樣當初錯時，或是讓slave把一些文字用`cat`、`print`等函數印出來時，都會顯示在原本的R中：
+
+```
+> clusterEvalQ(cl, cat("hello world\n"))
+hello world
+hello world
+hello world
+hello world
+[[1]]
+NULL
+
+[[2]]
+NULL
+
+[[3]]
+NULL
+
+[[4]]
+NULL
+```
+
+
+
