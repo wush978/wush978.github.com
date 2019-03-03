@@ -1,7 +1,7 @@
 ---
-title: "讓R自動優化建立報告的流程"
-date: "2019-03-03"
-slug: R drake
+title: 讓R自動優化建立報告的流程
+date: 2019-03-03 22:30
+slug: drake
 ---
 
 ## 前情提要
