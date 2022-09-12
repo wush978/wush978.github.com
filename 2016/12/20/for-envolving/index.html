@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.102.3" />
+
+
+<title>能應付變化的資料格式（續） - Wush &lt;- &#39;儒爸&#39;</title>
+<meta property="og:title" content="能應付變化的資料格式（續） - Wush &lt;- &#39;儒爸&#39;">
+
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/meme.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/wush978">GitHub</a></li>
+    
+    <li><a href="https://hahow.in/cr/r-hands-on">Hahow R語言入門</a></li>
+    
+    <li><a href="https://www.linkedin.com/in/wush978/">My LinkedIn Profile</a></li>
+    
+    <li><a href="https://datascienceandr.org">R語言翻轉教室</a></li>
+    
+    <li><a href="https://gitter.im/wush978/DataScienceAndR">聊天室</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">1 min read</span>
+    
+
+    <h1 class="article-title">能應付變化的資料格式（續）</h1>
+
+    
+    <span class="article-date">2016-12-20</span>
+    
+
+    <div class="article-content">
+      
+
+
+<p>在專案的開始，我們選擇json作為資料的格式後，慢慢的也體驗到這個選擇的問題了。</p>
+<div id="在其他工具上的效能問題" class="section level4">
+<h4>在其他工具上的效能問題</h4>
+<p>json雖然在nodejs上非常方便，讀取與寫入的效能也很棒，但是當我切換到其他工具時（例如R或java），json就不這麼方便了。</p>
+<p>舉例來說，如果我們把<a href="http://wush.ghost.io/neng-ying-fu-bian-hua-de-zi-liao-ge-shi/">上一篇</a>的範例資料重複10000次之後（產生一個共40000行json的檔案），在我的電腦上使用nodejs讀取只需要1.7秒，但是使用R的<code>jsonlite::stream_in</code>卻需要27.2秒，效能差很大。</p>
+<p>就我所知，nodejs在處理json資料上做了很多優化，所以效能很高（差不多和protocol buffer一樣快）。但是其他工具處理json就慢多了。</p>
+</div>
+<div id="彈性太大導致執行期的錯誤" class="section level4">
+<h4>彈性太大導致執行期的錯誤</h4>
+<p>使用json時，由於格式太自由，常常要在程式碼中處理可能的資料格式不相容的問題。
+舉例來說，如果bid request之中不一定會有使用者的identity。若不小心直接在程式中讀取identity而沒有做保護，就容易發生錯誤，而且是很難除錯的錯誤。</p>
+<p>而且當我們想使用第三方的工具時（例如Google Big Query），即使看介紹時對方宣稱接受json，實際上卻往往對json有很多限制，導致我們在串接這些工具時都還是要額外整理資料。老實說，在有包袱後，要完成這樣的任務是挺困難的，寫出來的程式都仍然隨時會出錯。</p>
+</div>
+<div id="浪費儲存空間" class="section level4">
+<h4>浪費儲存空間</h4>
+<p>json都是以純文字來儲存訊息，而這其實是很浪費空間的，尤其是大量的浮點數。記憶體中，一個浮點數只佔用4個位元組，但是如果在json中以<code>3.1415936</code>儲存，那就會佔用9個位元組。實務上為了減輕這個問題，我們通常會對json做gzip壓縮。</p>
+</div>
+<div id="解決方法" class="section level3">
+<h3>解決方法</h3>
+<p>為了改善上述的問題，我們後來使用Google的取代json。其中最大的理由是因為，Google有提供OpenRTB 的 protocol buffer的schema。否則的話，我還滿想嘗試這個格式。</p>
+<p>現在開發數據相關系統的工程師，在選擇資料格式時，應該都要選擇<a href="https://developers.google.com/protocol-buffers/">protocol buffer</a>、<a href="https://avro.apache.org/">avro</a>或其他相似功能的格式了。</p>
+<p>protocol buffer 與 avro 都是針對跨工具需求所設計的資料儲存格式，並且處打高效能的存取速度與儲存空間。他們也都會提供主流工具(C / java)的存取套件，開發起來都算方便。</p>
+<p>最重要的是他們都具備有「可擴充」的schema，所以可以一邊解決資料格式會一直變化的問題之外，也能在Schema中保護程式對資料的存取。我個人是認為，數據系統中所需要記載的資訊，是會一直演化的。而json雖然可以應付這樣的變化，但是卻太過自由導致許多維護的問題。protocol buffer/avro這類schema可擴充的格式，應當是目前最好的選擇。</p>
+<p>另外針對資料科學的用途上，我目前是更推薦avro這個格式。理由是protocol buffer先天上並沒有設計多筆紀錄堆成一個檔案的情境，但是avro是有針對這樣的情境做設計的。我們分析資料時，一定都是分析多筆資料，而不會只有一筆，所以在這點上avro是勝過protocol buffer的。</p>
+<p>而我們的專案採用protocol buffer的主因是我找到Google撰寫的OpenRTB的protocol buffer schema。考量到我有限的工程資源，我就不考慮自行開發avro的schema了。</p>
+<div id="取捨" class="section level4">
+<h4>取捨</h4>
+<p>json還是有比protocol buffer與avro好的優點。</p>
+<p>他們唯一不如json的地方就是，要看資料時，json還是比較方便。在改成使用protocol buffer後，我要看log，都得再自己寫工具來解析，而json有<code>jq</code>可以直接看，方便多了。</p>
+<p>另一個問題是在我們的應用中，json仍然是最根本的資料，而protocol buffer / avro 都需要經過轉換。這個轉換是可能會掉資訊的。因此，在實務上我還是會以很低的機率，將完整的json寫入protocol buffer中，以供除錯用。</p>
+</div>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-130199267-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </body>
+</html>
+

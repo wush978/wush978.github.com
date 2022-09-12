@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.102.3" />
+
+
+<title>資料科學團隊的Hello World - Wush &lt;- &#39;儒爸&#39;</title>
+<meta property="og:title" content="資料科學團隊的Hello World - Wush &lt;- &#39;儒爸&#39;">
+
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/meme.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/wush978">GitHub</a></li>
+    
+    <li><a href="https://hahow.in/cr/r-hands-on">Hahow R語言入門</a></li>
+    
+    <li><a href="https://www.linkedin.com/in/wush978/">My LinkedIn Profile</a></li>
+    
+    <li><a href="https://datascienceandr.org">R語言翻轉教室</a></li>
+    
+    <li><a href="https://gitter.im/wush978/DataScienceAndR">聊天室</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">1 min read</span>
+    
+
+    <h1 class="article-title">資料科學團隊的Hello World</h1>
+
+    
+    <span class="article-date">2015-09-06</span>
+    
+
+    <div class="article-content">
+      
+
+
+<p>這週末我參加了資料科學愛好者年會系列活動的第一場：<a href="http://datasci.tw/event/data_team/">資料科學團隊培訓及導入經驗分享會</a>。</p>
+<p><a href="http://datasci.tw/"><img src="http://i.imgur.com/rNaDzKN.png" alt="Imgur" /></a></p>
+<p>由於我已經親身經歷了一個資料科學團隊的建立過程，親身體驗了不少在建立資料科學團隊時不應該發生的錯誤。因此，難得有機會聽聽陳老師的經驗，就一定要來取經，並且和我自己的想法做印證呀！</p>
+<p>在上課的過程中，聽到老師許多生動的描述資料科學的各種能力、資料素養和創意的養成和團隊會遇到的困難等等。這些種種要點，更讓我確定一個，我在過去已經萌芽的一個信念：<strong>Dashboard的製作就是資料科學團隊的Hello World</strong>。</p>
+<p>Hello World 是每一種程式語言中最基本、最簡單的程式，也通常是初學者所編寫的第一個程式。它還可以用來確定該語言的編譯器、程式開發環境，以及執行環境是否已經安裝妥當。換句話說，它除了擔任初學者的第一個任務之外，也肩負著檢查工作環境的任務。而今天我想要論述的，就是：「<strong>資料科學團隊在上手的第一個任務，應當是針對手上的資料源建立Dashboard</strong>」。</p>
+<p><img src="http://i.imgur.com/Lf5Q79U.png" /></p>
+<div id="檢驗資料的品質" class="section level2">
+<h2>檢驗資料的品質</h2>
+<p>當我們剛拿到一批資料，絕對不能一頭栽進去做深入的分析，或是建立機器學習模型。合格的資料科學家，應該先要做視覺化和計算簡單統計量。這些工具不只能描述資料的特性，更有重要的是要檢驗資料的<strong>乾淨度</strong>與<strong>正確性</strong>。</p>
+<p>乾淨度與正確性是資料科學的根本。資料如果不乾淨，會造成分析上極大的不便。資料科學團隊在製作Dashboard的時候，應該第一時間就會注意到這些資料的乾淨度是否足夠，能夠讓團隊順利的把資料載入分析工具中。如果有乾淨度的問題，也應該在這個階段先行解決。</p>
+<p>正確性也是很重要的事情。分析不正確的資料，產生的報告是沒有價值的。更有甚者，如果團隊不能掌握資料的正確性，在未來應用時，更會造成極大的不便。舉例來說，如果一間電商公司每次在看到報表上的成效數據變差，都要先從頭檢查報表的數據正確性，並且等確認數據正確之後，才開始找原因，那會對企業的資源造成極大的浪費，並且拖慢企業的反應時間。尤其是在當系統越來越複雜的時候，如果不能保證數據的正確性，那維護起來是非常非常痛苦的。</p>
+<p>一個Dashboard的建立，除了只是呈現資料與計算統計量之外，我認為最重要的任務就是要確保團隊所使用的資料，是否乾淨與正確。這兩者是所有後續的分析、機器學習的基石，所以一定要在一開始就打好良好的基底。</p>
+<p>而且建立Dashboard的同時，等同於把所有上述的檢查自動化。只是做出一次性的資料視覺化是不夠的，最好是建立起一個長久的Dashboard系統。因為在企業之中，新資料會不停的進來，今天的資料品質不代表明天的資料品質。建立自動化的檢驗新資料的乾淨度與正確性，對於資料科學團隊是很重要的基石。我並不認為維護資料的品質只靠Dashboard是足夠的，但是Dashboard是一個很好的開始。</p>
+</div>
+<div id="檢驗科學家們對資料的理解" class="section level2">
+<h2>檢驗科學家們對資料的理解</h2>
+<p>在這次今年的年會與週末的課程中，講者們也再三地強調資料科學家必須要熟悉企業要解決的問題。就如同阿里巴巴的車副總裁強調的，新進資料科學家的KPI就是和業務部門主管吃飯的次數。</p>
+<p>我以為設計一個有價值的Dashboard，背後就反應了資料科學團隊對企業領域的理解程度。統計的指標是非常多的，如何選取完全要仰賴團隊對於企業領域的理解。而且Dashboard應當是要回饋給資料的提供者。如果這個Dashboard有打中問題的核心，資料提供者會很開心，並且獲得不少對資料科學團隊的信心。反之，如果資料提供者沒什麼反應，資料科學團隊也可以藉機檢驗自己對於企業問題的理解是否仍然不足，並且從對方的反饋訊息裡面，更深入對企業的了解。</p>
+</div>
+<div id="每導入一個資料源就應該要製作對應的dashboard" class="section level2">
+<h2>每導入一個資料源，就應該要製作對應的Dashboard</h2>
+<p>根據我的經驗，數種資料源能帶來的價值，是以指數成長的。舉例來說，如果只有<a href="http://data.gov.tw/node/8345">政府標案資料</a>，那我們只能運用標案資料中的數據來檢測有無圍標的可能，對於有心人來說，是很好規避的。但是若是結合了<a href="http://company-graph.g0v.ronny.tw/index/about">公司資料關係圖</a>，那就更可能深入挖掘我們政府招邊的潛在問題。</p>
+<p>但是不同的資料源，面對的乾淨度與正確性的問題，是獨立的。標案資料乾淨，不代表公司資料關係圖就會跟著乾淨，這是因為這些資料的提供者往往彼此獨立。</p>
+<p>因此，我以為每當資料科學團隊獲取了一份資料源，就應當建立對應的Dashboard，就好像每當我們換一種程式語言，就一定要先寫對應的Hello World。</p>
+</div>
+<div id="dashboard能為資料科學團隊建立初步的信譽" class="section level2">
+<h2>Dashboard能為資料科學團隊建立初步的信譽</h2>
+<p>一個資料科學團隊要能成功，和企業內部的銷售、業務和要解決的核心問題，是習習相關的。陳老師再三強調溝通能力對於資料科學家的重要性，我自己以為核心的理由是<strong>資料科學團隊是其他企業團隊的支援單位</strong>。如果資料科學團隊的信譽不佳，那即使做出了重要的研究成果，要在企業內部推行也會非常困難。這種困難，絕對不是長官挺就夠的，而是團隊自己要取得對方的信任。</p>
+<p>這部份的想法，啟發自我個人的經歷，以及<a href="http://www.meetup.com/Taiwan-R/events/221493175/">MLDM Monday Cyber Security</a>資策會資安所的毛敬豪博士分享的內容。毛博士一開始做了許多學術味很重的分析，但是並沒有激起相關資安專家的興趣，因為雖然用了很多分析技術，但是得到的資訊往往是專家們已經知道的。但是當他們團隊轉頭先開始幫資料提供單位建立Dashboard，對方就開始覺得：「這個團隊有點用」。而當毛博士他們能串接不同資料源，說出對方過去做不到的事情，專家們就會非常的興奮，並且願意主動和毛博士合作。</p>
+<p>資料科學是一個很新的領域，其他部門往往不知道資料科學團隊在做什麼，也不懂資料科學的價值。而當這個團隊建立的時候，其他團隊還要提供資料（增加額外的工作）！所以若團隊不能很快的回饋有用的價值給其他部門，而僅僅只是靠長官相挺，這看起來不就很「空降」、「借長官壓人」的感覺嗎？</p>
+<p>我以為提供Dashboard是一個最快回饋給對方的方式，就像是要和別人深入合作，通常要先建立起友誼與互信一樣，是一個很好的開始。</p>
+</div>
+<div id="總結" class="section level2">
+<h2>總結</h2>
+<p>從陳老師提到資料科學的各面向，再再都驗證了Dashboard能解決的問題的重要性。雖然老師也提到：「不要讓資料科學團隊只做Dashboard」，我個人認為這是一種過與不及的概念。Dashboard對於初期的資料科學團隊很重要，但是當馬步蹲好了，團隊一定要繼續往前走，探索更深入的問題。而我這篇文章想強調的，則是在往前走之前，這些基礎的功夫不要省。如果團隊在蹲馬步時偷吃步，例如和不乾淨的資料與不正確的資料妥協，或是在對企業不夠理解的狀況下就開始花資源解決問題，最後都是得不償失的。有趣的是，這些問題通通可以在建立Dashboard時檢驗出來，所以這個Hello World專案是可以讓團隊集中注意力，蹲好馬步的。</p>
+<p>所以經過這次課程，我更加肯定：<strong>資料科學團隊的Hello World，應當是針對手上的資料源建立Dashboard</strong>。這個蹲馬步的工作不先做<strong>好</strong>，貪快跳進深入分析、撰寫報告、建立機器學習產品等等，都是非常危險的。</p>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-130199267-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </body>
+</html>
+

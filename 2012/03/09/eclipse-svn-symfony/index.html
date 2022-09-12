@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.102.3" />
+
+
+<title>eclipse-svn-symfony - Wush &lt;- &#39;儒爸&#39;</title>
+<meta property="og:title" content="eclipse-svn-symfony - Wush &lt;- &#39;儒爸&#39;">
+
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/meme.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/wush978">GitHub</a></li>
+    
+    <li><a href="https://hahow.in/cr/r-hands-on">Hahow R語言入門</a></li>
+    
+    <li><a href="https://www.linkedin.com/in/wush978/">My LinkedIn Profile</a></li>
+    
+    <li><a href="https://datascienceandr.org">R語言翻轉教室</a></li>
+    
+    <li><a href="https://gitter.im/wush978/DataScienceAndR">聊天室</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">1 min read</span>
+    
+
+    <h1 class="article-title">eclipse-svn-symfony</h1>
+
+    
+    <span class="article-date">2012-03-09</span>
+    
+
+    <div class="article-content">
+      
+
+
+<h1>
+Subclipse功能簡介
+</h1>
+<h2>
+建立本機端的repository
+</h2>
+<ul>
+<li>於eclipse內打開SVN Repository的perspective</li>
+<li>於SVN Repositories視窗內右邊的倒三角形 -&gt; New repository…</li>
+<li>選擇要建立repository的位置 -&gt; OK</li>
+</ul>
+<h2>
+建立資料夾
+</h2>
+<ul>
+<li>右鍵點選repository -&gt; New -&gt; New remote folder</li>
+<li>輸入資料夾名稱</li>
+</ul>
+<h2>
+匯入資料
+</h2>
+<ul>
+<li>右鍵點選資料夾 -&gt; Import…</li>
+<li>於Import directory內選擇要被匯入的資料</li>
+<li>於Comment:內輸入註解</li>
+<li>OK</li>
+</ul>
+<h2>
+Checkout並建立專案
+</h2>
+<ul>
+<li>右鍵點選要被Checkout的資料夾 -&gt; Checkout…</li>
+<li>選擇Check out as a project configured using the New Project Wizard</li>
+<li>選擇Check out HEAD revision</li>
+<li>選擇Depth:為Fully recursive</li>
+<li>選擇Allow unversioned obstructions</li>
+<li>Finish</li>
+<li>選擇專案的種類為PHP Project</li>
+<li>剩下的步驟同Eclipse建立新專案的步驟</li>
+</ul>
+<h2 id="commit">
+送交至Repository(Commit)
+</h2>
+<ul>
+<li>右鍵點選已經被修改的檔案 -&gt; Team -&gt; Commit…</li>
+<li>視窗上方輸入要commit的message</li>
+<li>視窗下方確認要送交的檔案/目錄</li>
+<li>OK</li>
+<li>請不要在送交的message內使用中文</li>
+</ul>
+<h2>
+自專案中新增檔案/目錄
+</h2>
+<ul>
+<li>右鍵點選要新增至repository的檔案/目錄 -&gt; Team -&gt; Add to Version Control</li>
+<li>如果要取消, 請在右鍵點選要取消的檔案/目錄 -&gt; Team -&gt; Revert…</li>
+<li><a href="#commit">送交</a>要新增的檔案/目錄</li>
+</ul>
+<h2>
+更新Repository
+</h2>
+<ul>
+<li>右鍵點選要更新的檔案/目錄 -&gt; Team -&gt; Update to HEAD</li>
+</ul>
+<h2>
+刪除Repository內的檔案/目錄
+</h2>
+<ul>
+<li>刪除檔案/目錄</li>
+<li>送交</li>
+</ul>
+<h2>
+移動Repository內的檔案/目錄
+</h2>
+<ul>
+<li>移動檔案/目錄</li>
+<li>送交</li>
+</ul>
+<h2>
+解決衝突
+</h2>
+<ul>
+<li>送交時發生out of date錯誤</li>
+<li>更新時發現File conflicts</li>
+<li>Edit Conflict</li>
+<li>Mark Resolved…</li>
+<li>送交</li>
+</ul>
+<h2>
+清除暫存的登入帳號密碼
+</h2>
+<ul>
+<li>Windows -&gt; Preference -&gt; Team -&gt; SVN 檢查Client Adapter</li>
+<li>依照<a href="http://subclipse.tigris.org/wiki/PluginFAQ#head-d507c29676491f4419997a76735feb6ef0aa8cf8">Subclipse Wiki FAQ</a>的指示清除對應的資料夾</li>
+</ul>
+<h1>
+Symfony和svn
+</h1>
+<ul>
+<li>於Repository內建立三個資料夾:
+myproject/
+branches/
+tags/
+trunk/</li>
+<li>複製Symfony資料夾至myproject內</li>
+<li>更改Symfony資料夾的名稱為專案名稱(以下仍繼續使用Symfony)</li>
+<li>右鍵點選Symfony/src -&gt; Team -&gt; Add to Version Control</li>
+<li>忽略下列檔案:
+vendor
+app/內的bootstrap<em>
+app/config/內的 parameters.ini
+app/cache/內的 </em>
+app/logs/內的 *
+web/內的 bundles</li>
+</ul>
+<h1>
+參考資料
+</h1>
+<ul>
+<li><a href="http://symfony.com/doc/current/cookbook/workflow/new_project_svn.html">How to Create and store a Symfony2 Project in Subversion</a></li>
+</ul>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-130199267-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </body>
+</html>
+

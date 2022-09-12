@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.102.3" />
+
+
+<title>讓R自動優化建立報告的流程 - Wush &lt;- &#39;儒爸&#39;</title>
+<meta property="og:title" content="讓R自動優化建立報告的流程 - Wush &lt;- &#39;儒爸&#39;">
+
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/meme.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/wush978">GitHub</a></li>
+    
+    <li><a href="https://hahow.in/cr/r-hands-on">Hahow R語言入門</a></li>
+    
+    <li><a href="https://www.linkedin.com/in/wush978/">My LinkedIn Profile</a></li>
+    
+    <li><a href="https://datascienceandr.org">R語言翻轉教室</a></li>
+    
+    <li><a href="https://gitter.im/wush978/DataScienceAndR">聊天室</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">1 min read</span>
+    
+
+    <h1 class="article-title">讓R自動優化建立報告的流程</h1>
+
+    
+    <span class="article-date">2019-03-03</span>
+    
+
+    <div class="article-content">
+      
+
+
+<p>在開始介紹今天想介紹的R套件之前，我想先分享一個最近做分析的流程。</p>
+<p>我的目標是要幫客戶分析某個任務在各種狀況下的成功率。
+首先客戶每天產出一份excel報表給我，而我需要彙整每份報表之後，根據客戶感興趣的條件來作差異分析，最後要產生一個靜態網頁報告。</p>
+<p>然而在每次開會時，客戶都會對資料的定義有變動，導致整套分析要從頭開始。
+這是因為，我們做分析時，都是先清理資料，才開始跑相關的統計數據，最後再畫圖，以及製作相關報表。
+也由於資料量不小，所以我也沒辦法在一個R session中把所有事情做完，而是把工作切割成若干份，分段做，並且需要自己處理中間產生的暫存檔。</p>
+<div id="makefile" class="section level2">
+<h2>Makefile</h2>
+<p>為了管理我的分析流程，我通常會一邊做分析，一邊撰寫Makefile。</p>
+<p>Makefile是在Open Source界很常用的建置管理工具。
+它的內容是在描述各種檔案之間的新舊關係。
+更具體來說，它是要解決一個專案內，各個檔案之間的相依性關係。
+舉例來說，如果我寫了：</p>
+<pre><code>report.html : report.Rmd
+  Rscript -e &quot;rmarkdown::render(&#39;report.Rmd&#39;)&quot;</code></pre>
+<p>就表示，<code>report.html</code>這個檔案要比<code>report.Rmd</code>這個檔案還要新。
+因此，當我在命令列輸入<code>make</code>以後，
+<code>make</code>這支程式就會去比較這兩個檔案的變動時間。</p>
+<p>如果<code>make</code>找不到<code>report.html</code>，或是<code>report.html</code>的時間比較舊，
+<code>make</code>就會幫我執行程式：<code>Rscript -e "rmarkdown::render('report.Rmd')"</code></p>
+<p>也因此，我往往會在一個比較複雜的專案中，撰寫<code>Makefile</code>。
+最主要的任務是幫我記錄，每個檔案之間的產生順序。</p>
+</div>
+<div id="drake" class="section level2">
+<h2><a href="https://github.com/ropensci/drake">drake</a></h2>
+<p>今天我看到一個有趣的專案：<a href="https://github.com/ropensci/drake">drake</a>。
+仔細看字根，他應該就是在講<code>data</code>與<code>R</code>的<code>make</code>。</p>
+<p>在簡單看了以下的六分鐘的介紹影片（請直接到drake的說明網站中觀看）後，我發現drake這個專案，可以幫助我管理，一個複雜的資料分析專案的相依性關係。</p>
+<p><a href="https://ropenscilabs.github.io/drake-manual"> <img src="https://ropensci.github.io/drake/figures/video.png" alt="video" align="center" style = "border: none; float: center;"> </a></p>
+<p>首先，drake是一個純R的專案，所以我們可以不用額外去寫<code>Makefile</code>，去撰寫那些命令列呼叫R的額外工作。
+舉例來說，在<code>Makefile</code>中我們要寫：<code>Rscript -e "rmarkdown::render(...)"</code>，在drake中我們只要寫
+<code>rmarkdown::render(...)</code>就可以了。</p>
+<p>如果只有這樣，其實我大概不會心動。
+但是第二個事情有讓我感興趣：drake會幫我們管理暫存檔案。</p>
+<p>在我的Makefile中，常常看到：</p>
+<pre><code>first.Rds : first.R
+  Rscript first.R
+
+second.Rds : first.Rds second.R
+  Rscript second.R</code></pre>
+<p>這樣的關係。</p>
+<p>在drake中，我只需要寫清楚<code>first</code>與<code>second</code>中間的事情，而不用去處理存取<code>first.Rds</code>與<code>second.Rds</code>的事情了。
+這很方便。
+因為實務上，我常常在清洗資料的時候增減暫存檔，或是重構存放的目錄（例如把檔案都移到<code>data</code>資料夾中）。
+而每次修改，就至少改兩個地方（存與取）</p>
+<p>因此，今天就介紹這個有趣的專案給大家。
+有興趣的R友歡迎一起試用看看。
+我自己也會找機會試用看看，有更進一步的心得再跟大家分享。</p>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-130199267-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </body>
+</html>
+

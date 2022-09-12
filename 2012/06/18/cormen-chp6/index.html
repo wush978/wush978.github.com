@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.102.3" />
+
+
+<title>Cormen Chp6 - Wush &lt;- &#39;儒爸&#39;</title>
+<meta property="og:title" content="Cormen Chp6 - Wush &lt;- &#39;儒爸&#39;">
+
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/meme.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/wush978">GitHub</a></li>
+    
+    <li><a href="https://hahow.in/cr/r-hands-on">Hahow R語言入門</a></li>
+    
+    <li><a href="https://www.linkedin.com/in/wush978/">My LinkedIn Profile</a></li>
+    
+    <li><a href="https://datascienceandr.org">R語言翻轉教室</a></li>
+    
+    <li><a href="https://gitter.im/wush978/DataScienceAndR">聊天室</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">2 min read</span>
+    
+
+    <h1 class="article-title">Cormen Chp6</h1>
+
+    
+    <span class="article-date">2012-06-18</span>
+    
+
+    <div class="article-content">
+      
+
+
+<div id="heapsort" class="section level1">
+<h1>Heapsort</h1>
+<div id="heaps" class="section level2">
+<h2>6.1 Heaps</h2>
+<div id="heap-introduction" class="section level3">
+<h3>Heap Introduction</h3>
+<ul>
+<li>sorts <span class="math inline">\(n\)</span> elements in <span class="math inline">\(O(nlog(n))\)</span></li>
+<li>in place
+ps. <em>in place</em> : only used <span class="math inline">\(O(1)\)</span> additional memory to store data</li>
+<li>heat property: <span class="math display">\[\mbox{Parent[PARENT(i)] } \leq \mbox{ A[i]}\]</span></li>
+</ul>
+</div>
+<div id="exercise" class="section level3">
+<h3>Exercise</h3>
+<div id="section" class="section level4">
+<h4>6.1-1</h4>
+<p>min: <span class="math inline">\(2 ^ h\)</span><br />
+max: <span class="math inline">\(2 ^ h - 1\)</span></p>
+</div>
+<div id="section-1" class="section level4">
+<h4>6.1-2</h4>
+<p>Mathematical Induction</p>
+</div>
+<div id="section-2" class="section level4">
+<h4>6.1-3</h4>
+<p>Trivial</p>
+</div>
+<div id="section-3" class="section level4">
+<h4>6.1-4</h4>
+<p>Leaf</p>
+</div>
+<div id="section-4" class="section level4">
+<h4>6.1-5</h4>
+<p>Yes, it is</p>
+</div>
+<div id="section-5" class="section level4">
+<h4>6.1-6</h4>
+<p>No, <span class="math inline">\(6 &lt; 7\)</span></p>
+</div>
+<div id="section-6" class="section level4">
+<h4>6.1-7</h4>
+<p>Proof:
+<span class="math display">\[
+\begin{eqnarray}
+&amp; &amp; k \mbox{-th element is a leaf iff } 2k &gt; n \newline
+&amp;\Rightarrow&amp; k \geq \lfloor n/2 \rfloor + 1
+\end{eqnarray}
+\]</span></p>
+</div>
+</div>
+</div>
+<div id="maintaining-the-heap-property" class="section level2">
+<h2>6.2 Maintaining the heap property</h2>
+<p><code>MaxHeapify(A,i)</code> convert a heap that the subtree rooted at <span class="math inline">\(2 i\)</span> and
+<span class="math inline">\(2 i + 1\)</span> are max-heaps, but <span class="math inline">\(A[i]\)</span> might be smaller than one of its
+child, thus violating the max-heap property.</p>
+<p>The idea is to float-down <span class="math inline">\(A[i]\)</span>.</p>
+<div id="exercise-1" class="section level3">
+<h3>Exercise</h3>
+<div id="section-7" class="section level4">
+<h4>6.2-6</h4>
+<p>Give a special case such as root 0 and node 1.</p>
+</div>
+</div>
+</div>
+<div id="building-a-heap" class="section level2">
+<h2>6.3 Building a heap</h2>
+<p>Do <code>MaxHeapify(A,i)</code> from the leaf to the root.</p>
+<ul>
+<li>Initial: leaf is a valid subtree with heap property</li>
+<li>Maintain: for each step of heapify, heap property is maintained</li>
+<li>Termination:</li>
+</ul>
+<div id="exercise-2" class="section level3">
+<h3>Exercise</h3>
+<div id="section-8" class="section level4">
+<h4>6.3-2</h4>
+<p>Because <code>MaxHeapify(A,i)</code> needs <code>left(i)</code> and <code>right(i)</code> are subtree
+with heap property.</p>
+</div>
+</div>
+</div>
+<div id="the-heapsort-algorithm" class="section level2">
+<h2>6.4 The heapsort algorithm</h2>
+</div>
+</div>
+<div id="my-own-implementation" class="section level1">
+<h1>My own implementation</h1>
+<p>{% include_code Heap.hpp lang:cpp cormen/data_structure/Heap.hpp %}
+{% include_code HeapSort.hpp lang:cpp cormen/sorting/HeapSort.hpp %}</p>
+</div>
+<div id="reference" class="section level1">
+<h1>Reference</h1>
+<p>See my github repository: <a href="https://github.com/wush978/cormen">cormen</a> for details of the code.</p>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-130199267-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </body>
+</html>
+

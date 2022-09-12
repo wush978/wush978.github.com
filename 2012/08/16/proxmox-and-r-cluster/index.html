@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.102.3" />
+
+
+<title>Proxmox &amp;amp; R cluster - Wush &lt;- &#39;儒爸&#39;</title>
+<meta property="og:title" content="Proxmox &amp;amp; R cluster - Wush &lt;- &#39;儒爸&#39;">
+
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/meme.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/wush978">GitHub</a></li>
+    
+    <li><a href="https://hahow.in/cr/r-hands-on">Hahow R語言入門</a></li>
+    
+    <li><a href="https://www.linkedin.com/in/wush978/">My LinkedIn Profile</a></li>
+    
+    <li><a href="https://datascienceandr.org">R語言翻轉教室</a></li>
+    
+    <li><a href="https://gitter.im/wush978/DataScienceAndR">聊天室</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">7 min read</span>
+    
+
+    <h1 class="article-title">Proxmox &amp;amp; R cluster</h1>
+
+    
+    <span class="article-date">2012-08-16</span>
+    
+
+    <div class="article-content">
+      
+
+
+<p>Here I’ll show how to set up my parallel computing environment of R.</p>
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>As far as I know, the virtualization for linux with <a href="http://wiki.openvz.org/Main_Page">OpenVZ</a> does not loss too many computation efficiency.
+Moreover, it provides a simple way to <em>copy</em> whole computation environment from one machine to another.
+The consistency of the environment reduces the difficulty of setting MPI between machines, so I decide
+to build my R cluster under Proxmox, which is an easy to use open source virtualization platform.</p>
+</div>
+<div id="environment" class="section level1">
+<h1>Environment</h1>
+<p>OS:</p>
+<ul>
+<li>Host OS: <a href="http://www.proxmox.com/">Proxmox</a>(Version 2.1-1/fb0f63a)</li>
+<li>Container OS: <a href="http://www.ubuntu.com/">Ubuntu Precise</a>(Version 12.04)</li>
+</ul>
+<p>Software(Installed in Container OS):</p>
+<ul>
+<li><a href="http://www.r-project.org/">R</a>(Version 2.14.1)
+<ul>
+<li><a href="http://www.stats.uwo.ca/faculty/yu/Rmpi/">Rmpi</a>(Version 0.5-9)</li>
+<li><a href="http://cran.r-project.org/web/packages/snow/index.html">snow</a>(Version 0.3-10)</li>
+</ul></li>
+<li><a href="http://rstudio.org/">Rstudio</a>(Version 0.96.316)</li>
+<li><a href="http://packages.ubuntu.com/precise/mpich2">MPICH2</a>(Version 1.4.1)</li>
+</ul>
+</div>
+<div id="set-up-proxmox-cluster" class="section level1">
+<h1>Set up Proxmox Cluster</h1>
+<div id="install-proxmox" class="section level2">
+<h2>Install Proxmox</h2>
+<p>Please see <a href="http://pve.proxmox.com/wiki/Installation">Proxmox Installation</a></p>
+</div>
+<div id="set-up-proxmox-cluster-1" class="section level2">
+<h2>Set up Proxmox Cluster</h2>
+<p>Please see <a href="http://pve.proxmox.com/wiki/Proxmox_VE_Cluster#Create_a_Proxmox_VE_Cluster">Create a Proxmox VE Cluster</a></p>
+</div>
+<div id="create-a-container" class="section level2">
+<h2>Create a container</h2>
+<p>An easy way is to create the container under the management console of Proxmox.</p>
+<p>Please download the container template from [<a href="http://wiki.openvz.org/Download/template/precreated" class="uri">http://wiki.openvz.org/Download/template/precreated</a>] and put it under <code>/var/lib/vz/template/cache/</code>.</p>
+<p>Here, I write small shell script (modified from <a href="https://raw.github.com/drivard/openvz-create-container-script/master/createvz.sh">Here</a>)
+to create the virtual container with 6 CPUs, 2G memory and 32G disk:</p>
+<p><code>sh create_vz.sh #! /bin/bash VZUID="$1"  VZHOSTNAME="$2"  VZIP="$3"  VZTEMPLATE="$4"  if [[ $1 != "" &amp;&amp; $2 != "" &amp;&amp; $3 != "" &amp;&amp; $4 != "" ]]; then   /usr/bin/pvectl create $VZUID $VZTEMPLATE --cpus 6 --disk 32 --hostname $VZHOSTNAME --memory 2048 --swap 2048 --nameserver 8.8.8.8 --password initpasswd --pool Rslaves --netif ifname=eth0,mac=$(./macgen.py),host_ifname=veth103.0,host_mac=&lt;host_mac&gt;,bridge=vmbr0   /usr/bin/pvectl set $VZUID --ip_address $VZIP else   /bin/echo ""   /bin/echo "./create_vz.sh &lt;UID&gt; &lt;HOSTNAME&gt; &lt;IP&gt; &lt;TEMPLATE&gt;"   /bin/echo ""   /bin/echo ""   /usr/bin/pvectl list fi</code></p>
+<p>Note that the initial root password is <em>initpasswd</em> and the user need to fill <host_mac> according to the mac address of the host.(run <code>ifconfig</code> in host machine or check the setting of the container created in management console).</p>
+<p>The mac address is initialized according to the following python scripts:</p>
+<p>``` py macgen.py
+#! /usr/bin/python
+# Filename: macgen.py
+# Usage: It’s intended to generate MAC addresses for virtualized
+# systems that created by Xen, OpenVZ, Vserver etc.</p>
+<p>import random</p>
+</div>
+</div>
+<div id="the-first-line-is-defined-for-specified-vendor" class="section level1">
+<h1>The first line is defined for specified vendor</h1>
+<p>mac = [ 0x00, 0x24, 0x81,
+random.randint(0x00, 0x7f),
+random.randint(0x00, 0xff),
+random.randint(0x00, 0xff) ]</p>
+<p>print ‘:’.join(map(lambda x: “%02x” % x, mac))</p>
+<pre><code>
+After creating _create_vz.sh_ and _macgen.py_ and put them into the same directory, 
+run the shell command `./create_vz.sh 200 Rmaster 192.168.0.100 /var/lib/vz/template/cache/ubuntu-12.04-x86_64.tar.gz`
+
+    Creating container private area (/var/lib/vz/template/cache/ubuntu-12.04-x86_64.tar.gz)
+    Performing postcreate actions
+    CT configuration saved to /etc/pve/openvz/200.conf
+    Container private area was created
+    CT configuration saved to /etc/pve/openvz/200.conf
+    
+# Set up the prototype of container
+
+I will set up everything in one container and copy it to other machines in Proxmox Cluster.
+
+Note that the following commands are executed in the container under root privilege.
+
+## Initialize
+
+Login the virtual machine via ssh(`ssh root@192.168.0.100`) with the initial root password.
+
+``` sh
+locale-gen --lang en_US en_US.UTF-8
+apt-get update
+apt-get upgrade -y
+apt-get install build-essential -y</code></pre>
+<div id="install-r" class="section level2">
+<h2>Install R</h2>
+<pre class="sh"><code>apt-get install r-base -y</code></pre>
+</div>
+<div id="set-etchosts" class="section level2">
+<h2>Set <em>/etc/hosts</em></h2>
+<p>Here I’ll set up a clusters with 3 machines:</p>
+<p><code>text /etc/hosts 192.168.0.100 Rmaster 192.168.0.101 Rslave1 192.168.0.102 Rslave2</code></p>
+</div>
+<div id="set-ssh" class="section level2">
+<h2>Set SSH</h2>
+<p>Enable ssh public key authentication.</p>
+<pre class="text"><code>adduser ruser
+su ruser
+ssh-keygen -t dsa -N &quot;&quot; -f ~/.ssh/id_rsa
+cat ~/.ssh/id_rsa.pub &gt;&gt; ~/.ssh/authorized_keys
+exit</code></pre>
+<p>Test</p>
+<pre class="text"><code>sudo -u ruser ssh ruser@localhost</code></pre>
+<p>We should directly login without prompt of password.</p>
+</div>
+<div id="install-mpich2" class="section level2">
+<h2>Install MPICH2</h2>
+<pre class="sh"><code>apt-get install mpich2 -y</code></pre>
+<p>Check Install Result</p>
+<p>Run <code>mpich2version</code></p>
+<pre><code>MPICH2 Version:         1.4.1
+MPICH2 Release date:    Wed Aug 24 14:40:04 CDT 2011
+MPICH2 Device:          ch3:nemesis
+MPICH2 configure:       --build=x86_64-linux-gnu --prefix=/usr --includedir=${prefix}/include --mandir=${prefix}/share/man --infodir=${prefix}/share/info --sysconfdir=/etc --localstatedir=/var --libexecdir=${prefix}/lib/mpich2 --srcdir=. --disable-maintainer-mode --disable-dependency-tracking --disable-silent-rules --enable-shared --prefix=/usr --enable-fc --disable-rpath --sysconfdir=/etc/mpich2 --includedir=/usr/include/mpich2 --docdir=/usr/share/doc/mpich2 --with-hwloc-prefix=system --enable-checkpointing --with-hydra-ckpointlib=blcr
+MPICH2 CC:      gcc  -g -O2 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -g -O2 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -Werror=format-security -Wall  -O2
+MPICH2 CXX:     c++  -g -O2 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -g -O2 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Wformat-security -Werror=format-security -Wall -O2
+MPICH2 F77:     gfortran  -g -O2 -O2
+MPICH2 FC:      gfortran   -O2</code></pre>
+</div>
+<div id="install-rmpi-with-mpich2" class="section level2">
+<h2>Install Rmpi with MPICH2</h2>
+<p>Comment out origin setting of <code>CC</code> and <code>SHLIB_LD</code>.
+Add:</p>
+<pre class="text"><code>#CC = ...
+CC = mpicc
+...
+#SHLIB_LD = ...
+SHLIB_LD=mpicc</code></pre>
+<p>Open <em>R</em> console and execute following commands to install <em>Rmpi</em> with <em>MPICH2</em>:</p>
+<p><code>r install Rmpi install.packages('Rmpi',configure.args="--with-Rmpi-type=MPICH2 --with-Rmpi-include=/usr/lib/mpich2/include --with-Rmpi-libpath=/usr/lib/mpich2/lib/ --with-mpi=/usr/include/mpich2/")</code></p>
+<p>Recover <em>/etc/R/Makeconf</em>:</p>
+<pre class="text"><code>CC = ...
+#CC = mpicc
+...
+SHLIB_LD = ...
+#SHLIB_LD=mpicc</code></pre>
+<p>Modify <em>/usr/local/lib/R/site-library/Rmpi/Rslaves.sh</em> line 17:</p>
+<p><code>text /usr/local/lib/R/site-library/Rmpi/Rslaves.sh ...         $R_HOME/bin/R --no-init-file --slave --no-save &lt; $1 &gt; /tmp/$hn.$2.$$.log 2&gt;&amp;1 ...</code></p>
+<p>Note that without modification of <em>/usr/local/lib/R/site-library/Rmpi/Rslaves.sh</em> will produce <em>Permission denied</em> during <code>mpi.spawn.Rslaves</code>.</p>
+</div>
+<div id="install-snow" class="section level2">
+<h2>Install snow</h2>
+<p>Install <em>snow</em></p>
+<p><code>r insatll snow install.packages("snow")</code></p>
+</div>
+</div>
+<div id="spread-prototype" class="section level1">
+<h1>Spread Prototype</h1>
+<p>In this section, the commands are executed in host OS (Proxmox) if there is no further explanation.</p>
+<div id="shutdown-the-prototype-of-container" class="section level2">
+<h2>Shutdown the prototype of container</h2>
+<p>Before deploying the prototype of container to other machines, I suggest
+to shutdown the prototype.</p>
+<p><code>sh Under container init 0</code></p>
+</div>
+<div id="backup-the-snapshot-of-the-container" class="section level2">
+<h2>Backup the Snapshot of the container</h2>
+<p>run <code>vzdump -dumpdir . 200</code></p>
+<pre><code>INFO: starting new backup job: vzdump 200 --dumpdir .
+INFO: Starting Backup of VM 200 (openvz)
+INFO: CTID 200 exist unmounted down
+INFO: status = stopped
+INFO: backup mode: stop
+INFO: ionice priority: 7
+INFO: creating archive &#39;./vzdump-openvz-200-2012_08_16-13_53_23.tar&#39;
+INFO: Total bytes written: 960901120 (917MiB, 716MiB/s)
+INFO: archive file size: 916MB
+INFO: delete old backup &#39;./vzdump-openvz-200-2012_08_16-13_33_40.tar&#39;
+INFO: Finished Backup of VM 200 (00:00:02)
+INFO: Backup job finished successfully</code></pre>
+<p>The Proxmox will dump the environment of the prototype container to one file whose size is about 1G.
+Note that <em>200</em> is the <em>uid</em> of the prototype.</p>
+</div>
+<div id="copy-the-prototype" class="section level2">
+<h2>Copy the prototype</h2>
+<p>I spread the prototype with the following shell scripts.</p>
+<p>Please remember to modify the <host_mac> or other settings to fit your own environment.</p>
+<p><code>sh spread_vz.sh #! /bin/bash VZUID="$1"  VZHOSTNAME="$2"  VZIP="$3"  VZDUMP="$4" if [[ $1 != "" &amp;&amp; $2 != "" &amp;&amp; $3 != "" &amp;&amp; $4 != "" ]]; then   vzrestore $VZDUMP $VZUID   pvectl set $VZUID --ip_address $VZIP --netif ifname=eth0,mac=$(./macgen.py),host_ifname=veth$VZUID.0,host_mac=&lt;host_mac&gt;,bridge=vmbr0 --hostname $VZHOSTNAME else   /bin/echo ""   /bin/echo "./spread_vz.sh &lt;UID&gt; &lt;HOSTNAME&gt; &lt;IP&gt; &lt;VZDUMP&gt;"   /bin/echo ""   /bin/echo ""   /usr/bin/pvectl list fi</code></p>
+<p>run <code>./spread_vz.sh 201 Rslave1 192.168.0.101 vzdump-openvz-200-2012_08_16-13_53_23.tar</code></p>
+<pre class="text"><code>extracting archive &#39;/root/dump/vzdump-openvz-200-2012_08_16-13_53_23.tar&#39;
+Total bytes read: 960901120 (917MiB, 470MiB/s)
+restore configuration to &#39;/etc/pve/nodes/&lt;cluster1&gt;/openvz/201.conf&#39;
+CT configuration saved to /etc/pve/openvz/201.conf</code></pre>
+<p>run <code>./spread_vz.sh 202 Rslave2 192.168.0.102 vzdump-openvz-200-2012_08_16-13_53_23.tar</code> for second slave.</p>
+</div>
+<div id="deploy-the-slave" class="section level2">
+<h2>Deploy the slave</h2>
+<p>Just open the management console of Proxmox to migrate these new containers to other machines in Proxmox Cluster.</p>
+</div>
+<div id="validate-environment" class="section level2">
+<h2>Validate Environment</h2>
+<ul>
+<li>Start all containers.</li>
+<li>Login to Rmaster as ruser.</li>
+<li>Try ssh to Rslave1 and Rslave2 as ruser. It should not require password.</li>
+<li>Check the content of <em>/etc/hosts</em> on all machines.</li>
+<li>Create Rmpi.conf as</li>
+</ul>
+<pre class="text"><code>Rmaster
+Rslave1
+Rslave2</code></pre>
+<ul>
+<li>Create Rmpi.test.R as
+<code>r Rmpi.test.R library(Rmpi) cl &lt;- mpi.spawn.Rslaves(nslaves=6) mpi.close.Rslaves() mpi.quit()</code></li>
+<li>execute <code>mpiexec -np 1 -f Rmpi.conf R --vanilla &lt; Rmpi.test.R</code></li>
+</ul>
+<pre class="text"><code>R version 2.14.1 (2011-12-22)
+Copyright (C) 2011 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type &#39;license()&#39; or &#39;licence()&#39; for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type &#39;contributors()&#39; for more information and
+&#39;citation()&#39; on how to cite R or R packages in publications.
+
+Type &#39;demo()&#39; for some demos, &#39;help()&#39; for on-line help, or
+&#39;help.start()&#39; for an HTML browser interface to help.
+Type &#39;q()&#39; to quit R.
+
+&gt; library(Rmpi)
+&gt; cl &lt;- mpi.spawn.Rslaves(nslaves=6)
+        6 slaves are spawned successfully. 0 failed.
+master (rank 0, comm 1) of size 7 is running on: Rmaster 
+slave1 (rank 1, comm 1) of size 7 is running on: Rslave1
+slave2 (rank 2, comm 1) of size 7 is running on: Rslave2
+slave3 (rank 3, comm 1) of size 7 is running on: Rmaster
+slave4 (rank 4, comm 1) of size 7 is running on: Rslave1
+slave5 (rank 5, comm 1) of size 7 is running on: Rslave2
+slave6 (rank 6, comm 1) of size 7 is running on: Rmaster
+&gt; mpi.close.Rslaves()
+[1] 1
+&gt; mpi.quit()</code></pre>
+</div>
+<div id="install-rstudio-server" class="section level2">
+<h2>Install Rstudio Server</h2>
+<pre class="sh"><code>apt-get install libssl0.9.8 libapparmor1 apparmor-utils -y
+wget http://download2.rstudio.org/rstudio-server-0.96.330-amd64.deb
+dpkg -i rstudio-server-0.96.330-amd64.deb</code></pre>
+<p>See <a href="http://rstudio.org/download/server">Download RStudio Server</a> for details.</p>
+</div>
+<div id="set-rmpi-in-rstudio-server" class="section level2">
+<h2>Set Rmpi in Rstudio Server</h2>
+<div id="configuration" class="section level3">
+<h3>Configuration</h3>
+<p>Create <em>/etc/Rmpi.conf</em></p>
+<p><code>text /etc/Rmpi.conf Rmaster Rslave1 Rslave2</code></p>
+<p>Create <em>/usr/lib/rstudio-server/bin/rsession-mpiexec.sh</em>:</p>
+<p>``` sh /usr/lib/rstudio-server/bin/rsession-mpiexec.sh
+#! /bin/bash</p>
+<p>mpiexec -np 1 -f /etc/Rmpi.conf -errfile-pattern /tmp/mpiexec.error.log /usr/lib/rstudio-server/bin/rsession “$@”</p>
+<pre><code>
+Modify the privilege:
+
+``` sh
+chmod u+x /usr/lib/rstudio-server/bin/rsession-mpiexec.sh
+chmod g+x /usr/lib/rstudio-server/bin/rsession-mpiexec.sh
+chmod o+x /usr/lib/rstudio-server/bin/rsession-mpiexec.sh</code></pre>
+<p>Create or modify <em>/etc/rstudio/rserver.conf</em>:</p>
+<pre class="text"><code>rsession-path=/usr/lib/rstudio-server/bin/rsession-mpiexec.sh
+#rsession-path=/usr/lib/rstudio-server/bin/rsession</code></pre>
+<p>Modify <em>/etc/apparmor.d/rstudio-server</em>:</p>
+<p><code>text rstudio-server   #/usr/lib/rstudio-server/bin/rsession ux,   /usr/lib/rstudio-server/bin/rsession-mpiexec.sh ux,</code></p>
+<p>Restart Rstudio Server or restart the Rmaster</p>
+<pre class="sh"><code>rstudio-server restart</code></pre>
+</div>
+<div id="testing-with-rmpi" class="section level3">
+<h3>Testing with <em>Rmpi</em></h3>
+<p>Login into web interface of Rstudio and execute</p>
+<pre class="r"><code>library(Rmpi)
+cl &lt;- mpi.spawn.Rslaves(nslaves=6)
+mpi.close.Rslaves()
+mpi.quit()</code></pre>
+<p>You should see the slaves are spawned in different container/machines.</p>
+</div>
+<div id="testing-with-snow" class="section level3">
+<h3>Testing with <em>snow</em></h3>
+<p>Login into web interface of Rstudio and execute</p>
+<pre class="r"><code>library(snow)
+cl &lt;- makeMPIcluster(count = 18)
+unlist(clusterEvalQ(cl, system(&#39;hostname&#39;,intern=TRUE)))
+stopCluster(cl)</code></pre>
+<p>You should see the hostname of slaves.</p>
+</div>
+</div>
+</div>
+<div id="trouble-shooting" class="section level1">
+<h1>Trouble Shooting:</h1>
+<ul>
+<li>Check the network environment
+<ul>
+<li>Is the <em>/etc/hosts</em> correct?</li>
+<li>Can <em>ruser</em> ssh to slaves and masters without password prompt?</li>
+</ul></li>
+<li>Check logs:
+<ul>
+<li>the system log (/var/log/syslog)</li>
+<li>mpiexec error log (/tmp/mpiexec.error.log) which is set in <em>/usr/lib/rstudio-server/bin/rsession-mpiexec.sh</em></li>
+</ul></li>
+</ul>
+<p>Good Luck!</p>
+</div>
+<div id="reference" class="section level1">
+<h1>Reference</h1>
+<ul>
+<li><a href="http://sealmemory.blogspot.tw/2012/05/ubuntu-1204-openmpi-cluster.html">海豹雜記: 使用 Ubuntu Linux 12.04 與 OpenMPI 架設 Cluster</a></li>
+<li><a href="http://webappl.blogspot.tw/2012/01/install-rmpi-with-mpich2-environment.html">Web Application: Install Rmpi with MPICH2 environment</a></li>
+</ul>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-130199267-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </body>
+</html>
+

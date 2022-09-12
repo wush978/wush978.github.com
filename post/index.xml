@@ -1,0 +1,931 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on Wush &lt;- &#39;儒爸&#39;</title>
+    <link>/post/</link>
+    <description>Recent content in Posts on Wush &lt;- &#39;儒爸&#39;</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-tw</language>
+    <lastBuildDate>Sun, 03 Mar 2019 00:00:00 +0000</lastBuildDate><atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>讓R自動優化建立報告的流程</title>
+      <link>/2019/03/03/drake/</link>
+      <pubDate>Sun, 03 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/2019/03/03/drake/</guid>
+      <description>在開始介紹今天想介紹的R套件之前，我想先分享一個最近做分析的流程。
+我的目標是要幫客戶分析某個任務在各種狀況下的成功率。 首先客戶每天產出一份excel報表給我，而我需要彙整每份報表之後，根據客戶感興趣的條件來作差異分析，最後要產生一個靜態網頁報告。
+然而在每次開會時，客戶都會對資料的定義有變動，導致整套分析要從頭開始。 這是因為，我們做分析時，都是先清理資料，才開始跑相關的統計數據，最後再畫圖，以及製作相關報表。 也由於資料量不小，所以我也沒辦法在一個R session中把所有事情做完，而是把工作切割成若干份，分段做，並且需要自己處理中間產生的暫存檔。
+Makefile 為了管理我的分析流程，我通常會一邊做分析，一邊撰寫Makefile。
+Makefile是在Open Source界很常用的建置管理工具。 它的內容是在描述各種檔案之間的新舊關係。 更具體來說，它是要解決一個專案內，各個檔案之間的相依性關係。 舉例來說，如果我寫了：
+report.html : report.Rmd Rscript -e &amp;quot;rmarkdown::render(&amp;#39;report.Rmd&amp;#39;)&amp;quot; 就表示，report.html這個檔案要比report.Rmd這個檔案還要新。 因此，當我在命令列輸入make以後， make這支程式就會去比較這兩個檔案的變動時間。
+如果make找不到report.html，或是report.html的時間比較舊， make就會幫我執行程式：Rscript -e &#34;rmarkdown::render(&#39;report.Rmd&#39;)&#34;
+也因此，我往往會在一個比較複雜的專案中，撰寫Makefile。 最主要的任務是幫我記錄，每個檔案之間的產生順序。
+drake 今天我看到一個有趣的專案：drake。 仔細看字根，他應該就是在講data與R的make。
+在簡單看了以下的六分鐘的介紹影片（請直接到drake的說明網站中觀看）後，我發現drake這個專案，可以幫助我管理，一個複雜的資料分析專案的相依性關係。
+首先，drake是一個純R的專案，所以我們可以不用額外去寫Makefile，去撰寫那些命令列呼叫R的額外工作。 舉例來說，在Makefile中我們要寫：Rscript -e &#34;rmarkdown::render(...)&#34;，在drake中我們只要寫 rmarkdown::render(...)就可以了。
+如果只有這樣，其實我大概不會心動。 但是第二個事情有讓我感興趣：drake會幫我們管理暫存檔案。
+在我的Makefile中，常常看到：
+first.Rds : first.R Rscript first.R second.Rds : first.Rds second.R Rscript second.R 這樣的關係。
+在drake中，我只需要寫清楚first與second中間的事情，而不用去處理存取first.Rds與second.Rds的事情了。 這很方便。 因為實務上，我常常在清洗資料的時候增減暫存檔，或是重構存放的目錄（例如把檔案都移到data資料夾中）。 而每次修改，就至少改兩個地方（存與取）
+因此，今天就介紹這個有趣的專案給大家。 有興趣的R友歡迎一起試用看看。 我自己也會找機會試用看看，有更進一步的心得再跟大家分享。</description>
+    </item>
+    
+    <item>
+      <title>在parallel的cluster中幫slave除錯</title>
+      <link>/2019/02/14/bug/</link>
+      <pubDate>Thu, 14 Feb 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/2019/02/14/bug/</guid>
+      <description> 在R中要平行跑程式的一個方法是使用內建的parallel套件來建立一個cluster。
+該cluster會產生若干個slave供R使喚。但是預設的情境之下，slave出錯後的錯誤訊息在R中是看不到的，導致除錯變得困難。
+解決方法是在建立cluster時設定參數 outfile ：
+cl &amp;lt;- parallel::makeCluster(2, outfile = &amp;quot;&amp;quot;) 這樣當初錯時，或是讓slave把一些文字用cat、print等函數印出來時，都會顯示在原本的R中：
+&amp;gt; clusterEvalQ(cl, cat(&amp;quot;hello world\n&amp;quot;)) hello world hello world hello world hello world [[1]] NULL [[2]] NULL [[3]] NULL [[4]] NULL </description>
+    </item>
+    
+    <item>
+      <title>trace函數： 修改既有的R function內容</title>
+      <link>/2018/05/07/trace%E5%87%BD%E6%95%B8-%E4%BF%AE%E6%94%B9%E6%97%A2%E6%9C%89%E7%9A%84r-function%E5%85%A7%E5%AE%B9/</link>
+      <pubDate>Mon, 07 May 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/05/07/trace%E5%87%BD%E6%95%B8-%E4%BF%AE%E6%94%B9%E6%97%A2%E6%9C%89%E7%9A%84r-function%E5%85%A7%E5%AE%B9/</guid>
+      <description>今天為了追一個安裝套件的bug，我需要追蹤tools:::.install_packages這個程式碼在if (test_load) {以後的行為。
+在追蹤R語言函數的行為時，我常用的是在原始碼中插入browser()與debug(tools:::.install_packages)兩種方法。trace函式我一直不太懂。有興趣的讀者可以在查閱我過去寫的：R的除錯功能
+在追tools:::.install_packages這個函數時，一來我懶的去研究如何修改tools這個內建套件的函數原始碼，二來這個函數很複雜，如果用debug需要瘋狂的next step…
+trace這個函數，是用來編輯已經存在的R函數。第一種用法是直接在指定的行數插入給定的expression。這裡的行數，是以list(body(tools:::.install_packages))的輸出為準。有興趣的讀者直接查閱examples(trace)就可以看到範例了。
+另外一種作法，是直接設定edit = TRUE，R就會打開預設的編輯器(效果應該等同於file.edit)後，讓我們直接編輯原始碼，儲存退出後生效。以我手上的例子，我需要輸入：trace(&#34;.install_packages, where = loadNamespace(&#34;tools&#34;), edit = TRUE)。
+以下的附加說明是寫給沒這麼熟R套件系統的讀者。tools:::.install_packages是tools套件的內部函數(有三個:)，所以即使我library(tools)之後，直接在console輸入.install_packages，R仍然會回報錯誤：找不到.install_packages物件。因此我需要指定where參數，告訴R.install_packages在哪裡。tools套件的內部函數，在R中是放在&amp;lt;environment: namespace:tools&amp;gt;這個環境中，我們可以使用loadNamespace(&#34;tools&#34;)的輸出來取得這個環境。
+輸入以後，我就可以手動編輯原始碼，直接找到test_load這段程式之後，在下一行插入browser()，就可以在執行tools:::.install_packages時直接中斷在我要的地方。</description>
+    </item>
+    
+    <item>
+      <title>透過homebrew/linuxbrew安裝Rstudio Server</title>
+      <link>/2017/12/24/o-server/</link>
+      <pubDate>Sun, 24 Dec 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/12/24/o-server/</guid>
+      <description>現在在homebrew/linuxbrew專案中，已經有Rstudio-server 的 formula讓我們可以直接安裝rstudio server在mac 或是沒有root權限的linux server之上：
+brew update brew tap homebrew/science brew install r openssl ant brew install homebrew/science/rstudio-server 與一般安裝不同的是，這種安裝方法不會預設開啟rstudio-server的背景執行程式。
+所以我們可以透過：
+rserver --server-daemonize=0 \ --www-address=127.0.0.1 \ --www-port=8787 這個指令開啟rstudio-server的程序。如果想要在關閉ssh/terminal之後讓rstudio-server繼續執行，可以在screen或tmux底下執行。
+開啟rstudio-server之後，還可以直接透過ssh的port forwarding技術，不用找網管開防火牆即可使用了：
+ssh -fNL &amp;lt;local port&amp;gt;:localhost:8787 &amp;lt;server-address&amp;gt; 接著只要在瀏覽器打開http://localhost:&amp;lt;local port&amp;gt;就可以連到server上的rstudio server。</description>
+    </item>
+    
+    <item>
+      <title>itertools的效能</title>
+      <link>/2017/03/11/erformance/</link>
+      <pubDate>Sat, 11 Mar 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/03/11/erformance/</guid>
+      <description>看到許多版友在問itertools的效能，讓我想跟大家分享一些關於程式效能的經驗。
+一般來說，我們不會去優化所有的程式碼，因為優化有很大的代價:一般性與可讀性。 通常跑得快與寫的快，是要做取捨的。 這裡的例子很好想像，大家只要比較R的程式碼與Rcpp的程式碼就好了。
+又由於程式的效能通常也符合80-20法則: 80%的時間是花在20%的程式碼 所以實務上，我不會從頭到尾都把程式用Rcpp來寫， 而是只抽出最花時間的那段程式碼，改成Rcpp。
+以一個for loop來說:
+library(microbenchmark) library(itertools) ## Loading required package: iterators f1 &amp;lt;- function() { lapply(1:100, function(i) { lapply(1:100, function(j) { }) }) NULL } f2 &amp;lt;- function() { lapply(product(i = 1:100, j = 1:100), function(x) { }) NULL } microbenchmark(f1(), f2(), times = 10) ## Unit: milliseconds ## expr min lq mean median uq max ## f1() 4.657429 5.329925 6.092346 5.896559 6.685231 8.</description>
+    </item>
+    
+    <item>
+      <title>itertools 簡介</title>
+      <link>/2017/03/10/ntro/</link>
+      <pubDate>Fri, 10 Mar 2017 00:00:00 +0000</pubDate>
+      
+      <guid>/2017/03/10/ntro/</guid>
+      <description>最近在ptt R_Language版上看到許多跟迴圈有關的文章，所以一時興起想跟大家分享寫迴圈或apply等函數好用的套件:itertools
+library(itertools) ## Loading required package: iterators 講itertools之前，要先介紹iterator的概念：這是把迴圈的功能更精鍊出來的概念。 我們先看一個迴圈的範例：
+for(i in 1:3) { print(i) } ## [1] 1 ## [1] 2 ## [1] 3 這段迴圈的靈魂，在於變數i。透過i in 1:3，R 就知道i的值有以下規則:
+從1開始 每次遞增1 到3結束 更一般來說，R 的迴圈是透過一個Vector物件，告訴R要如何執行迴圈。舉例來說，i in x即代表:
+從x[1]開始 x[i]結束之後執行x[i+1] 到x[length(x)]結束 但是我們可以再更精鍊這樣的概念。而許多工具中，就會設計iterator這樣的物件，並且讓他具備以下兩種功能
+有沒有下一個值 取出下一個值，並且往前推進 有這兩個概念即可建立一個迴圈。
+舉例來說，以下兩個迴圈是等價的:
+for(i in 1:3) { print(i) } ## [1] 1 ## [1] 2 ## [1] 3 i &amp;lt;- 0 while(i &amp;lt; 3) { i &amp;lt;- i + 1 print(i) } ## [1] 1 ## [1] 2 ## [1] 3 這裡的i &amp;lt; 3代表有沒有下一個值的邏輯判斷，而i &amp;lt;- i + 1則代表取出下一個值，並且往前推進。</description>
+    </item>
+    
+    <item>
+      <title>A Plain Markdown Post</title>
+      <link>/2016/12/30/a-plain-markdown-post/</link>
+      <pubDate>Fri, 30 Dec 2016 21:49:57 -0700</pubDate>
+      
+      <guid>/2016/12/30/a-plain-markdown-post/</guid>
+      <description>This is a post written in plain Markdown (*.md) instead of R Markdown (*.Rmd). The major differences are:
+You cannot run any R code in a plain Markdown document, whereas in an R Markdown document, you can embed R code chunks (```{r}); A plain Markdown post is rendered through Blackfriday, and an R Markdown document is compiled by rmarkdown and Pandoc. There are many differences in syntax between Blackfriday&amp;rsquo;s Markdown and Pandoc&amp;rsquo;s Markdown.</description>
+    </item>
+    
+    <item>
+      <title>機器學習系統需要的資料格式</title>
+      <link>/2016/12/26/rning-format/</link>
+      <pubDate>Mon, 26 Dec 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/12/26/rning-format/</guid>
+      <description>之前我分享了對於一般線上系統與分析系統對於資料的不同需求，並且針對他們不同的需求，提出我個人認為，在工程資源有限時比較好的選擇。接下來我想拿機器學習系統的需求與線上系統、分析系統做比較。以廣告系統為例，一個常見的機器學習系統，就是對每一個bid request後面代表的事件預測使用者點擊廣告的機率。
+就我所知，機器學習系統可以分成兩種作法。一般的作法會把整套系統分成兩塊：線上預測與線下學習。通常我們會先累計「可以學習」的資料，在線下透過各種方法讓機器學出一個模型。接下來再把模型放到線上系統，即時的對每一個事件做預測。另外一種作法，則是讓機器學習系統在收到事件後，做預測的同時，即時更新模型。兩者最主要的差異，就是前者是將預測與學習做分割，而後者是同時做預測與學習。以下我們先針對這兩種架構做討論。
+在線上系統中同時進行預測與學習 這種作法的資料格式需求，會非常近似於線上系統。無論是預測與學習，都可以視為是線上服務的一部分，所以一個基本門檻就是：處理單一事件時，反應時間要夠快。也因為後者的作法，需求貼近線上服務，所以資料格式的設計就很單純，程式碼在維護的成本也比較低。但是代價則是在多服務器時，讓機器學習系統同步的難度很高。
+( 出處： http://f5loadbalancer.com/f5-load-balancer-wiki/ )
+現代的線上系統，常常用多台機器來平行處理事件，讓系統能夠在很短的時間處理大量的事件。也因此，每一台機器會接收到的事件數量、事件內容會不太一樣。因此，如果採用「學習」與「預測」同時在線上處理的架構，就會發生每一台機器不一致的狀況。而機器學習系統除了處理單一事件時，反應時間要夠快這樣的需求之外，還有更重要的需求：預測精準（無論那一種架構的機器學習系統，都要符合這樣的需求，否則不如不要搭建機器學習系統）。而一個常識是：越多的學習資料，機器學習系統就越準。因此，直接以常見的方式平行擴充服務器，這種架構的機器學習系統的預測精準度會比較低，因為每一個模型所學習的資料只有1/n ( n 為服務器的個數 )。
+這種架構的另一個問題，會在運用監督式學習時發生。監督式學習的學習資料中，需要有每一個事件的反饋資訊。舉例來說，預測點擊率的機器學習系統，學習時需要知道事件的結果（使用者有無點擊廣告）。但是這樣的結果，並不會和事件同時被觀察到，而是需要等待。如果等待的時間夠短，我們可以把事件放在Memory Buffer中，等若干分鐘後再做學習。如果等待的時間要很長，那就要花額外的工程能量來克服（建構對應的database… 等等）。
+在線上做預測，線下作學習 這種作法的資料格式需求，則會比較複雜。前面我們提過，在線上系統的需求是：處理單一事件時，反應時間要快，而分析系統的需求是：處理全部事件時的整體時間要短。而分析系統的另一個挑戰是查詢指令的不確定性。
+機器學習系統，在線上預測的需求，則也是類似：預測單一事件的時間要短以及預測精準。也因此，這部份的系統設計也是接近線上系統的設計。而機器學習系統在線下學習時，又分成兩種工作：模型的調校，與例行性的學習。模型的調校，比較接近一般分析系統的情境：我們很難事先知道會使用的資料欄位。而我們對每一次調校能容許的等待時間，比一般的分析系統下查詢的時間更長。也因此，前面介紹給分析系統使用的資料格式(Ex : 將資料以column-based的方式儲存於檔案系統)，其實也是滿足這樣的工作需求。而一般在工程資源有限時，我們會直接用相同的作法解決讓模型的調校與例行性的學習的需求。(在大公司，這兩種工作的確是會切開的)。
+到這裡，讀者可能覺得故事很單純：那我們就在線上系統使用row based的資料格式(ex: protocol buffer或avro)做預測，線下系統使用column based的資料格式做學習就好了。但是機器學習系統，通常還需要做把資料轉換成線性代數中的向量後，才能做學習與預測。這個問題在遇到大量類別型變數時，特別嚴重，而廣告系統剛好就是其中一個例子。更成熟的機器學習系統，還會對事件做特徵抽取(feature extraction)或特徵工程(feature engineer)。前面提到，機器學習系統的基本需求是預測精準，而預測與學習的一致性是預測精準的基本需求之一。
+ps. 預測與學習的一致性是指，事件在預測時，或是在學習時，轉換成線性代數的向量，要一致。
+所以，如果我們在線上系統使用row based的資料格式，線下系統使用column based或是其他的資料格式，而且各自寫一個程式來將事件轉換成線性代數中的向量，那就會帶來極大的維護難題：要讓兩支輸入不同（雖然資訊相同，但是資料格式不同）的程式，輸出的結果一模一樣。在工程能量有限時，我們應該避免這樣的狀況。
+因此，我認為採用這樣的架構時，在線下學習，仍然應該採用以row based儲存於檔案系統的方式，儲存與處理資料。儘量讓線下學習與線上預測使用相同的程式碼，是在工程能量有限時很重要的考量。
+這樣做的代價，是在線下學習時的時間更長。但是因為我們對每一次調校能容許的等待時間，比一般的分析系統下查詢的時間更長，所以我在取捨之下，會更喜歡這種作法。</description>
+    </item>
+    
+    <item>
+      <title>資料分析所採用的資料格式</title>
+      <link>/2016/12/23/is-format/</link>
+      <pubDate>Fri, 23 Dec 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/12/23/is-format/</guid>
+      <description>數據分析已經是一個悠久的需求，也因此對於數據分析所需的需求，其實也有很多解法了。分析可以分成已知需求的分析與未知需求的分析。前者常常被分類到BI的範疇，而後者則是被歸類為分析的範疇。
+若已知分析面向，我們可以在系統處理事物性需求時，做出即時的統計數據。舉例來說，在做RTB時，只要在每次收到win notice時將需要支付的金額更新到如redis的資料庫中，就可以了解最新的已花費金額。這樣的查詢，可以花費很少的力氣做到即時數據與即時的Dashboard。
+但這種做法的缺點，是在規劃時，就限制了分析能查看的面向。若我們只累計金額，就只能查詢已花費的總金額。要查詢個別campaign花費的金額時，就只能回去爬log。如果我們儲存金額時，額外放入campaign的資訊，那無論是總金額或是各別campaign的金額，都能夠做到即時查詢，但是creative的花費就沒辦法查詢。若是反過來，紀錄各別creative的金額，那無論是總金額，或是各別campaign的消費，與個別creative的消費，就都能即時查詢。而無論是紀錄總金額、campaign的花費、或是creative的花費，都沒辦法查詢個別app上的花費。當然，我們可以同時記錄creative的花費與app上的花費，讓這樣的需求都可以即時查詢。
+ps. 在廣告中，每個creative一定屬於某個campaign，而一個campaign會包含多個creative。
+以上的做法，就是在事先知道查詢需求時，可以用很少的工程資源做出來的即時dashboard的方法。這樣的代價則是，查詢的需求是受到規劃的限制，並且在沒有規劃時，也沒辦法做交叉查詢。舉例來說，即使我們記錄了creative的消費與app的消費，也沒辦法查詢creative-app的消費。另一個取捨，則是效能與允許的查詢面向有關。如果我們要查creative、app、user的各種屬性、… 那即時記錄的成本就會越來越高，進而影響到系統效能。而且這樣的方式，只能記錄累計的資訊。
+如果我們希望分析更廣泛的面向，並且是事先不確定的面向，那我的建議是搭建高效能的爬log的系統或是搭建SQL Database。而這樣做的代價是，我們的查詢會從即時的結果，變成需要等待，而且等待的時間是從數秒鐘到數小時都有可能，一切取決於資料量，以及資料庫的設計。這是一門很深的學問。
+過去，在遇到這樣分析的需求時，工程師的第一種想法可能是搭建資料庫(無論是關聯式或非關聯式)，搭配適當的Schema設計讓分析師使用。更有彈性的BI報表可能會這樣設計，但是背後需要理解資料庫的DBA設計資料庫的結構，否則資料一大，等待的時間就會線性的成長。這種做法的取捨，是要放大效能時，在採用加機器的方式比較不容易；就是當資料結構改變時，Database的Schema要做變更比較挑戰；當寫入與讀取相同的表格時，也有機會互相干擾。基於以上的因素，我認為這個方向的解決辦法，是很消耗工程資源的:需要公司提供一名經驗豐富的DBA或後端工程師來支援才能達到合理的效能。
+我在進行RTB的專案時，主管提供一組mongodb cluster給我使用:寫入master, 讀取slave。但是這樣的架構在某次slave崩潰後，造成了不可回復的災難:slave要追回原本的資料，但是master不停的情況下追不上。最終，由於我個人對mongodb的錯誤回復不熟悉，公司又沒有其他工程師能支援，所以我放棄了這個方法。
+對於缺乏工程資源的團隊，我還是比較推薦直接使用HDFS-like的檔案系統即可。無論是Amazon的S3或是Google Cloud Platform的Cloud Storage都是很好的選向。這類的檔案系統，暫時不用擔心存取的效能不足。紀錄已protobuf或avro寫入之後，再透過如Google的Dataflow來進行清理，並將資料寫入BigQuery，所需的工程資源並不大。當資料格式變化時，要更新Schema也容易，因為這些格式都擁有向下相容的功能。而BigQuery透過Column Based的方式儲存資料，讓我們對他做任意面向的查詢，效能是非常高的。筆者在對千萬級~億量級的資料做樞紐分析，都是在一分鐘上下完成。
+BigQuery能這麼快速的理由，其實和他儲存的資料格式相關:他們是用Column Based的方式做儲存的。之前介紹的資料格式，無論是JSON、Protocol Buffer或Avro，都是以Row Based的為主。這是因為系統在寫入資料的時候，資料是一筆一筆的進入，一筆一筆的出去，所以每一筆資料自成一個單位。但是當我們將大量資料倒入Big Query的時候，系統就可以依照Schema把資料轉成以欄位為主來做儲存。這種做法最大的好處，就是當我們在分析資料時，大大的降低需要讀取的資料量。
+舉例來說，如果要在RTB的紀錄中觀察creative-app的出價資料，我們只需要每次讀取三個欄位:creative, app, 與出價。但是一個RTB的紀錄中，包含很多很多資料。如果我們用Row based的方式儲存，電腦就會得一筆一筆的掃描資料。但是若以Column based的方式儲存，電腦就只需要掃過目標欄位即可。使用Big Query時使用者可以看到估計的處理資料量。只要讀取的欄位不多，其實資料量就會少，當然效能也跟著快了。
+如果不考慮雲端系統，我就建議使用HDFS搭配Apache Parquet與Spark SQL來做出類似的效果。只是在工程資源有限的團隊，絕對不要自己搭建資料系統。因為這是很消耗工程資源的事情，而且不同等級的資料量，往往最適合、CP值最高的架構也不同，而架構的轉換是非常耗時的。若使用雲端系統時，在專案初期資料量少時費用也便宜，後續擴充也快速不用改架構，等到太昂貴需要自建時，想必企業也成長到能夠負荷足夠的工程能量。</description>
+    </item>
+    
+    <item>
+      <title>線上系統與分析系統對數據效能的不同需求</title>
+      <link>/2016/12/21/nalysis-performance-requirement/</link>
+      <pubDate>Wed, 21 Dec 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/12/21/nalysis-performance-requirement/</guid>
+      <description>前面兩篇以系統的觀點分享數據系統儲存與傳輸資料的格式。今天我想分享我對數據分析所使用的格式的看法。
+以系統的觀點，資料很自然的是一筆一筆做處理的。這是因為系統在收到一筆資料（Bid Request）之後，是要很快的做反應的（我要出標嘛？要的話出多少錢？）。因此，系統的觀點通常在追求我們對單一筆資料的處理時間。舉例來說，RTB系統都會即時監控平均每一個bid request的處理時間（主管希望系統平均的處理時間在0.05秒以下）。
+然而在分析數據時，處理完一筆並沒有太多意義，而是要處理完全部的數據。因此，分析的觀點通常在追求我們處理整體資料的時間。舉例來說，一天有86400秒。如果用和線上系統相同的方式做處理，難道分析一整天的數據，我們就要等一天嘛？
+其實大部份的檔案系統，在處理一整段資料時，會比一筆一筆處理來快的許多。這和硬碟的結構有關。只要資料在硬碟上的位置是連續的，當硬碟的指針找到位置後，就可以連續的讀過去。但如果資料在硬碟上不是連續的，那讀取硬碟的指針就需要跳動。這會讓處理資料的速度慢非常多。
+以RTB為例，如果每筆Bid Request進來之後，我們需要查詢該使用者的興趣，就會把這樣的數據放到資料庫中。但是如果我是在做分析，想要看使用者的興趣使否會導致Bid Request的價格產生變化，那這樣的數據放到檔案系統其實就可以了。
+如果我們把數據放到檔案系統後，再讓系統在收到Bid Request之後自己去找該筆使用者的位置，就會花費許多時間，而造成系統處理該比數據的時間過長。因此在線上系統，我們都會建構一個Key-Value based的資料庫（例如Redis，或Cassandra），讓系統可以在很短的時間內找到使用者的資料。
+但是在做分析的線下系統處理數據時，這樣的資料庫系統反而是個累贅。如果數據放到記憶體不會出問題的話，那是最簡單的狀況，只要用excel / R / python等工具就可以簡單處理掉了。如果數據的大小超過記憶體呢？
+依照我的經驗，在反正規劃後直接把資料讀到檔案系統，對分析反而是最友善的。
+主要的原因在於：我們不知道分析會用到的欄位
+一個資料科學家通常都在解決未知的問題。舉例來說，在我想要看使用者的興趣使否會導致Bid Request的價格產生變化之前，我是不知道答案的。這樣的查詢也很可能是最後一次。因此，為了這樣的查詢去建Index，是很沒有效率的。
+如果資料庫系統事先沒有準備好Index，那直接倒資料，還不如直接從硬碟讀取整個資料。只要選用的資料格式正確（我們下一篇再談)，那效能會非常驚人的快。
+但是在實務上，有一種狀況是「每日報表」。這是我們可以事先知道需要分析的欄位，那就可以透過資料庫，或是其他的手段，再大幅加速處理資料的效能。一種作法是直接在線上系統做運算。舉例來說，如果我想要知道每天的花費，那就直接在線上系統收到win notice的時候直接累計花費即可。這樣的效能比我上面提到的，將資料存到硬碟後再讀出來算，要快的多，而且還是即時數據。之後我們再來看看這部份的系統要如何設計的好。
+如果大家理解為什麼分析要使用檔案系統後，就可以理解Hadoop / Spark為什麼會被開發出來了。但是這兩個東西無論任何一個，都絕對是需要工程師支援的。因此我直接使用Google的Dataflow服務，專注於開發程式邏輯，將系統的維護丟給Google(並付給他們一些費用)。
+這也是今年我獲得最大的技能：用小小的人力做出大大的事情中，一個很好的經驗：如何利用各種雲端服務來讓自己專注在最有價值的工作內容。</description>
+    </item>
+    
+    <item>
+      <title>能應付變化的資料格式（續）</title>
+      <link>/2016/12/20/for-envolving/</link>
+      <pubDate>Tue, 20 Dec 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/12/20/for-envolving/</guid>
+      <description>在專案的開始，我們選擇json作為資料的格式後，慢慢的也體驗到這個選擇的問題了。
+在其他工具上的效能問題 json雖然在nodejs上非常方便，讀取與寫入的效能也很棒，但是當我切換到其他工具時（例如R或java），json就不這麼方便了。
+舉例來說，如果我們把上一篇的範例資料重複10000次之後（產生一個共40000行json的檔案），在我的電腦上使用nodejs讀取只需要1.7秒，但是使用R的jsonlite::stream_in卻需要27.2秒，效能差很大。
+就我所知，nodejs在處理json資料上做了很多優化，所以效能很高（差不多和protocol buffer一樣快）。但是其他工具處理json就慢多了。
+彈性太大導致執行期的錯誤 使用json時，由於格式太自由，常常要在程式碼中處理可能的資料格式不相容的問題。 舉例來說，如果bid request之中不一定會有使用者的identity。若不小心直接在程式中讀取identity而沒有做保護，就容易發生錯誤，而且是很難除錯的錯誤。
+而且當我們想使用第三方的工具時（例如Google Big Query），即使看介紹時對方宣稱接受json，實際上卻往往對json有很多限制，導致我們在串接這些工具時都還是要額外整理資料。老實說，在有包袱後，要完成這樣的任務是挺困難的，寫出來的程式都仍然隨時會出錯。
+浪費儲存空間 json都是以純文字來儲存訊息，而這其實是很浪費空間的，尤其是大量的浮點數。記憶體中，一個浮點數只佔用4個位元組，但是如果在json中以3.1415936儲存，那就會佔用9個位元組。實務上為了減輕這個問題，我們通常會對json做gzip壓縮。
+解決方法 為了改善上述的問題，我們後來使用Google的取代json。其中最大的理由是因為，Google有提供OpenRTB 的 protocol buffer的schema。否則的話，我還滿想嘗試這個格式。
+現在開發數據相關系統的工程師，在選擇資料格式時，應該都要選擇protocol buffer、avro或其他相似功能的格式了。
+protocol buffer 與 avro 都是針對跨工具需求所設計的資料儲存格式，並且處打高效能的存取速度與儲存空間。他們也都會提供主流工具(C / java)的存取套件，開發起來都算方便。
+最重要的是他們都具備有「可擴充」的schema，所以可以一邊解決資料格式會一直變化的問題之外，也能在Schema中保護程式對資料的存取。我個人是認為，數據系統中所需要記載的資訊，是會一直演化的。而json雖然可以應付這樣的變化，但是卻太過自由導致許多維護的問題。protocol buffer/avro這類schema可擴充的格式，應當是目前最好的選擇。
+另外針對資料科學的用途上，我目前是更推薦avro這個格式。理由是protocol buffer先天上並沒有設計多筆紀錄堆成一個檔案的情境，但是avro是有針對這樣的情境做設計的。我們分析資料時，一定都是分析多筆資料，而不會只有一筆，所以在這點上avro是勝過protocol buffer的。
+而我們的專案採用protocol buffer的主因是我找到Google撰寫的OpenRTB的protocol buffer schema。考量到我有限的工程資源，我就不考慮自行開發avro的schema了。
+取捨 json還是有比protocol buffer與avro好的優點。
+他們唯一不如json的地方就是，要看資料時，json還是比較方便。在改成使用protocol buffer後，我要看log，都得再自己寫工具來解析，而json有jq可以直接看，方便多了。
+另一個問題是在我們的應用中，json仍然是最根本的資料，而protocol buffer / avro 都需要經過轉換。這個轉換是可能會掉資訊的。因此，在實務上我還是會以很低的機率，將完整的json寫入protocol buffer中，以供除錯用。</description>
+    </item>
+    
+    <item>
+      <title>資料系統的挑戰 --- 專屬的工程能量</title>
+      <link>/2016/12/17/ata-system/</link>
+      <pubDate>Sat, 17 Dec 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/12/17/ata-system/</guid>
+      <description>我在剛開始工作時，公司讓一名很忙的工程師與我搭配。主管說：「你就開需求，看要收集什麼資料，讓工程師來收集吧！」
+這是很標準的工程面的想法：確定需求、開發、驗收。
+但是在分析數據時，我們其實是一直在嘗試各種錯誤：
+也因此，在該名工程師完成第一版之後，我很快地提出第二版的需求。但是因為他也有許多其他重要的工作，而我卻無法肯定我的工作的重要性（大部分的想法其實是失敗的），所以很快地，我們的合作就無法滿足我的工作需求了：我只能一直等該名工程師有空的時間。短期的修正還好，但是一些大的更動，往往一等就是數個月。畢竟其他的需求都是確定性的需求，但是我這裡的需求往往是不確定效用的，所以權衡下來，就常常被擱置了。
+這是我再次學到的一個教訓：資料科學團隊需要專屬的工程能量。
+由於公司收購其他公司的緣故，因此人事被凍結，所以我只好捲起袖子，自己下來提供自己所需的工程能量。</description>
+    </item>
+    
+    <item>
+      <title>從Data Engineer、Data Architecture到Data Science -- 序言</title>
+      <link>/2016/12/16/ngineer-architecture-science/</link>
+      <pubDate>Fri, 16 Dec 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/12/16/ngineer-architecture-science/</guid>
+      <description>今年我因緣際會，得到一個在start up 中建構RTB(Real Time Bidding)的廣告即時競標系統的職位。憑藉著過去的經驗，我一直很期待能依照自己想法打造資料科學團隊的機會。原先我以為這個職位能帶給我這樣的機會，只是人算不如天算，最後變成了單打獨鬥的狀況。
+但無論如何，這裡的主管還是給予我足夠的信任，放手讓我從建構出標系統，做到後端的機器學習。於是我能實現自己對數據系統的想法，並獲得了驗證。我也把單兵作戰視為一個巨大的挑戰，但是在利用Google Cloud Platform來放大自己的工作能量之後，我終於能運用少少的人力處理小小的數據（目前一秒大概千筆資料上下，實在不敢說大）。
+今天碰巧看到朋友轉貼的ITHome鐵人大賽。我就想藉這個機會，讓自己把今年的心得整理整理，並分享給大家。我的目標是寫完我認為數據系統的挑戰，以及我的解決方法與試用心得。本系列也會同步發表在我的個人部落格： https://wush.ghost.io 。</description>
+    </item>
+    
+    <item>
+      <title>Rcpp Modules 的進階筆記</title>
+      <link>/2016/08/23/advanced/</link>
+      <pubDate>Tue, 23 Aug 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/08/23/advanced/</guid>
+      <description>雖然我Rcpp用很久了，但是一些技巧還是常常忘記。所以這裡列一些我花許多時間摸出來的技術。
+Package 中使用 Rcpp Modules 的命名衝突問題 由於新的Rcpp中已經不建議使用loadRcppModules了，所以我想依照警告訊息，改用loadModule。
+我的C++中已經寫了：
+#include &amp;lt;Rcpp.h&amp;gt; using namespace Rcpp; RCPP_MODULE(MemorySparseArray) { class_&amp;lt;MemorySparseArray&amp;gt;(&amp;quot;MemeorySparseArray&amp;quot;) .constructor&amp;lt;int&amp;gt;() ; } 根據文件，本來的：
+.onLoad &amp;lt;- function(libname, pkgname) { loadRcppModules() } 要改成：
+loadModule(&amp;quot;MemorySparseArray&amp;quot;) 但是編譯時馬上遇到Linking Error：
+Error in .doLoadActions(where, attach) : error in load action .__A__.1 for package CountingTF: loadModule(module = &amp;quot;Array&amp;quot;, what = TRUE, env = ns, loadNow = TRUE): Unable to load module &amp;quot;Array&amp;quot;: Failed to initialize module pointer: Error in FUN(X[[i]], .</description>
+    </item>
+    
+    <item>
+      <title>在伺服器上跑R 的上手須知</title>
+      <link>/2016/06/27/torial/</link>
+      <pubDate>Mon, 27 Jun 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/06/27/torial/</guid>
+      <description>在伺服器上跑R, 要了解更多作業系統的運作的知識，而不只是R 的知識。 以下假設你用的是Linux伺服器，那你應該一步一步的照以下的步驟檢查伺服器
+Hello World 第一件事情，我們應該要確定你的R 能正確的在命令列上執行 所以我建議你先寫一個test.R的檔案，裡面只有:
+print(&amp;#39;hello world&amp;#39;) 接著你要切換到存放test.R的目錄下，輸入:
+Rscript test.R 如果你可以在螢幕上看到hello world，那這階段就通過了。 如果沒有，那有以下幾種可能的錯誤:
+沒有安裝R 有權限就自己裝，或是找管理員安裝吧。
+沒有權限，也可以自己編譯後安裝在家目錄之下，只是這比較高級，就先跳過囉。有機會再分享。
+環境變數理面沒有R的執行檔路徑 如果你知道R 的路徑，例如: /usr/bin/R
+或是 Rscript 的路徑，例如: /usr/bin/Rscript
+請輸入 echo $PATH 看看 /usr/bin 有沒有在顯示在營幕中。
+$PATH的內容應該是: &amp;lt;目錄1&amp;gt;:&amp;lt;目錄2&amp;gt;:...
+例如我的某台伺服器，登入後的$PATH是:
+/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin 那當我們輸入Rscript test之後，作業系統就會依序找:
+/usr/local/sbin/Rscript /usr/local/bin/Rscript … 先找到哪個，就先用那個執行檔案當成Rscript對應到的執行檔。如果都找不到，就失敗。
+ps. 如果你了解上面的說明，你應該就知道怎麼快速切換R 的運行版本
+檔案不存在 你可以試試看執行ls test.R或cat test.R。如果出現 No such file or directory 的訊息，就是檔案不存在，或是你輸入的路徑錯誤
+ex: 把 test.R 打成 tests.R
+沒有讀取權限 如果你在cat test.R的時候看到 Permission denied ，表示你沒有權限讀取內容。正常來說，如果是你編輯的檔案，不會有這樣的錯誤。但是如果你想要用背景執行，或是做一些工作的自動化，甚至是提供web-service或寫成shiny application，那你一定要先去找出，系統是用哪一個使用者的身分來執行程式。</description>
+    </item>
+    
+    <item>
+      <title>客製化R的開發環境</title>
+      <link>/2016/05/28/environment/</link>
+      <pubDate>Sat, 28 May 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/05/28/environment/</guid>
+      <description>這幾年來，隨著R越玩越深，R已經變成我日常工作很自然的一部份了。舉例來說，最近主管要求要我每日寄工作報告給他，我又懶得每天去輸入那些寄信的細節，就用R兜了一個簡易的命令列應用，讓我只要寫好報告後，在命令列打一行就會自動發信。有興趣的朋友可以看看： https://github.com/gmobi-wush/DailyReport
+這幾年下來，我也累積了一些小技巧，讓自己開發R應用時能夠更順手。這裡想趁機筆記一些，給未來的自己複製貼上用。
+機器上的預先載入功能 在使用R時，我們可以透過.Rprofile來讓每次R開始執行時，預先執行的指令。通常我會把一些使用者帳號密碼，以及網路服務的API key存放在這。舉例來說，我習慣會寫一個callme函數，讓R可以發訊息到我自己有使用的IM服務。最近的新歡是：Gitter。
+由於這樣的功能，是「跨專案」的，所以我會在家目錄（你可以輸入：normalizePath(&#34;~&#34;)來問R你的家目錄的位置）底下儲存一個檔案，叫：.Rprofile（這是完整的檔名，結尾不包含.R）。而他的內容是：
+callme &amp;lt;- function(msg) { hostname &amp;lt;- system(&amp;quot;hostname&amp;quot;, intern = TRUE) msg &amp;lt;- sprintf(&amp;quot;%s (%s) \n```\n%s\n```&amp;quot;, hostname, Sys.time(), msg) httr::POST(url = &amp;quot;https://api.gitter.im/v1/rooms/&amp;lt;room id&amp;gt;/chatMessages&amp;quot;, httr::add_headers(&amp;quot;Authorization&amp;quot; = &amp;quot;Bearer &amp;lt;my gitter api key&amp;gt;&amp;quot;), encode = &amp;quot;json&amp;quot;, body = list(text = msg) ) } 這樣只要當我跑一個需要等的指令時，只要在最後加一個：callme(&#34;xxx job is done&#34;)，就可以在完成工作時自動發送訊息到我的IM service，如果手機上有裝app並且開啟通知，就… 可以先去忙別的事情，等到手機震動了再切回來繼續忙。用身體來學什麼是asynchronous I/O！
+有興趣的朋友可以去github與gitter註冊帳戶後，開一個自己的room，然後把上面程式碼中room id與gitter api key換掉後，就可以自己玩玩看啦！
+R好棒~~~
+.Rprofile的地雷 另一種常見的狀況，是預先載入常用的套件。舉例來說，在.Rprofile輸入：
+library(dplyr) 就能在每次進入R之後載入dplyr套件。但直接這樣寫會有個問題，就是如果還沒安裝dplyr套件時，你不但會出錯，而且裝dplyr套件可能還會失敗。這是因為R在安裝套件時，會開另一個R Process來檢查安裝有沒有成功。這個R process當然也會受到.Rprofile的影響，所以也會預先載入dplyr。所以：
+輸入install.packages(&#39;dplyr&#39;) R 開始安裝dplyr與其他相依套件，例如Rcpp 安裝完Rcpp後，R要檢查Rcpp能否正常運作，開啟一個新的R Process要載入Rcpp 新的R Process受到.</description>
+    </item>
+    
+    <item>
+      <title>Linux command line tool &#43; pipe 學習筆記之一：讓R 加入pipe的一環</title>
+      <link>/2016/05/08/nd-line-tool-pipe-parallel-1/</link>
+      <pubDate>Sun, 08 May 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/05/08/nd-line-tool-pipe-parallel-1/</guid>
+      <description>最近我在幫General Mobile Corporation開發RTB系統。為了要處理有點大量，又沒有太大量的資料，與其直接用貴鬆鬆的AWS EMR(Elastic Map Reduce)去跑Apache Spark, 我選擇用基本的pipe與一些精巧的小程式，搭配nodejs與R來達成整理資料的目的。
+動機則來自於很久以前讀過的文章：Command-line tools can be 235x faster than your Hadoop cluster以及過去自己維護過HDFS Cluster的經驗。至少在公司願意養一個full time engineer來維護Cluster，或是資料大到十億筆等級以上時，我覺得才有開始導入Apache Spark的必要性。
+基本上，運用linux command line tool + pipe有幾個好處：
+高效 省記憶體 自動平行化 許多清理資料的功能，可以透過linux command line tool，搭配pipe的技巧做串接。這些小程式的效能，都是好的驚人的。與我自己簡單寫的c++程式做比較，這些小程式的效能大概還要快10倍。理由是因為，這些程式的優化都做得很深，所以效能可以海放我這種不是科班出身的工程師。
+另一個特色是，pipe天生就會讓程式平行運作。在現在CPU都是多核的年代，一旦用pipe開發後，你就會看到一個CPU core在解壓縮，一個CPU core過濾資料，一個CPU core轉換資料。只要每個動作的效能差不多，就不用額外費心去做平行化。
+前提條件：資料能乾淨的用一行來做單位 過去在前公司，我沒辦法盡興地使用Linux pipe tools的主因是，公司log的資料中，會有大量的斷行符號，導致處理時很麻煩。而在Gmobi Inc.時, 感謝同仁的配合，原始的log記錄是用ndjson的格式處理，所以用linux pipe style來做資料的前處理很方便。
+以下我就用簡單的經驗，來介紹與記錄這陣子摸索的小工具們。
+解壓縮起手式：zcat 為了節省雲端的硬碟用量，照慣例工程師都會用gz格式做壓縮，Gmobi也不例外。所以解壓縮工具：zcat就變成了起手式。
+舉例來說，如果有一個檔案：bids.20160401.json.gz要處理，起手式就是：
+zcat &amp;lt; bids.20160401.json.gz 這裡的&amp;lt;符號，會讓作業系統把bids.20160401.json.gz的檔案內容，從stdin的管線入口，導入至zcat的程序(Process)。zcat接著會將資料解壓縮後，寫到stdout。如果後面沒有串接其他的程序，stdout的結果就會直接呈現在螢幕上，所以我就會看到整個解壓縮後的bids.20160401.json.gz的檔案內容。
+如果我們只執行上述的指令，bids.20160401.json.gz不會有任何更動，也不會產生任何新的檔案，就只是把bids.20160401.json.gz的內容印到螢幕上。
+開發時好用的工具：head 開發的時候，常常要測試自己的程式。此時head就會很方便。舉例來說：
+zcat &amp;lt; bids.20160401.json.gz | head -n 100 就會高效率的只輸出檔案內容的前100筆資料，讓我們可以在很短的時間內做測試。
+這裡|的符號，告訴作業系統將zcat的stdout串接到head的stdin，也就是把zcat處理後的輸出，當成head的輸入。而head程序只處理前100行（用-n參數控制），將內容輸入到stdout，之後就將程式關閉（連帶的zcat也會跟著關閉）。
+利用R 來處理stdin的資料 接著，我們可以用R 寫一個命令列應用，如：</description>
+    </item>
+    
+    <item>
+      <title>Linux command line tool &#43; pipe 學習筆記之二：平行運算</title>
+      <link>/2016/05/08/nd-line-tool-pipe-parallel-2/</link>
+      <pubDate>Sun, 08 May 2016 00:00:00 +0000</pubDate>
+      
+      <guid>/2016/05/08/nd-line-tool-pipe-parallel-2/</guid>
+      <description>上一篇：Linux command line tool + pipe 學習筆記之一：讓R 加入pipe的一環中，雖然提到了pipe就會自動用多個Process來平行跑每一個pipe的步驟的檔案，但有時候這還是不夠快。尤其是當我在pipe中混用了R或nodejs的程序時，最後效能都卡在這些笨重的直譯式語言工具。
+我在開發RTB系統時，遇到的情境是，必須要用nodejs（這是工程師用來開發RTB伺服器的工具）來將JSON物件轉換成sparse vector。舉例來說，我可能收到一系列如下的request:
+{&amp;quot;user_id&amp;quot;:&amp;quot;1&amp;quot;,&amp;quot;website_id&amp;quot;:&amp;quot;b&amp;quot;} {&amp;quot;user_id&amp;quot;:&amp;quot;2&amp;quot;,&amp;quot;website_id&amp;quot;:&amp;quot;c&amp;quot;} {&amp;quot;user_id&amp;quot;:&amp;quot;1&amp;quot;,&amp;quot;website_id&amp;quot;:&amp;quot;c&amp;quot;} {&amp;quot;user_id&amp;quot;:&amp;quot;3&amp;quot;,&amp;quot;website_id&amp;quot;:&amp;quot;b&amp;quot;} {&amp;quot;user_id&amp;quot;:&amp;quot;2&amp;quot;,&amp;quot;website_id&amp;quot;:&amp;quot;a&amp;quot;} {&amp;quot;user_id&amp;quot;:&amp;quot;1&amp;quot;,&amp;quot;website_id&amp;quot;:&amp;quot;a&amp;quot;} 為了要套用某些ML演算法做預測，通常需要先把上述的JSON物件轉換成對應的sparse vectors:
+{&amp;quot;i&amp;quot;:[0,1,5],&amp;quot;x&amp;quot;:[1,1,1]} {&amp;quot;i&amp;quot;:[0,2,6],&amp;quot;x&amp;quot;:[1,1,1]} {&amp;quot;i&amp;quot;:[0,1,6],&amp;quot;x&amp;quot;:[1,1,1]} {&amp;quot;i&amp;quot;:[0,3,5],&amp;quot;x&amp;quot;:[1,1,1]} {&amp;quot;i&amp;quot;:[0,2,4],&amp;quot;x&amp;quot;:[1,1,1]} {&amp;quot;i&amp;quot;:[0,1,4],&amp;quot;x&amp;quot;:[1,1,1]} 這個轉換的過程因為要嵌入到工程師撰寫的線上服務的伺服器邏輯中，所以必須採用nodejs比較簡單。
+但是在跑實驗的時候，這樣的nodejs程式往往會是處理資料的瓶頸。而我基於維護的理由，不願意用C、R或是其他更方便工具來重複做相同的功能。
+為了加速，就只好用平行化運算來處理。目前就我所知，在linux command line中有兩種方式可以來平行化處理，而且剛好對應到我熟悉的兩種R中的平行化技術。
+開發命令列介面 為了要跟linux command line tools做串接，所以我可以用nodejs的套件開發命令列介面。這裡我是參考其他介面的方式，寫了兩種輸入資料的介面：
+給路徑，讀取檔案輸入 從stdin輸入 事後看，這兩種方式我都有用到。以下我還是以R的命令列應用為例。
+舉例來說：
+#! /usr/bin/env Rscript --vanilla args &amp;lt;- commandArgs(TRUE) if (length(args) == 0) { f &amp;lt;- file(&amp;quot;stdin&amp;quot;) } else { f &amp;lt;- file(args[1]) } open(f) # do something... 換句話說，我們可以在命令列中，輸入：
+Rscript example.R target.json 來從路徑中讀取檔案。或是使用：</description>
+    </item>
+    
+    <item>
+      <title>Rcereal 投稿CRAN的心得</title>
+      <link>/2015/11/06/rcereal-%E6%8A%95%E7%A8%BFcran%E7%9A%84%E5%BF%83%E5%BE%97/</link>
+      <pubDate>Fri, 06 Nov 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/11/06/rcereal-%E6%8A%95%E7%A8%BFcran%E7%9A%84%E5%BF%83%E5%BE%97/</guid>
+      <description>上週末，我又突然發神經投了一個CRAN的套件：Rcereal。這裡想跟各位分享整個投套件的過程，因為這個套件本身是非常簡單的。從我開始接觸cereal專案到投上Rcereal，大概只花了三天，所以整個過程就是很單純處理CRAN Submission的過程。
+投稿動機 在Rcpp裡面有很豐富的功能，可以把C++物件輸出到R中做操作。有興趣踩雷的朋友，歡迎讀讀Rcpp-modules，並且開始踩雷之旅。這東西現在應該是充分可用了，所以你應該有很大的機會生還，扯遠了。但是這些C++物件是保存在記憶體中，而且也不是R 的原生物件，所以只要不小心把R 一重開，即使其他的R 原生物件可以透過workspace的存檔保留下來，但是Rcpp Modules的物件會全部消失。要解決這個問題，只能自己做serialization和deserialization。
+痛苦的 boost serialization 寫c++的朋友，在宅力達到金牌的時候，都應該會聽過c++ boost這系列c++ libraries。它裡面是有serialization的功能，但是需要使用者安裝boost serialization這個套件才能運作。而這偏偏不是R 可以自己操控的事情，所以如果只是要寫程式給自己跑，這絕對OK。如果想要給別人用（例如投稿CRAN），那就很難解決跨平台的問題。
+最近還在探索的新歡：cereal cereal則是一個C++ Header Only的套件。雖然需要C++11，但是目前CRAN對C++11的支援在許多大大的努力之下，已經算可用了。在確認這個套件成功的解決我的問題之後，我就動了把它包一包投稿到CRAN上的念頭，讓我自己、以及其他人可以更方便的在Rcpp中使用cereal。
+這個動機我覺得很重要，因為根據我的經驗，能解決自己問題的Open Source專案，做起來才比較有動力，也比較有機會做的更好。
+投稿過程 License 由於這個套件用到cereal，所以我需要先研究cereal的License是不是CRAN上可接受的License。我的運氣很好，cereal是BSD，是CRAN相容的License。
+聯繫作者 背著作者，拿著他們的東西去投稿不是什麼好主意。雖然Open Source License可能不禁止這個動作，但是聯繫作者除了避免潛在的麻煩之外，還可以聽聽作者對這件事情的建議，有百利而無一害。
+參考cereal官網上的說明，可以找到他們的mailing list。我就在裡面和作者們交換了一點意見。
+決定功能 所有的專案都需要說明文件，所以我就簡單寫了個錯字連篇的README… （強力徵求Open Source英文文件互助會成員）
+ps. 投稿上的隔天，就收到Hadley的兩個PR… 他大概也覺得我的英文很扯爛吧… 哈哈哈！不過多虧他，Rcereal很快的收到了一點點的星星。
+然後我就開始「參考」Dirk的BH套件。這也是一個包著C++ Boost Library的R 套件。看到他有提供選擇Boost版本的功能，我就用git2r寫了一個從Github上下載cereal指定版本的原始碼的功能。
+建立Unit Test + CI 由於我寫了切換版本的功能，所以就需要寫測試來保證功能是可以跨平台的。
+在感染了不做CI就會死掉的病之後，我就開始設定travis-ci和appveyor上的服務。而我總共花了一天多做這個東西。沒錯！這步驟最花時間。
+第一個雷是travis-ci在呼叫github API上很容易超過上限而失敗（Github應該是把整個travis-ci上的CI都算到呼叫次數中了…）
+第二個雷是appveyor上的CI不支援C++11。
+幫r-appveyor改編譯器的版本 感謝R_Language神威副版主給我的提醒，最新的Rtools已經包含支援C++11的gcc版本，所以我就和r-appveyor的作者詢問有沒有可能更改gcc的版本。結果… 所有的open source作者都是挖坑王。他希望我能幫他上個PR，新增控制gcc版本，然後在我改出來之後，又問我能不能順便改R 的版本… （平常出來挖坑，腳底也是很容易踩空的）
+基於「解決自己問題優先」的心態，我只好先婉拒了第二個坑，然後第一個坑目前也只填了我腳底下的部份。
+要解決我手上的問題之前，先找Open Source專案的作者們溝通是很好的習慣。一來是他可以直接告訴你門路，二來是你有機會成為貢獻者，讓你解決的問題可以反饋給Open Source社群。這就是「我餵人人，人人餵我」的實現阿！（難怪最近一直瘦不下來…）
+上CRAN 等到事情都準備好了，最後就是要上CRAN了。
+用R CMD build把套件包成Rcereal_xxx.tar.gz 在自己的電腦上先用 R CMD check Rcereal_xxx.</description>
+    </item>
+    
+    <item>
+      <title>Feature Hashing</title>
+      <link>/2015/10/25/hing/</link>
+      <pubDate>Sun, 25 Oct 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/10/25/hing/</guid>
+      <description>今天早上，我透過網路在第八届中国R语言会议（南昌）暨江西财经大学第一届金融大数据论坛上宣傳自己的套件FeatureHashing。
+由於用中華電信連中國實在是不穩，所以我就預錄了影片請馮帥（原本都稱馮兄的，視頻過後真的要改口說馮帥了！這才是科學的態度阿，不人云亦云）。現場聽講的老師因為中途加入，還以為我是實際連線跟他們報告呢，哈哈。
+事實上，我錄了兩個版本。第一個版本因為講解的太仔細了，結果超過時間的兩倍。我覺得刪除還是太可惜了，所以就上傳到Youtube上：
+如果有朋友要在R 裡面處理大量的文字相關的資料，可以看看這個套件。如果想要知道相關技術的細節，以及想知道為什麼大數據的環境之下，Feature hashing trick 會這麼泛用的朋友，也可以看看這個預錄。影片中我也介紹了0.10版本中和jiebaR的整合功能。
+有任何問題都歡迎到https://github.com/wush978/FeatureHashing/issues上找我討論。</description>
+    </item>
+    
+    <item>
+      <title>dplyr::group_by 的進階運用</title>
+      <link>/2015/10/05/by/</link>
+      <pubDate>Mon, 05 Oct 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/10/05/by/</guid>
+      <description>大家好，今天想跟大家介紹一個使用dplyr時的一個小撇步。他可以讓我們在使用group_by之後，有更多的彈性，並會更理解group_by這好用功能的原理。
+背景簡介 我由於工作上要研究網路廣告，常常要比較各種不同方法間的數據。舉例來說，我可能手上有一大筆看起來像這樣的資料：
+廣告 網站 點擊 1 廣告D 網站C 0 2 廣告A 網站C 0 3 廣告A 網站C 0 4 廣告B 網站C 1 5 廣告B 網站B 0 6 廣告B 網站B 0 而我想要知道各種廣告在網站A上的表現。透過dplyr，這並不困難：
+filter(sample, 網站 == &amp;quot;網站A&amp;quot;) %&amp;gt;% group_by(廣告) %&amp;gt;% summarise(曝光 = length(點擊), 點擊數 = sum(點擊)) 廣告 曝光 點擊數 1 廣告A 329 0 2 廣告B 588 4 3 廣告C 81 0 4 廣告D 71 0 然而，以這個資料來說，我並不確定廣告C和廣告D的成效是不是明顯的不同。我想大家能同意，廣告的點擊是有機率在背後的，所以我們必須要透過一些計算才能知道，數據上顯示的：「廣告B比其他廣告好」，是運氣比較好，還是真的比較好。
+R 有一個製作95%信賴區間很方便的套件：binom。只要簡單利用binom.confint，就可以快速算出各種方法的confidence interval。 以下就是一個簡單的範例，我們使用預設的95%信心水準（可以使用參數conf.level來調整），統計方法是&#34;exact&#34;（由Clopper and Pearson (1934)所設計出來的方法）。binom套件提供了10種方法給使用者計算信賴區間。</description>
+    </item>
+    
+    <item>
+      <title>利用R處理大量的JSON資料 （Streaming Style）</title>
+      <link>/2015/09/15/.rmd/</link>
+      <pubDate>Tue, 15 Sep 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/09/15/.rmd/</guid>
+      <description>這陣子我接了一個案子，要幫忙核桃運算開發他們產品BigObject Analytics的R Client。恰巧，他們的RESTful API在撈資料的時候，吐回來的格式是jsonlines：
+{&amp;quot;Sepal.Length&amp;quot;:&amp;quot;5.1&amp;quot;,&amp;quot;Sepal.Width&amp;quot;:&amp;quot;3.5&amp;quot;,&amp;quot;Petal.Length&amp;quot;:&amp;quot;1.4&amp;quot;,&amp;quot;Petal.Width&amp;quot;:&amp;quot;0.2&amp;quot;,&amp;quot;Species&amp;quot;:&amp;quot;setosa&amp;quot;} {&amp;quot;Sepal.Length&amp;quot;:&amp;quot;4.9&amp;quot;,&amp;quot;Sepal.Width&amp;quot;:&amp;quot;3.0&amp;quot;,&amp;quot;Petal.Length&amp;quot;:&amp;quot;1.4&amp;quot;,&amp;quot;Petal.Width&amp;quot;:&amp;quot;0.2&amp;quot;,&amp;quot;Species&amp;quot;:&amp;quot;setosa&amp;quot;} {&amp;quot;Sepal.Length&amp;quot;:&amp;quot;4.7&amp;quot;,&amp;quot;Sepal.Width&amp;quot;:&amp;quot;3.2&amp;quot;,&amp;quot;Petal.Length&amp;quot;:&amp;quot;1.3&amp;quot;,&amp;quot;Petal.Width&amp;quot;:&amp;quot;0.2&amp;quot;,&amp;quot;Species&amp;quot;:&amp;quot;setosa&amp;quot;} {&amp;quot;Sepal.Length&amp;quot;:&amp;quot;4.6&amp;quot;,&amp;quot;Sepal.Width&amp;quot;:&amp;quot;3.1&amp;quot;,&amp;quot;Petal.Length&amp;quot;:&amp;quot;1.5&amp;quot;,&amp;quot;Petal.Width&amp;quot;:&amp;quot;0.2&amp;quot;,&amp;quot;Species&amp;quot;:&amp;quot;setosa&amp;quot;} {&amp;quot;Sepal.Length&amp;quot;:&amp;quot;5.0&amp;quot;,&amp;quot;Sepal.Width&amp;quot;:&amp;quot;3.6&amp;quot;,&amp;quot;Petal.Length&amp;quot;:&amp;quot;1.4&amp;quot;,&amp;quot;Petal.Width&amp;quot;:&amp;quot;0.2&amp;quot;,&amp;quot;Species&amp;quot;:&amp;quot;setosa&amp;quot;} {&amp;quot;Sepal.Length&amp;quot;:&amp;quot;5.4&amp;quot;,&amp;quot;Sepal.Width&amp;quot;:&amp;quot;3.9&amp;quot;,&amp;quot;Petal.Length&amp;quot;:&amp;quot;1.7&amp;quot;,&amp;quot;Petal.Width&amp;quot;:&amp;quot;0.4&amp;quot;,&amp;quot;Species&amp;quot;:&amp;quot;setosa&amp;quot;} 由於負擔起底層Client的責任，這是我第一次要正面迎戰這樣的資料。以前我遇到這種資料，都是先亂七八糟的解掉，反正當下能用就好了。但是在寫Client的時候，這樣的解決方法是不能讓人滿意的！
+亂七八糟的解法： library(magrittr) src # 剛剛的文字資料 strsplit(src, &amp;quot;\n&amp;quot;) %&amp;gt;% sapply(fromJSON) 話說最近用magrittr的pipeline style寫程式碼真的上癮了，害我寫python的時候覺得python更難用了… 而且還找不到這種pipeline style。抱歉扯遠了！
+所以在不能漏氣驅使自己進步的動力下，我開始運用過去和JSON打交道的經驗簡單研究一下，目前在R 之中，要如何漂亮的處理這類的資料。
+R中處理JSON的套件 相信碰過這個問題的朋友不在少數，而大家的想法大概都類似：找個套件把問題解決掉就好啦！
+但是處理JSON的套件在R裡面就有好幾個，這裡列出我用過的套件：
+rjson RJSONIO jsonlite 而三個套件都提供了fromJSON函數，而偏偏三個函數的fromJSON都不能用：
+rjson rjson::fromJSON只處理第一行，後面的資料就當成沒看到了。
+&amp;gt; rjson::fromJSON(src) $Sepal.Length [1] &amp;quot;5.1&amp;quot; $Sepal.Width [1] &amp;quot;3.5&amp;quot; $Petal.Length [1] &amp;quot;1.4&amp;quot; $Petal.Width [1] &amp;quot;0.2&amp;quot; $Species [1] &amp;quot;setosa&amp;quot; RJSONIO RJSONIO::fromJSON則回傳了意味不明的一個… 東西？
+&amp;gt; RJSONIO::fromJSON(src) Sepal.Length &amp;quot;5.1&amp;quot; Sepal.Width &amp;quot;3.5&amp;quot; Petal.Length &amp;quot;1.4&amp;quot; Petal.Width &amp;quot;0.2&amp;quot; Species &amp;quot;setosa\&amp;quot;}{\&amp;quot;Sepal.Length\&amp;quot;:\&amp;quot;4.9\&amp;quot;,\&amp;quot;Sepal.Width\&amp;quot;:\&amp;quot;3.0\&amp;quot;,\&amp;quot;Petal.Length\&amp;quot;:\&amp;quot;1.4\&amp;quot;,\&amp;quot;Petal.Width\&amp;quot;:\&amp;quot;0.2\&amp;quot;,\&amp;quot;Species\&amp;quot;:\&amp;quot;setosa\&amp;quot;}{\&amp;quot;Sepal.Length\&amp;quot;:\&amp;quot;4.7\&amp;quot;,\&amp;quot;Sepal.Width\&amp;quot;:\&amp;quot;3.2\&amp;quot;,\&amp;quot;Petal.Length\&amp;quot;:\&amp;quot;1.3\&amp;quot;,\&amp;quot;Petal.Width\&amp;quot;:\&amp;quot;0.2\&amp;quot;,\&amp;quot;Species\&amp;quot;:\&amp;quot;setosa\&amp;quot;}{\&amp;quot;Sepal.Length\&amp;quot;:\&amp;quot;4.6\&amp;quot;,\&amp;quot;Sepal.Width\&amp;quot;:\&amp;quot;3.1\&amp;quot;,\&amp;quot;Petal.Length\&amp;quot;:\&amp;quot;1.5\&amp;quot;,\&amp;quot;Petal.Width\&amp;quot;:\&amp;quot;0.2\&amp;quot;,\&amp;quot;Species\&amp;quot;:\&amp;quot;setosa\&amp;quot;}{\&amp;quot;Sepal.Length\&amp;quot;:\&amp;quot;5.0\&amp;quot;,\&amp;quot;Sepal.Width\&amp;quot;:\&amp;quot;3.6\&amp;quot;,\&amp;quot;Petal.Length\&amp;quot;:\&amp;quot;1.4\&amp;quot;,\&amp;quot;Petal.Width\&amp;quot;:\&amp;quot;0.2\&amp;quot;,\&amp;quot;Species\&amp;quot;:\&amp;quot;setosa\&amp;quot;}{\&amp;quot;Sepal.Length\&amp;quot;:\&amp;quot;5.4\&amp;quot;,\&amp;quot;Sepal.Width\&amp;quot;:\&amp;quot;3.9\&amp;quot;,\&amp;quot;Petal.Length\&amp;quot;:\&amp;quot;1.7\&amp;quot;,\&amp;quot;Petal.Width\&amp;quot;:\&amp;quot;0.4\&amp;quot;,\&amp;quot;Species\&amp;quot;:\&amp;quot;setosa&amp;quot; 由於太過驚嚇，所以我只好趕快檢查一下這東西到底是什麼：
+&amp;gt; str(.</description>
+    </item>
+    
+    <item>
+      <title>資料科學團隊的Hello World</title>
+      <link>/2015/09/06/ello-world/</link>
+      <pubDate>Sun, 06 Sep 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/09/06/ello-world/</guid>
+      <description>這週末我參加了資料科學愛好者年會系列活動的第一場：資料科學團隊培訓及導入經驗分享會。
+由於我已經親身經歷了一個資料科學團隊的建立過程，親身體驗了不少在建立資料科學團隊時不應該發生的錯誤。因此，難得有機會聽聽陳老師的經驗，就一定要來取經，並且和我自己的想法做印證呀！
+在上課的過程中，聽到老師許多生動的描述資料科學的各種能力、資料素養和創意的養成和團隊會遇到的困難等等。這些種種要點，更讓我確定一個，我在過去已經萌芽的一個信念：Dashboard的製作就是資料科學團隊的Hello World。
+Hello World 是每一種程式語言中最基本、最簡單的程式，也通常是初學者所編寫的第一個程式。它還可以用來確定該語言的編譯器、程式開發環境，以及執行環境是否已經安裝妥當。換句話說，它除了擔任初學者的第一個任務之外，也肩負著檢查工作環境的任務。而今天我想要論述的，就是：「資料科學團隊在上手的第一個任務，應當是針對手上的資料源建立Dashboard」。
+檢驗資料的品質 當我們剛拿到一批資料，絕對不能一頭栽進去做深入的分析，或是建立機器學習模型。合格的資料科學家，應該先要做視覺化和計算簡單統計量。這些工具不只能描述資料的特性，更有重要的是要檢驗資料的乾淨度與正確性。
+乾淨度與正確性是資料科學的根本。資料如果不乾淨，會造成分析上極大的不便。資料科學團隊在製作Dashboard的時候，應該第一時間就會注意到這些資料的乾淨度是否足夠，能夠讓團隊順利的把資料載入分析工具中。如果有乾淨度的問題，也應該在這個階段先行解決。
+正確性也是很重要的事情。分析不正確的資料，產生的報告是沒有價值的。更有甚者，如果團隊不能掌握資料的正確性，在未來應用時，更會造成極大的不便。舉例來說，如果一間電商公司每次在看到報表上的成效數據變差，都要先從頭檢查報表的數據正確性，並且等確認數據正確之後，才開始找原因，那會對企業的資源造成極大的浪費，並且拖慢企業的反應時間。尤其是在當系統越來越複雜的時候，如果不能保證數據的正確性，那維護起來是非常非常痛苦的。
+一個Dashboard的建立，除了只是呈現資料與計算統計量之外，我認為最重要的任務就是要確保團隊所使用的資料，是否乾淨與正確。這兩者是所有後續的分析、機器學習的基石，所以一定要在一開始就打好良好的基底。
+而且建立Dashboard的同時，等同於把所有上述的檢查自動化。只是做出一次性的資料視覺化是不夠的，最好是建立起一個長久的Dashboard系統。因為在企業之中，新資料會不停的進來，今天的資料品質不代表明天的資料品質。建立自動化的檢驗新資料的乾淨度與正確性，對於資料科學團隊是很重要的基石。我並不認為維護資料的品質只靠Dashboard是足夠的，但是Dashboard是一個很好的開始。
+檢驗科學家們對資料的理解 在這次今年的年會與週末的課程中，講者們也再三地強調資料科學家必須要熟悉企業要解決的問題。就如同阿里巴巴的車副總裁強調的，新進資料科學家的KPI就是和業務部門主管吃飯的次數。
+我以為設計一個有價值的Dashboard，背後就反應了資料科學團隊對企業領域的理解程度。統計的指標是非常多的，如何選取完全要仰賴團隊對於企業領域的理解。而且Dashboard應當是要回饋給資料的提供者。如果這個Dashboard有打中問題的核心，資料提供者會很開心，並且獲得不少對資料科學團隊的信心。反之，如果資料提供者沒什麼反應，資料科學團隊也可以藉機檢驗自己對於企業問題的理解是否仍然不足，並且從對方的反饋訊息裡面，更深入對企業的了解。
+每導入一個資料源，就應該要製作對應的Dashboard 根據我的經驗，數種資料源能帶來的價值，是以指數成長的。舉例來說，如果只有政府標案資料，那我們只能運用標案資料中的數據來檢測有無圍標的可能，對於有心人來說，是很好規避的。但是若是結合了公司資料關係圖，那就更可能深入挖掘我們政府招邊的潛在問題。
+但是不同的資料源，面對的乾淨度與正確性的問題，是獨立的。標案資料乾淨，不代表公司資料關係圖就會跟著乾淨，這是因為這些資料的提供者往往彼此獨立。
+因此，我以為每當資料科學團隊獲取了一份資料源，就應當建立對應的Dashboard，就好像每當我們換一種程式語言，就一定要先寫對應的Hello World。
+Dashboard能為資料科學團隊建立初步的信譽 一個資料科學團隊要能成功，和企業內部的銷售、業務和要解決的核心問題，是習習相關的。陳老師再三強調溝通能力對於資料科學家的重要性，我自己以為核心的理由是資料科學團隊是其他企業團隊的支援單位。如果資料科學團隊的信譽不佳，那即使做出了重要的研究成果，要在企業內部推行也會非常困難。這種困難，絕對不是長官挺就夠的，而是團隊自己要取得對方的信任。
+這部份的想法，啟發自我個人的經歷，以及MLDM Monday Cyber Security資策會資安所的毛敬豪博士分享的內容。毛博士一開始做了許多學術味很重的分析，但是並沒有激起相關資安專家的興趣，因為雖然用了很多分析技術，但是得到的資訊往往是專家們已經知道的。但是當他們團隊轉頭先開始幫資料提供單位建立Dashboard，對方就開始覺得：「這個團隊有點用」。而當毛博士他們能串接不同資料源，說出對方過去做不到的事情，專家們就會非常的興奮，並且願意主動和毛博士合作。
+資料科學是一個很新的領域，其他部門往往不知道資料科學團隊在做什麼，也不懂資料科學的價值。而當這個團隊建立的時候，其他團隊還要提供資料（增加額外的工作）！所以若團隊不能很快的回饋有用的價值給其他部門，而僅僅只是靠長官相挺，這看起來不就很「空降」、「借長官壓人」的感覺嗎？
+我以為提供Dashboard是一個最快回饋給對方的方式，就像是要和別人深入合作，通常要先建立起友誼與互信一樣，是一個很好的開始。
+總結 從陳老師提到資料科學的各面向，再再都驗證了Dashboard能解決的問題的重要性。雖然老師也提到：「不要讓資料科學團隊只做Dashboard」，我個人認為這是一種過與不及的概念。Dashboard對於初期的資料科學團隊很重要，但是當馬步蹲好了，團隊一定要繼續往前走，探索更深入的問題。而我這篇文章想強調的，則是在往前走之前，這些基礎的功夫不要省。如果團隊在蹲馬步時偷吃步，例如和不乾淨的資料與不正確的資料妥協，或是在對企業不夠理解的狀況下就開始花資源解決問題，最後都是得不償失的。有趣的是，這些問題通通可以在建立Dashboard時檢驗出來，所以這個Hello World專案是可以讓團隊集中注意力，蹲好馬步的。
+所以經過這次課程，我更加肯定：資料科學團隊的Hello World，應當是針對手上的資料源建立Dashboard。這個蹲馬步的工作不先做好，貪快跳進深入分析、撰寫報告、建立機器學習產品等等，都是非常危險的。</description>
+    </item>
+    
+    <item>
+      <title>資料工程的挑戰 --- 乾淨的資料</title>
+      <link>/2015/09/01/ng/</link>
+      <pubDate>Tue, 01 Sep 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/09/01/ng/</guid>
+      <description>這陣子我聽了一系列Felix在MLDM Monday跟大家分享，關於資料工程的一些心得。這除了要感謝Felix的熱情分享以外，還要感謝萬惡之首 家齊的大力推坑！
+恰巧，這個領域也是我一直在思考的問題。一系列的討論下來，也讓我對這個問題有接近最本質的看法。
+Felix的演講雖然著重在技術面，著重在效能，但是他也點出了一個資料工程的觀點：資料要乾淨，後面的人才好做事。而根據我自己聽下來的心得，以及自己工作中的心得，我認為這部份其實包含了兩個面向：乾淨和正確。而這三點恰巧是我目前想到的，資料工程最重要的三個要點。
+這篇文章想分享，在最近事件所激發出我對於乾淨的資料的一些想像。
+資料的乾淨度 乾淨度其實牽涉到後續在取用資料時，能不能取得資料，以及後續方便性的問題。KKBOX在今年年會的時候，就很具體的描述，當一個分析師開始想要在企業內部取用資料時，會發生的種種狀況（投影片）。
+類似的問題在OpenData社群也有許多討論，有興趣的朋友可以也在https://www.facebook.com/groups/odtwn/permalink/1252416351439447看到一些討論的過程（感謝Ronny Wang的提供）。我自己在今年的年會中，也和慕約大大就這個議題有過簡短的交流。
+那在一個企業之中，要怎麼要訂定資料乾淨度的KPI呢？我想到了一個有趣的作法：直接利用企業中資料科學團隊取用資料時，所撰寫的程式碼，並且分析整段抓取資料的程式碼和邏輯。這段程式碼的複雜度，就是資料的乾淨程度的反指標。
+資料不乾淨的一些範例 舉例來說，儲存資料所採用的格式是不是乾淨的？我們可以觀察，資料科學家能不能用既有的分析工具（如R、Python、Excel、SAS或SPSS），簡單數行就可以把資料讀進分析軟體之中。這樣的想法，是能涵蓋目前我知道的，關於「資料不乾淨」的現象。
+資料讀取的問題 舉例來說，在我處理過得資料中，瀏覽器的用戶代理（User Agent）就是常常就夾雜著許多亂七八糟的符號，甚至是斷行符號，而資料科學家光要整理這樣的資料，絕對會寫出嚇死人的程式碼。
+又如果資料儲存的格式不是常見的標準格式，那資料科學家就要自己寫Parser，那程式碼的複雜度也是很高的。
+另外一個常見的讀取問題，就是編碼問題。我自己就遇過，同樣的檔案中有使用不同編碼的片段，處理起來，程式碼也是非常非常的醜。甚至還有BOM的判斷，這也是很討人厭的。
+特殊意義的符號是否有清楚的定義 在R來說，特殊的符號就有：NA（通常代表缺失值）或是NULL（空值）。我有看過一些很不乾淨的資料集用99或是一些魔術數字來作特別的意義，結果就是在分析之前，要寫一大堆邏輯來把這類魔術數字替換成NA。
+資料規格變動的問題 分析所需要的資料絕對是會一直變動的，這是實務資料科學和學校中的資料分析差異很大的地方！而如果企業沒有適當的管理這類變動的狀況，那資料科學家在使用資料的時候，可能就要處理很多exception，或是檢驗欄位是否存在的if-else。
+如何解決不乾淨的資料呢？ 目前我對於上述我已知的、遇到過得問題，也都有一些基本的對應手法了（真羨慕已經和資料工程師合作的資料科學家）。
+資料格式 以資料的工程面來說，在傳遞資料時，使用一些可擴充、無關工具的資料交換格式，如：XML、JSON或Protobuf，並且嚴謹的定義特殊符號，並且主動統一資料的編碼。以長期來說，是比較好的。如果使用XML或JSON，記得在欄位內主動加上版本號。Protobuf的話，因為有定義schema，所以可以把schema加入版控來管理。
+然而這類資料，都是屬於非結構化的資料格式，對分析軟體是比較不友善的。目前主流分析軟體，還是擅長處理結構化的資料，例如CSV、Parquet。我以為，把非結構化的資料轉換到結構化的資料，是屬於資料工程團隊內重要的工作內容。
+取用資料的客製化套件 由於每個企業的資料取用方法都是多變的，所以如果能針對資料科學團隊所使用的工具，開發鍵接資料的套件，讓分析師只要一行就可以撈出他需要的表格。這部份我覺得是R和Python這些軟體的強項，因為要開發他們的套件，是非常容易的，網路上是滿滿的文件，就連我過去也順手寫過：五分鐘學會「如何使用Rstudio建立R套件」
+。
+更有甚者，資料取用的邏輯也都可以整合進套件中，搭配先進的IDE，API就變成了文件呢！
+程式碼可以告訴我們，目前資料不乾淨的點 而如果我們真的直接利用企業中資料科學團隊取用資料時，所撰寫的程式碼，來判斷資料的乾淨程度，我們是可以有效的偵測出資料不乾淨的地方。而且程式碼的邏輯就會很具體的告訴我們，目前做不好的部份，讓資料工程團隊可以對症下藥。
+設計情境：什麼？撈資料居然要先對時間，那表示時間欄位一定不一致，有問題。
+而取用資料的套件，恰巧就會成為一個很棒的界面，把所有資料工程團隊要負責的邏輯（格式、效能的優化、正確性…）部份包裝起來，讓資料科學家們不用去碰觸這一塊。而這其實就是目前資料工程師的我每天需要幫資料科學家的我所進行的工作呀。</description>
+    </item>
+    
+    <item>
+      <title>KDD 2015 Keynote：「Online Controlled Experiments:  Lessons from Running A/B/n Tests for 12 years」聽後感</title>
+      <link>/2015/08/28/d/</link>
+      <pubDate>Fri, 28 Aug 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/08/28/d/</guid>
+      <description>今年在KDD 2015我聽到的第一場來自微軟的Ron Kohavi的演講就非常精彩。以下節錄一些值得我自己未來做線上AB分流實驗時，一直要謹記在心的要點：
+取得改善就是一種很大的挑戰。許多看起來很成功的想法，往往最後不但不能改善，還會把事情搞砸。 實驗跑越多，就會越謙虛 在做大規模的事情之前，一定要先簡單測試自己的想法 To have a great idea, have a lot of them - Thomas Edison If you have to kiss a lot of frogs to find a prince, find more frogs and kiss them faster and faster - Mike Moran, Do it Wrong Quickly Twyman’s Law：實驗的結果如果有令人驚訝的表現，一定要仔細檢視任何和實驗相關的事物。如果發現事情有很大的改善，檢查三次再慶祝。 儘早開始對大家要優化的目的擁有共識。光擁有共識的本身，就是一個很大很大的進步。 除了標的之外，也要仔細檢視許多相關的指標，來了解為什麼標的被改善了，並且進行未來實驗的規劃 要儘可能的獲得正確的數據。實務上，可以利用A/A Split Test來確認獲得的數據是否正確。取得數字很容易，但是取得可以相信的數字很困難。 為了取得統計的顯著性，必須要在足夠多的使用者上做實驗。 線上環境和線下環境是不同的。跑實驗最重要的是：這個實驗是可以重現的。 對這場演講有興趣的朋友可以到這裡去下載講者的投影片： http://bit.ly/KDD2015Kohavi</description>
+    </item>
+    
+    <item>
+      <title>雪梨行的收穫</title>
+      <link>/2015/08/26/%E9%9B%AA%E6%A2%A8%E8%A1%8C%E7%9A%84%E6%94%B6%E7%A9%AB/</link>
+      <pubDate>Wed, 26 Aug 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/08/26/%E9%9B%AA%E6%A2%A8%E8%A1%8C%E7%9A%84%E6%94%B6%E7%A9%AB/</guid>
+      <description> 這次雪梨行，我第一次給了時間不短的英文演講，介紹我開發的FeatureHashing套件。即使擁有許多在社群報告的經驗，我仍然非常非常的緊張。一來是要面對陌生的人群，我抓不太準他們會不會喜歡我報告風格。二來是我很久沒有說英文了，而且我的英文也不是很好。
+在漫長的準備過程中，我發現了一件事，就是當我意識到，我這次去報告，是去「給」，去分享我擁有的知識，去介紹和推廣我的套件，以及去交流R 社群的種種八卦，而不是去推銷東西，或是非得要別人用我的東西。最壞的狀況頂多是沒什麼人願意嘗試我寫的套件，不過這也沒什麼，我不應該為此感到任何的壓力。換句話說，我沒有要從他們身上拿任何的東西。
+奇妙的是，在這麼想以後，我的壓力至少減輕了一半。的確，英文的部份還是讓我感到很有壓力。不過這麼多年在江湖打滾的經驗也告訴我，我只需要死背開頭的一小段英文，等到熱身完畢來了，台上的我會自己克服一切。最後，在神奇的晚上之後，許多聽眾跑過來告訴我，他們完全能聽懂我要傳遞給他們的東西。甚至是我準備的兩個笑話，也都有聽到台下的笑聲。也為這次雪梨行拉開了成功的開始。
+Blue Mountains Sydney </description>
+    </item>
+    
+    <item>
+      <title>R 和 Microsoft SQL Server</title>
+      <link>/2015/08/25/rver/</link>
+      <pubDate>Tue, 25 Aug 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/08/25/rver/</guid>
+      <description>今天我想要跟大家介紹如何用R 連接Microsoft SQL Server。由於我自己比較習慣走JDBC的路線，所以要先請讀者安裝jdk、rJava和RJDBC。由於這件事情牽涉到R的版本、java的版本和SQL Server的版本，所以即使照著網路上的介紹走，仍然很容易遇到錯誤。這部分，只能仰賴微軟的官方文件了。
+安裝rJava R上要安裝rJava和RJDBC其實有一點學問。主要的關鍵在於：rJava編譯時使用的java
+如果使用CRAN編譯的binary，那java的版本就要透過以下的指令來查詢（出處：http://stackoverflow.com/q/26948777/1182304）：
+library(rJava) .jinit() jvm = .jnew(&amp;quot;java.lang.System&amp;quot;) jvm.props = jvm$getProperties()$toString() jvm.props &amp;lt;- strsplit(gsub(&amp;quot;\\{(.*)}&amp;quot;, &amp;quot;\\1&amp;quot;, jvm.props), &amp;quot;, &amp;quot;)[[1]] jvm.props 在落落長的訊息中，應該會看到如：java.version=1.6.0_65之類的文字，我們就知道目前電腦上使用的java版本是1.6。
+自行編譯rJava（Ubuntu &amp;amp; Mac） 如果要自行編譯rJava好配合電腦上的java版本，請先安裝對應的jdk。在安裝jdk過後，請先打開command line輸入：
+sudo R CMD javareconf 在mac上應該會出現如：
+Java interpreter : /usr/bin/java Java version : 1.7.0_75 Java home path : /Library/Java/JavaVirtualMachines/jdk1.7.0_75.jdk/Contents/Home/jre Java compiler : /usr/bin/javac Java headers gen.: /usr/bin/javah Java archive tool: /usr/bin/jar Non-system Java on OS X trying to compile and link a JNI program detected JNI cpp flags : -I$(JAVA_HOME)/.</description>
+    </item>
+    
+    <item>
+      <title>R 套件在 github 上已經有三種作業系統的CI服務</title>
+      <link>/2015/08/24/r-%E5%A5%97%E4%BB%B6%E5%9C%A8-github-%E4%B8%8A%E5%B7%B2%E7%B6%93%E6%9C%89%E4%B8%89%E7%A8%AE%E4%BD%9C%E6%A5%AD%E7%B3%BB%E7%B5%B1%E7%9A%84ci%E6%9C%8D%E5%8B%99/</link>
+      <pubDate>Mon, 24 Aug 2015 00:00:00 +0000</pubDate>
+      
+      <guid>/2015/08/24/r-%E5%A5%97%E4%BB%B6%E5%9C%A8-github-%E4%B8%8A%E5%B7%B2%E7%B6%93%E6%9C%89%E4%B8%89%E7%A8%AE%E4%BD%9C%E6%A5%AD%E7%B3%BB%E7%B5%B1%E7%9A%84ci%E6%9C%8D%E5%8B%99/</guid>
+      <description>R 目前在開發套件時，最多人使用的作業系統就是：
+Windows OS X Ubuntu 謎之音：Solaris… 聽說全世界只有那個人在用它跑R的作業系統
+現在如果在github上做R套件的開發，已經可以免費的同時在三種作業系統上進行套件測試了。這樣就應該可以降低那個人的維護負擔吧！
+Travis CI Travis CI目前提供Ubuntu和OS X環境的測試。如果有Github帳號，要註冊Travis CI是非常簡單的。
+Ubuntu Ubuntu上的測試可以參考Building an R Project的說明文件。這部份要感謝許多R界的大大們的努力。
+OS X 在OS X上的測試是透過objective-c去改出來的。我fork了wertion/r-travis-mac，更新了R的版本，CRAN上只有放最新的binary。如果已經會寫.travis.yml的朋友，可以參考FeatureHashing上給OS X測試的.travis.ci，應該很快就會上手了。
+我這裡補充一些細節：
+由於我沒有設定latex環境，所以R_BUILD_ARGS和R_CHECK_ARGS上都要放--no-manual FeatureHashing的vignette是透過Rmd寫的，不需要Latex，所以我沒有加--no-vignette。如果你的套件的vignette有用latex，可能就要自己再改這邊的測試參數了。 其他的部份，如果大家有問題，歡迎再問我。
+AppVeyor 這個CI服務提供Windows上的測試。只要有Github，要註冊也是非常簡單的。
+Windows Windows上的測試也是需要透過krlmlr/r-appveyor的專案來達成。
+有興趣的讀者可以參考FeatureHashing上給Windows測試的appveyor.yml，我覺得只要熟悉.travis.yml的語法的話，應該是不會感到陌生的。
+這部份也許還有其他的功能，不過目前我就只有摸索到這了，有機會的話再做筆記。</description>
+    </item>
+    
+    <item>
+      <title>Lorem Ipsum</title>
+      <link>/2015/01/01/lorem-ipsum/</link>
+      <pubDate>Thu, 01 Jan 2015 13:09:13 -0600</pubDate>
+      
+      <guid>/2015/01/01/lorem-ipsum/</guid>
+      <description>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</description>
+    </item>
+    
+    <item>
+      <title>Chinese Font on EC2 Instance</title>
+      <link>/2013/11/24/chinese-font-on-ec2-instance/</link>
+      <pubDate>Sun, 24 Nov 2013 00:00:00 +0000</pubDate>
+      
+      <guid>/2013/11/24/chinese-font-on-ec2-instance/</guid>
+      <description>Resolve Chinese font issue on AWS EC2 Record the step I used to resolve the font issue on AWS EC2
+Download chinese ttf font Download .ttf chinese font. For example, DFLiYuanXBold1B. Remember to rename the file extension from TTF to ttf Install R package extrafont install.packages(&amp;#39;extrafont&amp;#39;) Import ttf font library(extrafont) font_import(&amp;quot;&amp;lt;path to DFLIYX1B.ttf&amp;gt;&amp;quot;) Summary I didn’t try it second times. Please let me know if it works or not.</description>
+    </item>
+    
+    <item>
+      <title>Rcpp Tutorial Chapter 0</title>
+      <link>/2013/07/16/al-ch0/</link>
+      <pubDate>Tue, 16 Jul 2013 00:00:00 +0000</pubDate>
+      
+      <guid>/2013/07/16/al-ch0/</guid>
+      <description>前言 這系列的文章是想要重新在寫一次我使用Rcpp的心得，希望供其他R的愛好者參考。
+過去我認為，要能理解Rcpp的語法，必須先對C++這個我個人認為最難學的語言先學到某種程度才行。 根據Effective C++的作者Scott Meyers的看法，C++其實是下列四種程式語言的集合(難怪很難，一個打四個!!):
+C (指標、陣列等等) 物件導向 STL 標準函式庫 Template 我錯了！
+Rcpp的源碼中的確用了大量的C++的功能，但是對一般的Rcpp使用者來說，只要能用就好！而C++中複雜的部份Rcpp都包裝起來，只露出簡單的API給使用者。
+家齊某次和我hackthon時看到我寫的Rcpp的程式碼不禁驚呼：
+「這Rcpp寫起來和R很類似阿！」
+除非你想要hack他、擴充他，否則即使是C++的新手，應該也可以輕鬆的開始上手Rcpp。
+Rcpp 簡介 Rcpp 是一個整合R和C++的library，並且提供了許多功能讓使用者能在C++中使用類似R的語法。
+通常使用Rcpp不外乎是為了：
+優化R：利用編譯過後的程式大幅度的增加迴圈效能，以及增加記憶體的使用效率。 學習R：利用Rcpp快速的測試R 底層的C 函數，以了解R 的底層。 擴充R：將其他第3方的C套件整合到R之中，擴充R既有的功能。 講這麼多，相信沒經驗的讀者還是對Rcpp沒有概念， 所以我們先具體來看一個stackoverflow上的例子吧。(取自http://stackoverflow.com/questions/14494964/how-to-find-nearby-integers-efficiently/14496071#14496071 )
+有一個R使用者希望能優化(加速)這段R script:
+for(i in 1:length(centers)){ data2 &amp;lt;- data1 data2[,1] &amp;lt;- data2[,1] - centers[i] + ncol(score_matrix)/2 region_scores &amp;lt;- subset(data2,data2[,1] &amp;gt; 0 &amp;amp; data2[,1] &amp;lt;= ncol(score_matrix)) score_matrix[i,region_scores[,1]]&amp;lt;-region_scores[,2] } 接著再來看看我改的Rcpp code。看不懂細節沒關係，我們之後會再說明。這裡主要先讓讀者了解Rcpp code的架構：
+// R物件和C++物件之間的轉換 NumericMatrix data1(Rdata1); NumericVector centers(Rcenters); NumericMatrix score_matrix(Rscore_matrix); NumericVector data2(data1.</description>
+    </item>
+    
+    <item>
+      <title>Rcpp Tutorial Chapter 2</title>
+      <link>/2013/07/16/al-ch2/</link>
+      <pubDate>Tue, 16 Jul 2013 00:00:00 +0000</pubDate>
+      
+      <guid>/2013/07/16/al-ch2/</guid>
+      <description>設定Rcpp開發環境 為了能先讓讀者動手嘗試，這裡我先介紹一種最簡單的使用Rcpp的方法：
+安裝Rcpp 在Windows的讀者請先安裝Rtools。 接著在R底下安裝Rcpp套件。本系列撰寫時的Rcpp 是0.10.4版本。 使用inline嵌入Rcpp 如果我們只是單獨使用Rcpp的函式庫，那最簡單的方式就是使用inline套件。透過CRAN，讀者應該可以輕鬆安裝。 本系列主要在介紹Rcpp，所以讀者應該能透過inline來執行Rcpp code。
+接著我們來測試看看能不能正常使用Rcpp：
+library(Rcpp) library(inline) f &amp;lt;- cxxfunction(sig=c(), plugin=&amp;quot;Rcpp&amp;quot;, body=&amp;#39; Rcout &amp;lt;&amp;lt; &amp;quot;Hello World!&amp;quot; &amp;lt;&amp;lt; std::endl; &amp;#39;) f() 如果設定正常的話，就可以在R console上看到：
+&amp;gt; f() Hello World! NULL 真是非常簡單！
+ps. 這裡我假設讀者並沒有更改R的安裝路徑。如果不是裝在預設路徑，那可能還需要額外的設定了。
+使用Rcpp Attribute 這是Rcpp 0.10版本所推出的功能。
+讀者可以單獨的撰寫一個.cpp檔案，並透過適當的註解之後，將函數嵌入R 之中。
+舉例來說，我們可以寫一個test.cpp：
+#include&amp;lt;Rcpp.h&amp;gt; using namespace Rcpp; //[[Rcpp::export]] SEXP hello_world() { BEGIN_RCPP Rcout &amp;lt;&amp;lt; &amp;quot;hello world&amp;quot; &amp;lt;&amp;lt; std::endl; END_RCPP } 存檔之後，在同一目錄下打開R並執行：
+library(Rcpp) sourceCpp(&amp;quot;test.cpp&amp;quot;) hello_world() 讀者應該可以看到R console上跑出：
+&amp;gt; hello_world() hello world NULL 這是透過函數名稱前的C++註解所達到的效果。 只要加入：</description>
+    </item>
+    
+    <item>
+      <title>Rcpp Tutorial Chapter 3</title>
+      <link>/2013/07/16/al-ch3/</link>
+      <pubDate>Tue, 16 Jul 2013 00:00:00 +0000</pubDate>
+      
+      <guid>/2013/07/16/al-ch3/</guid>
+      <description>物件的轉換 是時候來仔細的看看前面兩個範例中所使用的Rcpp 物件了:
+NumericVector NumericMatrix 以及一個泛用的轉換函數：
+as 這些是和物件轉換相關的Rcpp API。as的情況比較複雜，所以我們先解釋NumericVector和NumericMatrix。 如名稱所述，這兩個物件分別代表著R之中的numeric型態的向量和矩陣。
+Rcpp中物件的名稱是經過設計的，讀者在累積足夠的知識後，應該從名稱就可以猜到Rcpp物件是對應到哪一種類型的R物件了。
+在更進一步解釋之前，我們需要先了解物件的型態。
+物件的型態(type) 由於使用R的時候，R會自動判斷物件的型態，所以R的使用者可能不清楚什麼是型態。
+所有物件的資料，最終就是電腦記憶體中的0和1(又稱做bit)，而電腦要怎麼解釋這些0和1的意義？
+舉例來說，00110000這8個bit可以解釋為文字符號&#34;0&#34;，也可以解釋為整數48。
+而型態就是電腦解釋這些bit的方式。
+如果對應到實際的世界：如果有一匹馬的名稱叫作小明，那小明的型態就是馬，而小明則是小明這隻馬的名稱。
+在程式中常見的基礎型態是整數、數值(實數)、字串或boolean，而他們在R和C++中有不一樣的名字：
+整數型態在R叫integer，C++叫int 數值型態在R叫numeric，C++叫double 字串型態在R叫character，C++叫std::string*。先不要管那個::，就把std::string當成一個型態的名稱就好！ boolean型態在R叫logical，C++叫bool 在R 之中還另外有一種稱為raw的向量，主要是用於儲存特殊格式的資料。它的概念近似於一般資料庫系統中的BLOB(Binary Large OBject)物件。
+備註: 字串型態在C++中有點複雜，詳細解釋的話超過本章節的範圍了。所以簡單起見，我一律用std::string來代表。
+在R 的世界中，R 會自動判斷物件的型態，所以使用者並不需要有這方面的知識，就可以用R了。
+但是在C++的世界中，所有物件的型態都要非常清楚。所以在用Rcpp的時候，我們需要初步的了解R 物件的型態。實際上，只要熟悉上面提到的4個型態，就可以將Rcpp應用在很廣泛的問題了！所以讀者不用感到害怕。
+從R 到 C++ 不透過Rcpp的話，在C++中，所有R的物件都是型態為SEXP的物件，這物件包含了另外三種pointer來供R處理各種型態。因此我們不能直接對SEXP做操作，必須要透過Rcpp所提供的物件和API。而且對於不同的R型態，必須要透過對應的Rcpp物件才能正確的處理。
+而Rcpp中對於物件的命名也是有下一番心思的。舉例來說，讀者在R執行：
+class(letters) ## [1] &amp;quot;character&amp;quot; 可以了解letters的型態是character，所以它在Rcpp中的就是用CharacterVector來處理。規則就是：把R的型態名稱改成大寫開頭，後面接上Vector即可。這裡Vector表示這是一個向量物件。在R中，所有物件都是向量，所以這就是R最基本的型態。
+同樣的道理：
+class(1:5) ## [1] &amp;quot;integer&amp;quot; 所以1:5這個物件在Rcpp中就是透過IntegerVector來處理。
+我要再次強調，唯有透過對應的Rcpp物件才能正確的在C++中處理R物件。我們用inline來跑個簡單的Demo：
+library(Rcpp);library(inline) ## Error in library(inline): there is no package called &amp;#39;inline&amp;#39; f &amp;lt;- cxxfunction(sig=c(Rx=&amp;quot;integer&amp;quot;), plugin=&amp;quot;Rcpp&amp;quot;, body=&amp;#39; IntegerVector x(Rx); return x; &amp;#39;) ## Error in cxxfunction(sig = c(Rx = &amp;quot;integer&amp;quot;), plugin = &amp;quot;Rcpp&amp;quot;, body = &amp;quot;\n IntegerVector x(Rx);\n return x;\n&amp;quot;): could not find function &amp;quot;cxxfunction&amp;quot; f(1:5) ## Error in f(1:5): could not find function &amp;quot;f&amp;quot; f(pi) ## Error in f(pi): could not find function &amp;quot;f&amp;quot; f(letters) ## Error in f(letters): could not find function &amp;quot;f&amp;quot; ps.</description>
+    </item>
+    
+    <item>
+      <title>Rcpp Tutorial Chapter 1</title>
+      <link>/2013/07/15/al-ch1/</link>
+      <pubDate>Mon, 15 Jul 2013 00:00:00 +0000</pubDate>
+      
+      <guid>/2013/07/15/al-ch1/</guid>
+      <description>Rcpp 入門 適合使用Rcpp做優化的R script 在開始之前，筆者要強調：並不是所有的R Script都適合使用Rcpp來做優化。
+我們先來看一些適合的例子。這是上一章出現的R script：
+for(i in 1:length(centers)){ data2 &amp;lt;- data1 data2[,1] &amp;lt;- data2[,1] - centers[i] + ncol(score_matrix)/2 region_scores &amp;lt;- subset(data2,data2[,1] &amp;gt; 0 &amp;amp; data2[,1] &amp;lt;= ncol(score_matrix)) score_matrix[i,region_scores[,1]]&amp;lt;-region_scores[,2] } 這個Script滿足以下幾個條件，所以改起來非常容易，加速的效果也很顯著(發問者說Rcpp的版本快了70倍)：
+迴圈：R語言的迴圈很慢，而Rcpp的迴圈很快。 簡單的操作：取值([)，加減乘除(+, /)、布林運算(&amp;amp;)和比較(&amp;gt;, &amp;lt;=)。這段Script中最複雜的是subset函數。演算法的邏輯愈簡單，用Rcpp寫起來就越省力。 我們再看另一個stackoverflow上的例子，取自http://stackoverflow.com/questions/14495697/speeding-up-a-repeated-function-call/14495967#14495967。 發問者想要優化這個R script:
+# x0: a scalar. rs: a numeric vector, length N # N: typically ~5000 f &amp;lt;- function (x0, rs, N) { lambda &amp;lt;- 0 x &amp;lt;- x0 for (i in 1:N) { r &amp;lt;- rs[i] rx &amp;lt;- r * x lambda &amp;lt;- lambda + log(abs(r - 2 * rx)) # calculate the next x value x &amp;lt;- rx - rx * x } return(lambda / N) } 仔細看看，這段Script是不是也符合剛剛提到的兩個特性呢？</description>
+    </item>
+    
+    <item>
+      <title>R 錯誤處理</title>
+      <link>/2013/04/04/r-error-handling/</link>
+      <pubDate>Thu, 04 Apr 2013 00:00:00 +0000</pubDate>
+      
+      <guid>/2013/04/04/r-error-handling/</guid>
+      <description>R 的官方文件在Exception handling有介紹R的例外處理機制。
+這裡我簡單介紹如何在R寫出類似java、c++或python等主流語言所使用的try-catch機制。
+另外這裡講的都是以R2.15為主。
+錯誤相關的函數 warning(...): 拋出一個警告 stop(...): 拋出一個例外 surpressWarnings(expr): 忽略expr中發生的警告 try(expr): 嘗試執行 tryCatch: 最主流語言例外處理的方法 conditionMessage : 顯示錯誤訊息 R 和其他主流語言的不同 R 語言處理例外的方式，是透過函數，而非像其他主流語言使用try … catch … 等語法。這是因為R 語言幾乎所有功能都是用函數來實作的。請參考Every operation is a function call。
+一個try的範例 我自己最早是先發現try函數。try的用法近似於回傳expr的結果或執行時發生的錯誤。
+result &amp;lt;- try(..., silent=TRUE) if (class(result) == &amp;quot;try-error&amp;quot;) { ... # 錯誤處理 } 由於R是我第一個語言，所以我也就接受他了。直到我後來發現主流語言的try – catch機制後，才覺得奇怪。
+一個tryCatch的範例 後來我發現tryCatch函式提供了比較類似try – catch機制的錯誤處理方法。
+tryCatch({ result &amp;lt;- expr }, warning = function(w) { ... # 警告處理 }, error = function(e) { .</description>
+    </item>
+    
+    <item>
+      <title>Slidy and Scianimator</title>
+      <link>/2013/03/04/slidy-and-scianimator/</link>
+      <pubDate>Mon, 04 Mar 2013 00:00:00 +0000</pubDate>
+      
+      <guid>/2013/03/04/slidy-and-scianimator/</guid>
+      <description>In knitr, there is a hook for creating animation with javascript:
+hook_scianimator
+However, if you directly use it with pandoc and slidy, the animation will not be correctly rendered. The reason is that the .html created by pandoc will not include the source scianimator required.
+Yesterday, I successfully intergrate scianimator into slidy.
+Environment Ubuntu 12.04 and ubuntu 12.10 pandoc 1.10.0.4 R 2.15.2 knitr 1.0.5 Hacks Download the zip file from Scianimator Copy the subdirectory assets under your project.</description>
+    </item>
+    
+    <item>
+      <title>Using Eclipse CDT to develop Rcpp Package</title>
+      <link>/2013/01/29/using-eclipse-cdt-to-develop-rcpp-package/</link>
+      <pubDate>Tue, 29 Jan 2013 00:00:00 +0000</pubDate>
+      
+      <guid>/2013/01/29/using-eclipse-cdt-to-develop-rcpp-package/</guid>
+      <description>Rstudio is great, but it lacks some useful features for C/C++ provided by modern IDE such as tracing. Eclipse CDT is a good choice, but it is complicated to setup the project correctly.
+I just wrote a cmake script to generate Eclipse CDT project for developing Rcpp package.
+Environment CMake &amp;gt;= 2.8.7 Eclipse &amp;gt;= 3.7 Eclipse CDT &amp;gt;= 1.4.2 R &amp;gt;= 2.15 Rcpp &amp;gt;= 0.10 Configuration Download FindLibR.cmake from github provided by Rstudio</description>
+    </item>
+    
+    <item>
+      <title>xts and Rcpp</title>
+      <link>/2013/01/11/xts-and-rcpp/</link>
+      <pubDate>Fri, 11 Jan 2013 00:00:00 +0000</pubDate>
+      
+      <guid>/2013/01/11/xts-and-rcpp/</guid>
+      <description>Here is my guideline to integrate xts with Rcpp in a R package.
+Because the xts_API is written for c language, so we need to hack somethings to make it work with c++.
+Modify DESCRIPTION Depends: xts, Rcpp linkingTo: xts, Rcpp Create files in src directory c xts_api.c #include &amp;lt;xts.h&amp;gt; #include &amp;lt;xts_stubs.c&amp;gt;
+```cpp xts_api.h extern “C” { #define class xts_class #include &amp;lt;xts.h&amp;gt; #undef class }
+inline SEXP install(const char* x) { return Rf_install(x); }</description>
+    </item>
+    
+    <item>
+      <title>Rtwmap</title>
+      <link>/2012/12/07/rtwmap/</link>
+      <pubDate>Fri, 07 Dec 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/2012/12/07/rtwmap/</guid>
+      <description>source: https://github.com/wush978/Rtwmap
+Plot Data library(Rtwmap) ## Loading required package: sp data(village2010) plot(village2010) plot of chunk village2010
+data(county1984) plot(county1984) plot of chunk county1984
+data(county2010) plot(county2010) plot of chunk county2010
+data(town1984) plot(town1984) plot of chunk town1984
+data(town2010) plot(town2010) plot of chunk town2010
+Coloring 隨機顏色
+data(county1984) random.color &amp;lt;- as.factor(sample(1:3, length(county1984), TRUE)) color &amp;lt;- rainbow(3) county1984$random.color &amp;lt;- random.color spplot(county1984, &amp;quot;random.color&amp;quot;, col.regions = color, main = &amp;quot;Taiwan Random Color&amp;quot;) plot of chunk county1984-color
+人口</description>
+    </item>
+    
+    <item>
+      <title>unicode escape in R</title>
+      <link>/2012/12/03/unicode-escape-in-r/</link>
+      <pubDate>Mon, 03 Dec 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/2012/12/03/unicode-escape-in-r/</guid>
+      <description>簡介 最近需要分析中文資料，就遇到了unicode escape的問題。
+除了抓下來的資料問題外，就是轉JSON的時候也會跑出來
+library(rjson) toJSON(&amp;quot;測試&amp;quot;) toJSON(&amp;quot;測試&amp;quot;, &amp;quot;R&amp;quot;) &amp;gt; library(rjson) &amp;gt; toJSON(&amp;quot;測試&amp;quot;) [1] &amp;quot;\&amp;quot;\\u6e2c\\u8a66\&amp;quot;&amp;quot; &amp;gt; toJSON(&amp;quot;測試&amp;quot;, &amp;quot;R&amp;quot;) [1] &amp;quot;\&amp;quot;測試\&amp;quot;&amp;quot; &amp;gt; 中間的\u6e2c\u8a66就是unicode escape
+解法原理 上面的\u6e2c中，\u是header，6e2c是__UTF16BE__編碼的hex code。
+了解這點之後，就很容易自己做出解決方法：
+利用regular expression(如gregexpr)定位\\u[0-9a-f]{4,4} 利用iconv把後面的兩個byte從__UTF16BE__轉換回__UTF8__ 很弱的實作 但是我在R裏面沒有找到原生的hex轉string的函數，最後就自己刻了兩個函數，效能很差。
+hex2str remove_unicode_escape 但是原理知道了，所以之後我有空可能刻個C++的解決方案。</description>
+    </item>
+    
+    <item>
+      <title>R package installation tips on Ubuntu</title>
+      <link>/2012/09/24/r-package-installation-tips-on-ubuntu/</link>
+      <pubDate>Mon, 24 Sep 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/2012/09/24/r-package-installation-tips-on-ubuntu/</guid>
+      <description> rgl sudo apt-get install r-cran-rgl RBGL, R interface to the Boost Graph Library #! /usr/bin/R source(&amp;quot;http://bioconductor.org/biocLite.R&amp;quot;) biocLite(&amp;quot;RBGL&amp;quot;) </description>
+    </item>
+    
+    <item>
+      <title>Benchmark of Saving and Loading R Objects</title>
+      <link>/2012/08/30/benchmark-of-saving-and-loading-r-objects/</link>
+      <pubDate>Thu, 30 Aug 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/2012/08/30/benchmark-of-saving-and-loading-r-objects/</guid>
+      <description>Introduction To compare the speed of saving and loading R objects to and from MongoDB with or without serialization.
+Environment OpenVZ with Ubuntu 12.04, i7-2600 CPU @ 3.4GHz, 2 processors, 4G RAM Local MongoDB Local PostgreSQL R 1.14.1 rmongodb 1.0.3 RPostgreSQL 0.3-2 Initialize sudo apt-get install mongodb R sh install libpq-dev sudo apt-get install libpq-dev
+r install R packages install.packages(&#34;rmongodb&#34;) install.packages(&#34;RPostgreSQL&#34;)
+Benchmark ```r Test saving object serialized or not { # loading package library(rmongodb) mongo &amp;lt;- mongo.</description>
+    </item>
+    
+    <item>
+      <title>Initialize PostgreSQL in Ubuntu 12.04</title>
+      <link>/2012/08/30/initialize-postgresql/</link>
+      <pubDate>Thu, 30 Aug 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/2012/08/30/initialize-postgresql/</guid>
+      <description> Install sudo apt-get install postgresql Configure sudo -u postgres createuser -D -P ruser sudo -u postgres createdb -O ruser ruserdb Edit /etc/postgresql/9.1/main/pg_hba.conf.
+Change this line:
+local all all peer to this:
+local all all md5 Restart service:
+sudo service postgresql restart Reference GET POSTGRES WORKING ON UBUNTU OR LINUX MINT </description>
+    </item>
+    
+    <item>
+      <title>我喜歡使用虛擬化系統</title>
+      <link>/2012/08/24/pros-and-cons-of-virtualized-system/</link>
+      <pubDate>Fri, 24 Aug 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/2012/08/24/pros-and-cons-of-virtualized-system/</guid>
+      <description>之前我因為工作的關係, 需要使用虛擬化系統來跑測試。
+這陣子在架了Proxmox的Virtualization Cluster後覺得這種系統在跑科學模擬上真是太方便，理由如下：
+環境管理: 我可以對整台機器的環境進行備份、還原和複製。 穩定: 虛擬機器內再怎麼當機怎麼毀滅, 幾乎不會影響到整台機器。所以我不用跑到實驗室去重開，頂多進入Proxmox主控台去重開虛擬機器即可。 而使用Proxmox的理由則是：
+Free 我熟悉ubuntu/debian system 當然這樣做也是有一些缺點：
+學習曲線: 我發現在這種東西的學習上, 我似乎比一般人還敏感一點, 所以我可以接受比較陡峭的學習曲線。 效能: 這點我還沒有空去實際測試。但是虛擬機器正常來說效能是會比較慢的。以目前我的經驗是，使用OpenVZ的虛擬化技術上並沒有感受到特別的效能損失。 有興趣或有類似需求或的朋友可以參考看看</description>
+    </item>
+    
+    <item>
+      <title>RcppArmadillo</title>
+      <link>/2012/08/21/rcpparmadillo/</link>
+      <pubDate>Tue, 21 Aug 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/2012/08/21/rcpparmadillo/</guid>
+      <description>Inroduction Recently I am exploring the linear algebra features provided in Armadillo through RcppArmadillo.
+Here is the note for myself.
+Note these functions are only my understanding of these operators and methods. I didn’t check the source code of Armadillo and RcppArmadillo.
+Basic Elements and Methods ``` cpp mat arma::mat a(5, 5); // Initialize a 5 x 5 matrix.
+a.fill(0); // fill it with 0 a.n_rows; //!&amp;lt; number of rows in the matrix (read-only) a.</description>
+    </item>
+    
+    <item>
+      <title>Proxmox &amp;amp; R cluster</title>
+      <link>/2012/08/16/proxmox-and-r-cluster/</link>
+      <pubDate>Thu, 16 Aug 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/2012/08/16/proxmox-and-r-cluster/</guid>
+      <description>Here I’ll show how to set up my parallel computing environment of R.
+Introduction As far as I know, the virtualization for linux with OpenVZ does not loss too many computation efficiency. Moreover, it provides a simple way to copy whole computation environment from one machine to another. The consistency of the environment reduces the difficulty of setting MPI between machines, so I decide to build my R cluster under Proxmox, which is an easy to use open source virtualization platform.</description>
+    </item>
+    
+    <item>
+      <title>R closure</title>
+      <link>/2012/08/14/r-closure/</link>
+      <pubDate>Tue, 14 Aug 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/2012/08/14/r-closure/</guid>
+      <description> R 中_function_也可以是一種物件型態，或稱做叫作_closure_:
+&amp;gt; typeof(rnorm) [1] &amp;quot;closure&amp;quot; 要比較兩個function物件，則可透過body這個函數：
+&amp;gt; body(rnorm) == body(rexp) [1] FALSE &amp;gt; body(rnorm) == body(temp) [1] TRUE </description>
+    </item>
+    
+    <item>
+      <title>Latex in Octopress</title>
+      <link>/2012/06/20/latex-in-octopress/</link>
+      <pubDate>Wed, 20 Jun 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/2012/06/20/latex-in-octopress/</guid>
+      <description> 大致上參考在Octopress中使用Latex即可。
+安裝 安裝kramdown sh install-kramdown gem install kramdown 修改/source/_includes/custom/head.html ``` html head.html ```
+使用注意事項 這個是我自己測出來的bug: 在latex中的符號 ^ 之後要接空格才能正常使用。 </description>
+    </item>
+    
+    <item>
+      <title>Cormen Chp6</title>
+      <link>/2012/06/18/cormen-chp6/</link>
+      <pubDate>Mon, 18 Jun 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/2012/06/18/cormen-chp6/</guid>
+      <description>Heapsort 6.1 Heaps Heap Introduction sorts \(n\) elements in \(O(nlog(n))\) in place ps. in place : only used \(O(1)\) additional memory to store data heat property: \[\mbox{Parent[PARENT(i)] } \leq \mbox{ A[i]}\] Exercise 6.1-1 min: \(2 ^ h\)
+max: \(2 ^ h - 1\)
+6.1-2 Mathematical Induction
+6.1-3 Trivial
+6.1-4 Leaf
+6.1-5 Yes, it is
+6.1-6 No, \(6 &amp;lt; 7\)
+6.1-7 Proof: \[ \begin{eqnarray} &amp;amp; &amp;amp; k \mbox{-th element is a leaf iff } 2k &amp;gt; n \newline &amp;amp;\Rightarrow&amp;amp; k \geq \lfloor n/2 \rfloor + 1 \end{eqnarray} \]</description>
+    </item>
+    
+    <item>
+      <title>Profiling R code</title>
+      <link>/2012/06/14/profiling-r-code/</link>
+      <pubDate>Thu, 14 Jun 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/2012/06/14/profiling-r-code/</guid>
+      <description>簡介 Profiling的意思就是去測量程式中每個函數的執行時間。 根據經驗法則，通常有80%的執行時間耗費在20%的程式碼中！ 所以若有提昇執行效能的需求，第一步就是找出跑得慢得程式碼(bottlenecks)，再針對慢得程式碼去做優化。
+介紹 ps. 以下的程式碼取自Rdebug
+考慮以下三個函數：
+r fun1.R fun1 &amp;lt;- function(x) { res &amp;lt;- NULL n &amp;lt;- nrow(x) for(i in 1:n) { if (!any(is.na(x[i,]))) { res &amp;lt;- rbind(res, x[i,]) } } res }
+r fun2.R fun2 &amp;lt;- function(x) { n &amp;lt;- nrow(x) res &amp;lt;- matrix(0, n, ncol(x)) k &amp;lt;- 1 for(i in 1:n) { if (!any(is.na(x[i,]))) { res[k,] &amp;lt;- x[i,] k &amp;lt;- k + 1 } } res[1:(k-1),] }</description>
+    </item>
+    
+    <item>
+      <title>R debug</title>
+      <link>/2012/06/14/r-debug/</link>
+      <pubDate>Thu, 14 Jun 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/2012/06/14/r-debug/</guid>
+      <description>簡介 很少人能夠第一次寫程式就能寫對，就連最專業的程式設計師也會花大把大把的時間在除錯。 所以熟悉除錯的工具也是能夠顯著的提昇寫程式的效率。
+其實作者我在寫這篇文章之前也完全沒用過除錯工具！想到又能提昇自己的coding效率又讓我熊熊的燃燒起來！！
+除錯函數 R 提供了以下的除錯功能:
+traceback browser debug trace 就讓我來一個個探索吧！
+traceback 所謂的traceback功能主要的目的，是找出錯誤發生時最後執行的函數：
+r traceback-example-1 fail_func1 &amp;lt;- function(size) { b &amp;lt;- 5 b &amp;lt;- b + size b &amp;lt;- b * 2 b &amp;lt;- b^2 b } fail_func2 &amp;lt;- function(size) { b &amp;lt;- fail_func1(size) a &amp;lt;- sample(0:1,size,FALSE) a } fail_func2(12) traceback() fail_func2(&#39;test&#39;) traceback()
+運行結果：
+rconsole traceback-example-1-output &amp;gt; fail_func2(12) Error in sample(0:1, size, FALSE) : cannot take a sample larger than the population when &#39;replace = FALSE&#39; &amp;gt; traceback() 2: sample(0:1, size, FALSE) at #3 1: fail_func2(12) &amp;gt; fail_func2(&#39;test&#39;) Error in b + size : non-numeric argument to binary operator &amp;gt; traceback() 2: fail_func1(size) at #2 1: fail_func2(&#34;</description>
+    </item>
+    
+    <item>
+      <title>Rcpp-2</title>
+      <link>/2012/06/04/rcpp-2/</link>
+      <pubDate>Mon, 04 Jun 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/2012/06/04/rcpp-2/</guid>
+      <description>本文延續Rcpp-1。
+從R傳遞資料到C++ 傳遞到對應的物件 Vector 在R的底層之中，最基礎的資料型態就是某六種型態的vector(詳情請見下表)。 傳遞這六種資料型態的vector到C++並不難，只要宣告對應的Rcpp class以及把透過.Call傳遞進來的SEXP丟到Rcpp class的constructor內就好了。
+表一：
+atomic type Rcpp Class logical LogicalVector integer IntegerVector double NumericVector complex ComplexVector character CharacterVector raw RawVector ps. 在R中，幾乎所有物件都是vector
+以integer為例子:
+``` cpp test-rcpp.cpp #include &amp;lt;Rcpp.h&amp;gt;
+using namespace Rcpp;
+RcppExport SEXP R2CppInteger(SEXP RIntegerVec);
+SEXP R2CppInteger(SEXP r_int_vec) { IntegerVector int_vec(r_int_vec); for (R_len_t i(0);i &amp;lt; int_vec.length();i++) { Rprintf(“%d”, int_vec[i]); } Rprintf(“length: %d ”, int_vec.length()); return R_NilValue; }
+編譯後，在R底下執行 ``` r test.R dyn.load(&amp;quot;test-rcpp.so&amp;quot;) a &amp;lt;- 1L:10L .</description>
+    </item>
+    
+    <item>
+      <title>試用Interactive charts and slides with R</title>
+      <link>/2012/06/04/shi-yong-interactive-charts-and-slides-with-r/</link>
+      <pubDate>Mon, 04 Jun 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/2012/06/04/shi-yong-interactive-charts-and-slides-with-r/</guid>
+      <description>簡介 新版的RStudio(0.98.228) 推出了Using Markdown with RStudio，這對於我這個markdown愛好者來說可是大利多呀!!
+簡單來說，就是透過以下的流程產生文件:
+Rmd –&amp;gt; Markdown –&amp;gt; HTML
+這裡的Markdown同時還支援:
+Github的擴充，更方便的插入code block Sundown，支援表格等其他功能 MathJax，支援數學方程式 想了就覺得非常方便!
+使用 安裝R package knitr。我在2.13版本之前的R是無法安裝的，所以想試用的朋友記得把R的版本更新。 打開Rstudio ，File –&amp;gt; New –&amp;gt; R Markdown 編輯markdown檔案，儲存為xxx.Rmd或xxx.md。注意: 副檔名若為md，就無法使用嵌入R圖片的功能。 點選編輯器上的Knit HTML就可以預覽產生的HTML格式。目前我個人在這部分遇到困難: 我沒有辦法把R畫出來的圖嵌入產生的HTML內。 語法範例 這裡是我試過的範例。有興趣的大大可以到knitr-example 看看更多的範例。
+嵌入R語法:
+```r cat(&amp;quot;hello world&amp;quot;) ``` ``` ## hello world ``` 嵌入R圖面
+```r plot(cars) ``` &amp;lt;img src=&amp;quot;2012-06-04-shi-yong-interactive-charts-and-slides-with-r_files/figure-html/圖片標題-1.png&amp;quot; width=&amp;quot;672&amp;quot; /&amp;gt; 行內嵌入方程式 \(latex X_t = \mu_t + \varepsilon_t\)
+方程式區塊 \[latex \begin{aligned} X_t = \mu_t + \varepsilon_t \\ \varepsilon_t ~ Normal(0,1) \end{aligned} \]</description>
+    </item>
+    
+    <item>
+      <title>eclipse-plugin</title>
+      <link>/2012/03/12/eclipse-plugin/</link>
+      <pubDate>Mon, 12 Mar 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/2012/03/12/eclipse-plugin/</guid>
+      <description> 相關的Eclipse Plugin Subclipse http://subclipse.tigris.org/update_1.8.x Symfony Eclipse Plugin http://pulse00.github.com/p2/ </description>
+    </item>
+    
+    <item>
+      <title>eclipse-svn-symfony</title>
+      <link>/2012/03/09/eclipse-svn-symfony/</link>
+      <pubDate>Fri, 09 Mar 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/2012/03/09/eclipse-svn-symfony/</guid>
+      <description>Subclipse功能簡介 建立本機端的repository 於eclipse內打開SVN Repository的perspective 於SVN Repositories視窗內右邊的倒三角形 -&amp;gt; New repository… 選擇要建立repository的位置 -&amp;gt; OK 建立資料夾 右鍵點選repository -&amp;gt; New -&amp;gt; New remote folder 輸入資料夾名稱 匯入資料 右鍵點選資料夾 -&amp;gt; Import… 於Import directory內選擇要被匯入的資料 於Comment:內輸入註解 OK Checkout並建立專案 右鍵點選要被Checkout的資料夾 -&amp;gt; Checkout… 選擇Check out as a project configured using the New Project Wizard 選擇Check out HEAD revision 選擇Depth:為Fully recursive 選擇Allow unversioned obstructions Finish 選擇專案的種類為PHP Project 剩下的步驟同Eclipse建立新專案的步驟 送交至Repository(Commit) 右鍵點選已經被修改的檔案 -&amp;gt; Team -&amp;gt; Commit… 視窗上方輸入要commit的message 視窗下方確認要送交的檔案/目錄 OK 請不要在送交的message內使用中文 自專案中新增檔案/目錄 右鍵點選要新增至repository的檔案/目錄 -&amp;gt; Team -&amp;gt; Add to Version Control 如果要取消, 請在右鍵點選要取消的檔案/目錄 -&amp;gt; Team -&amp;gt; Revert… 送交要新增的檔案/目錄 更新Repository 右鍵點選要更新的檔案/目錄 -&amp;gt; Team -&amp;gt; Update to HEAD 刪除Repository內的檔案/目錄 刪除檔案/目錄 送交 移動Repository內的檔案/目錄 移動檔案/目錄 送交 解決衝突 送交時發生out of date錯誤 更新時發現File conflicts Edit Conflict Mark Resolved… 送交 清除暫存的登入帳號密碼 Windows -&amp;gt; Preference -&amp;gt; Team -&amp;gt; SVN 檢查Client Adapter 依照Subclipse Wiki FAQ的指示清除對應的資料夾 Symfony和svn 於Repository內建立三個資料夾: myproject/ branches/ tags/ trunk/ 複製Symfony資料夾至myproject內 更改Symfony資料夾的名稱為專案名稱(以下仍繼續使用Symfony) 右鍵點選Symfony/src -&amp;gt; Team -&amp;gt; Add to Version Control 忽略下列檔案: vendor app/內的bootstrap app/config/內的 parameters.</description>
+    </item>
+    
+    <item>
+      <title>php開發建置</title>
+      <link>/2012/03/09/build-php-development-enviornment/</link>
+      <pubDate>Fri, 09 Mar 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/2012/03/09/build-php-development-enviornment/</guid>
+      <description>環境 開發工具 建置步驟 安裝IIS7 + php-fastcgi 安裝eclipse-PDT和svn 匯入既有的SVN Repository 安裝Xdebug 設定遠端除錯環境 設定php和MSSQL的連線 參考網頁 環境 server: windows 2008 R2 client: windows 7 database: MSSQL 2008 R2 Express 開發工具 eclipse-PDT svn tortoise-svn subclipse ps. 本文件僅測試於IIS7, php5.3.10, eclipse-PDT 3.0.2, subclipse 1.8.x, XDebug 2.1.3
+建置步驟 安裝IIS7 + php-fastcgi 安裝IIS7 需安裝cgi 安裝php5.3 下載VC9 x86 Non Thread Safe ZIP 解壓縮到*c: 安裝Microsoft Visual C++ 2008 Redistributable Package (x86) 測試以下的命令碼： c:.exe -i ps. 如出現side-by-side effect的錯誤訊息表示步驟3有問題 設定php.ini： 複製php.ini-development至php.ini 修改以下內容： fastcgi.</description>
+    </item>
+    
+    <item>
+      <title>R: DateTime格式的心得</title>
+      <link>/2012/02/29/rdatetime/</link>
+      <pubDate>Wed, 29 Feb 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/2012/02/29/rdatetime/</guid>
+      <description>概述 函數心得 取得當前的時間 Sys.time Sys.Date 時間格式間的轉換 mktime localtime gmtime 時間和字串間的轉換 strftime strptime trunc 參考資料 概述 R中主要的時間物件為POSIXct和POSIXlt。Date-Time Classes第8頁內提到設計者們在設計這類物件的考量：
+日期格式應該由locale參數來決定。 時間應該由電腦的Time zones來決定。 參考資料庫標準(SQL99 ISO)中使用的時間格式timestamp with time zone 考量到跨平台，使用[POSIX] [POSIX]是以UTC為基準，以c語言的double型態來儲存的時間格式， 而POSIXct則是代表以這種絕對座標所表示的時間。POSIXlt則是另一種包含timezones的格式 (lt代表local time)。其中timezone是以屬性tzone來代表的。
+以以下的程式碼為例： rout example from [Date-Time Classes] &amp;gt; file.info(dir())[, &#34;mtime&#34;, drop=FALSE] data 2012-02-29 21:18:11 在預設下，是以ISO標準格式來表示日期時間。 r example from [Date-Time Classes] &amp;gt; file_time &amp;lt;- file.info(dir())[, &#34;mtime&#34;, drop=FALSE] &amp;gt; file_time data 2012-02-29 21:18:11 &amp;gt; format(file_time, format=&#34;%x %X&#34;) data 2012/2/29 下午 09:18:11
+另外再列了幾個Date-Time Classes內的範例</description>
+    </item>
+    
+    <item>
+      <title>Rcpp-1</title>
+      <link>/2012/02/28/rcpp/</link>
+      <pubDate>Tue, 28 Feb 2012 00:00:00 +0000</pubDate>
+      
+      <guid>/2012/02/28/rcpp/</guid>
+      <description>Rcpp 心得 – 簡介 概述 背景知識 介紹 安裝 編譯 參考資料 概述 背景知識 就我所知，要能理解Rcpp的語法，你必須先對C++這個我個人認為最難學的語言先學到某種程度才行。根據Effective C++的作者Scott Meyers的看法，C++其實是下列四種程式語言的集合(難怪很難，一個打四個!!):
+C的特性 (指標、陣列等等) 物件導向 STL 標準函式庫 Template Rcpp中大量的使用了後面三種，所以如果看不習慣Rcpp的使用者，可能得先回頭把C++後面三種的語法複習一下了。
+介紹 [Rcpp] 1 是一個整合R和C++的library。 使用過R中的.Call函數的人一定會對於處理R和C之間資料結構的轉換感到很煩人，而Rcpp給我的第一個印象就是他把這些重複性很高的轉換給包起來了!所以在使用Rcpp時使用者不需要再去撰寫諸如以下的程式碼:
+c return a R integer vector with R API #include &amp;lt;R.h&amp;gt; #include &amp;lt;Rdefines.h&amp;gt; SEXP foo() { SEXP retval; PROTECT(retval = NEW_INTEGER(2)); INTEGER_POINTER(retval)[0] = 1; INTEGER_POINTER(retval)[1] = 2; UNPROTECT(1); return retval; }
+在Rcpp中, 透過C++的物件導向和template語法可以用下列的語法得到相同的效果：
+cpp return a R integer vector with Rcpp #include &amp;lt;Rcpp.</description>
+    </item>
+    
+  </channel>
+</rss>

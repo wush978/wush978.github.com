@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.102.3" />
+
+
+<title>R 錯誤處理 - Wush &lt;- &#39;儒爸&#39;</title>
+<meta property="og:title" content="R 錯誤處理 - Wush &lt;- &#39;儒爸&#39;">
+
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/meme.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/wush978">GitHub</a></li>
+    
+    <li><a href="https://hahow.in/cr/r-hands-on">Hahow R語言入門</a></li>
+    
+    <li><a href="https://www.linkedin.com/in/wush978/">My LinkedIn Profile</a></li>
+    
+    <li><a href="https://datascienceandr.org">R語言翻轉教室</a></li>
+    
+    <li><a href="https://gitter.im/wush978/DataScienceAndR">聊天室</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">1 min read</span>
+    
+
+    <h1 class="article-title">R 錯誤處理</h1>
+
+    
+    <span class="article-date">2013-04-04</span>
+    
+
+    <div class="article-content">
+      
+
+
+<p>R 的官方文件在<a href="http://cran.r-project.org/doc/manuals/R-lang.html#Exception-handling">Exception handling</a>有介紹R的例外處理機制。</p>
+<p>這裡我簡單介紹如何在R寫出類似java、c++或python等主流語言所使用的try-catch機制。</p>
+<p>另外這裡講的都是以R2.15為主。</p>
+<div id="錯誤相關的函數" class="section level1">
+<h1>錯誤相關的函數</h1>
+<ul>
+<li><code>warning(...)</code>: 拋出一個警告</li>
+<li><code>stop(...)</code>: 拋出一個例外</li>
+<li><code>surpressWarnings(expr)</code>: 忽略<code>expr</code>中發生的警告</li>
+<li><code>try(expr)</code>: 嘗試執行</li>
+<li><code>tryCatch</code>: 最主流語言例外處理的方法</li>
+<li><code>conditionMessage</code> : 顯示錯誤訊息</li>
+</ul>
+</div>
+<div id="r-和其他主流語言的不同" class="section level1">
+<h1>R 和其他主流語言的不同</h1>
+<p>R 語言處理例外的方式，是透過函數，而非像其他主流語言使用try … catch … 等語法。這是因為R 語言幾乎所有功能都是用函數來實作的。請參考<a href="https://github.com/hadley/devtools/wiki/Functions#every-operation-is-a-function-call">Every operation is a function call</a>。</p>
+</div>
+<div id="一個try的範例" class="section level1">
+<h1>一個<code>try</code>的範例</h1>
+<p>我自己最早是先發現<code>try</code>函數。<code>try</code>的用法近似於回傳expr的結果<em>或</em>執行時發生的錯誤。</p>
+<pre class="r"><code>result &lt;- try(..., silent=TRUE)
+if (class(result) == &quot;try-error&quot;) {
+  ... # 錯誤處理
+}</code></pre>
+<p>由於R是我第一個語言，所以我也就接受他了。直到我後來發現主流語言的try – catch機制後，才覺得奇怪。</p>
+</div>
+<div id="一個trycatch的範例" class="section level1">
+<h1>一個<code>tryCatch</code>的範例</h1>
+<p>後來我發現<code>tryCatch</code>函式提供了比較類似try – catch機制的錯誤處理方法。</p>
+<pre class="r"><code>tryCatch({
+  result &lt;- expr
+}, warning = function(w) {
+  ... # 警告處理
+}, error = function(e) {
+  ... # 錯誤處理
+}, finally {
+  ... # 清理
+}</code></pre>
+<p>這種語法和其他主流語言的機制比起來接近多了。</p>
+</div>
+<div id="conditionmessage" class="section level1">
+<h1><code>conditionMessage</code></h1>
+<p>有時候當錯誤發生時，我無法處理，需要直接回傳錯誤訊息給使用者時，或是log起來時，我們可以在<code>tryCatch</code>中使用<code>conditionMessage</code>來擷取錯誤訊息。</p>
+<pre class="r"><code>tryCatch({
+  stop(&quot;demo error&quot;)
+}, error = function(e) {
+  conditionMessage(e) # 這就會是&quot;demo error&quot;
+})</code></pre>
+</div>
+<div id="錯誤處理的相關issue" class="section level1">
+<h1>錯誤處理的相關issue</h1>
+<p>就我的經驗來說，寫出一個穩健的程式碼是非常不容易的。在軟體工程中有許多文章介紹如何寫出這類程式碼。</p>
+<p>大部份R 寫出來的script都是只用一次的，所以程式穩定不穩定就不是重點，也因此大家都很少去使用R 的例外處理機制。</p>
+<p>某些R 使用者，會需要寫出自動化的script。而這時候為了要讓迴圈不中斷，使用者才開始使用例外處理。</p>
+<p>但是當寫到套件時，例外處理就很重要了。這時候，函數的使用者將不再是開發者自己，而還包括其他的使用者，甚至是其他的開發者。此時例外處理就變成一門哲學了。這部份我也只略懂皮毛，下面只列出少許我知道的issue:</p>
+<ul>
+<li>釋放資源: 由於錯誤發生時，函數會在不正常的地方退出，所以此時需要釋放一些函數中獲得的資源(如資料庫連線需要關閉)。這部份在C++可以用<a href="http://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization">RAII</a>等技術來保證資源不會被忘記釋放。然而在R中，我還不知道有什麼類似的安全機制。</li>
+<li>exception safety guarantees: 當使用者要基於某些函數建立複雜的程式時，通常希望這些函式是不會出錯的。<a href="http://en.wikipedia.org/wiki/Exception_safety">Exception safety</a>就是在探討相關的issue。畢竟使用的函數有例外狀況時，原本的函數也跟著會有例外狀況。就像是蓋在危樓上的樓層，一定也很危險一樣。目前我也尚未看過R在這部份的功能。</li>
+<li>錯誤訊息: 當錯誤發生時，提供的錯誤訊息是否能幫助使用者找到發生錯誤的理由。R在這部份也很不足，這造成要除錯R的程式時，沒有相當的經驗，是無法理解錯誤訊息的。</li>
+</ul>
+</div>
+<div id="參考資料" class="section level1">
+<h1>參考資料</h1>
+<ul>
+<li><a href="http://cran.r-project.org/doc/manuals/R-lang.html#Exception-handling">Exception handling</a></li>
+<li><a href="http://mazamascience.com/WorkingWithData/?p=912">Using R — Basic error Handing with tryCatch()</a></li>
+</ul>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-130199267-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </body>
+</html>
+

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.102.3" />
+
+
+<title>Rcpp-2 - Wush &lt;- &#39;儒爸&#39;</title>
+<meta property="og:title" content="Rcpp-2 - Wush &lt;- &#39;儒爸&#39;">
+
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/meme.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/wush978">GitHub</a></li>
+    
+    <li><a href="https://hahow.in/cr/r-hands-on">Hahow R語言入門</a></li>
+    
+    <li><a href="https://www.linkedin.com/in/wush978/">My LinkedIn Profile</a></li>
+    
+    <li><a href="https://datascienceandr.org">R語言翻轉教室</a></li>
+    
+    <li><a href="https://gitter.im/wush978/DataScienceAndR">聊天室</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">2 min read</span>
+    
+
+    <h1 class="article-title">Rcpp-2</h1>
+
+    
+    <span class="article-date">2012-06-04</span>
+    
+
+    <div class="article-content">
+      
+
+
+<p>本文延續<a href="/blog/2012/02/28/rcpp/">Rcpp-1</a>。</p>
+<div id="從r傳遞資料到c" class="section level1">
+<h1>從R傳遞資料到C++</h1>
+<div id="傳遞到對應的物件" class="section level2">
+<h2>傳遞到對應的物件</h2>
+<div id="vector" class="section level3">
+<h3>Vector</h3>
+<p>在R的底層之中，最基礎的資料型態就是某六種型態的vector(詳情請見下表)。
+傳遞這六種資料型態的vector到C++並不難，只要宣告對應的Rcpp class以及把透過<code>.Call</code>傳遞進來的SEXP丟到Rcpp class的constructor內就好了。</p>
+<p>表一：</p>
+<table>
+<thead>
+<tr class="header">
+<th>atomic type</th>
+<th>Rcpp Class</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>logical</td>
+<td>LogicalVector</td>
+</tr>
+<tr class="even">
+<td>integer</td>
+<td>IntegerVector</td>
+</tr>
+<tr class="odd">
+<td>double</td>
+<td>NumericVector</td>
+</tr>
+<tr class="even">
+<td>complex</td>
+<td>ComplexVector</td>
+</tr>
+<tr class="odd">
+<td>character</td>
+<td>CharacterVector</td>
+</tr>
+<tr class="even">
+<td>raw</td>
+<td>RawVector</td>
+</tr>
+</tbody>
+</table>
+<p>ps. 在R中，幾乎所有物件都是vector</p>
+<p>以<code>integer</code>為例子:</p>
+<p>``` cpp test-rcpp.cpp
+#include &lt;Rcpp.h&gt;</p>
+<p>using namespace Rcpp;</p>
+<p>RcppExport SEXP R2CppInteger(SEXP RIntegerVec);</p>
+<p>SEXP R2CppInteger(SEXP r_int_vec) {
+IntegerVector int_vec(r_int_vec);
+for (R_len_t i(0);i &lt; int_vec.length();i++) {
+Rprintf(“%d”, int_vec[i]);
+}
+Rprintf(“length: %d ”, int_vec.length());
+return R_NilValue;
+}</p>
+<pre><code>
+編譯後，在R底下執行
+
+``` r test.R
+dyn.load(&quot;test-rcpp.so&quot;)
+a &lt;- 1L:10L
+.Call(&quot;R2CppInteger&quot;, a)
+dyn.unload(&quot;test-rcpp.so&quot;)</code></pre>
+<p>就會看到輸出</p>
+<pre><code>1 2 3 4 5 6 7 8 9 10 
+ length: 10 
+NULL</code></pre>
+<p>如果需要使用上的細節，只需要查閱<a href="http://dirk.eddelbuettel.com/code/rcpp/html/classVector.html">Rcpp Reference中關於Vector</a>的部分。</p>
+<p>而Rcpp還有許多可以直接傳遞其他進階的R物件的C++物件。</p>
+</div>
+<div id="matrix" class="section level3">
+<h3>Matrix</h3>
+<p>因為R中的matrix 或 array 物件其實就是加上dimension的vector，所以可以直接用xxxVector物件在C++內處理。
+Rcpp中另外還有更類似R的matrix的xxxMatrix物件。
+只是要注意，在C++裡面取出來的row或column在C++裡的型態會是<code>Rcpp::xxxMatrix::Row</code>或<code>Rcpp::xxxMatrix::Column</code>。請見以下範例：</p>
+<p>``` cpp test-rcpp.cpp
+#include &lt;Rcpp.h&gt;</p>
+<p>using namespace Rcpp;</p>
+<p>RcppExport SEXP R2CppInteger(SEXP RIntegerVec);</p>
+<p>SEXP R2CppInteger(SEXP r_int_mat) {
+IntegerMatrix int_mat(r_int_mat);
+Rprintf(“print the matrix”);
+for(int i(0);i &lt; int_mat.nrow();i++) {
+for(int j(0);j &lt; int_mat.ncol();j++) {
+Rprintf(“%d”, int_mat(i, j));
+}
+Rprintf(“”);
+}
+Rprintf(“print the first column:”);
+IntegerMatrix::Column int_mat_col( int_mat(internal::NamedPlaceHolder(), 0 ) );
+for(int i(0);i &lt; int_mat.nrow();i++) {
+Rprintf(“%d”, int_mat_col[i]);
+}
+Rprintf(“”);
+return R_NilValue;<br />
+}</p>
+<pre><code>
+編譯之後在R底下執行
+``` r
+dyn.load(&quot;test-rcpp.so&quot;)
+a &lt;- matrix(1L:10L, 2, 5)
+.Call(&quot;R2CppInteger&quot;, a)
+dyn.unload(&quot;test-rcpp.so&quot;)</code></pre>
+<p>就可以看到輸出</p>
+<pre><code>print the matrix
+1 3 5 7 9 
+2 4 6 8 10 
+print the first column: 1 2 
+NULL</code></pre>
+</div>
+<div id="list" class="section level3">
+<h3>List</h3>
+<p>list物件在R也是非常的重要，而且和上述的vector型態已經不一樣了。
+在R中，一個vector內的資料一定只能是相同的atomic type，但是在list中就可以放不同的atomic type。
+說穿了，List物件也只是R物件的vector，這從Rcpp中List的定義：<code>typedef Vector&lt;VECSXP&gt; List</code>可窺見一二。</p>
+<p>``` cpp test-rcpp.cpp
+#include &lt;Rcpp.h&gt;</p>
+<p>using namespace Rcpp;</p>
+<p>RcppExport SEXP R2CppList(SEXP RList);</p>
+<p>Function show(“show”);</p>
+<p>SEXP R2CppList(SEXP RList) {
+List list(RList);
+for (R_len_t i = 0;i &lt; list.size();i++) {
+show(list[i]);
+}
+return R_NilValue;
+}</p>
+<pre><code>
+ps. 這裡的Function是Rcpp中呼叫R function的方式，之後會再介紹。這裡的用途只是把傳入的東西以R中的`show`函數顯示到console上。
+
+編譯之後在R底下執行
+``` r
+dyn.load(&quot;test-rcpp.so&quot;)
+a &lt;- list()
+a[[1]] &lt;- 1L:10L
+a[[&#39;a&#39;]] &lt;- paste(&quot;test&quot;, 1:10)
+a[[2]] &lt;- factor(sample(1:2, 10, TRUE))
+.Call(&quot;R2CppList&quot;, a)</code></pre>
+<p>就可以看到：</p>
+<pre><code> [1]  1  2  3  4  5  6  7  8  9 10
+ [1] 2 2 1 2 2 1 2 1 1 2
+Levels: 1 2
+NULL</code></pre>
+</div>
+<div id="data.frame" class="section level3">
+<h3>data.frame</h3>
+<p>data.frame 其實就只是滿足某些條件的List物件，所以是可以用List物件來做處理的。
+除此之外Rcpp也提供C++物件：DataFrame給使用者。
+但是目前除了提供方便的建立DataFrame物件之外，只有類似List的操作方法。在此就不提供範例了。</p>
+</div>
+</div>
+<div id="傳遞到stl物件" class="section level2">
+<h2>傳遞到STL物件</h2>
+<p>Rcpp可以利用<code>as&lt;&gt;</code>函數將R物件轉換成對應的STL物件
+。</p>
+</div>
+</div>
+<div id="參考資料" class="section level1">
+<h1>參考資料</h1>
+<ul>
+<li><a href="http://cran.r-project.org/doc/manuals/R-lang.html#Vector-objects">R Language Definition</a></li>
+<li><a href="http://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-quickref.pdf">Rcpp Quick Reference Guide</a></li>
+</ul>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-130199267-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </body>
+</html>
+

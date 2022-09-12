@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.102.3" />
+
+
+<title>利用R處理大量的JSON資料 （Streaming Style） - Wush &lt;- &#39;儒爸&#39;</title>
+<meta property="og:title" content="利用R處理大量的JSON資料 （Streaming Style） - Wush &lt;- &#39;儒爸&#39;">
+
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/meme.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/wush978">GitHub</a></li>
+    
+    <li><a href="https://hahow.in/cr/r-hands-on">Hahow R語言入門</a></li>
+    
+    <li><a href="https://www.linkedin.com/in/wush978/">My LinkedIn Profile</a></li>
+    
+    <li><a href="https://datascienceandr.org">R語言翻轉教室</a></li>
+    
+    <li><a href="https://gitter.im/wush978/DataScienceAndR">聊天室</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">1 min read</span>
+    
+
+    <h1 class="article-title">利用R處理大量的JSON資料 （Streaming Style）</h1>
+
+    
+    <span class="article-date">2015-09-15</span>
+    
+
+    <div class="article-content">
+      
+
+
+<p>這陣子我接了一個案子，要幫忙<a href="http://www.macrodatalab.com/#/">核桃運算</a>開發他們產品BigObject Analytics的R Client。恰巧，他們的RESTful API在撈資料的時候，吐回來的格式是<a href="http://jsonlines.org/">jsonlines</a>：</p>
+<pre><code>{&quot;Sepal.Length&quot;:&quot;5.1&quot;,&quot;Sepal.Width&quot;:&quot;3.5&quot;,&quot;Petal.Length&quot;:&quot;1.4&quot;,&quot;Petal.Width&quot;:&quot;0.2&quot;,&quot;Species&quot;:&quot;setosa&quot;}
+{&quot;Sepal.Length&quot;:&quot;4.9&quot;,&quot;Sepal.Width&quot;:&quot;3.0&quot;,&quot;Petal.Length&quot;:&quot;1.4&quot;,&quot;Petal.Width&quot;:&quot;0.2&quot;,&quot;Species&quot;:&quot;setosa&quot;}
+{&quot;Sepal.Length&quot;:&quot;4.7&quot;,&quot;Sepal.Width&quot;:&quot;3.2&quot;,&quot;Petal.Length&quot;:&quot;1.3&quot;,&quot;Petal.Width&quot;:&quot;0.2&quot;,&quot;Species&quot;:&quot;setosa&quot;}
+{&quot;Sepal.Length&quot;:&quot;4.6&quot;,&quot;Sepal.Width&quot;:&quot;3.1&quot;,&quot;Petal.Length&quot;:&quot;1.5&quot;,&quot;Petal.Width&quot;:&quot;0.2&quot;,&quot;Species&quot;:&quot;setosa&quot;}
+{&quot;Sepal.Length&quot;:&quot;5.0&quot;,&quot;Sepal.Width&quot;:&quot;3.6&quot;,&quot;Petal.Length&quot;:&quot;1.4&quot;,&quot;Petal.Width&quot;:&quot;0.2&quot;,&quot;Species&quot;:&quot;setosa&quot;}
+{&quot;Sepal.Length&quot;:&quot;5.4&quot;,&quot;Sepal.Width&quot;:&quot;3.9&quot;,&quot;Petal.Length&quot;:&quot;1.7&quot;,&quot;Petal.Width&quot;:&quot;0.4&quot;,&quot;Species&quot;:&quot;setosa&quot;}</code></pre>
+<p>由於負擔起底層Client的責任，這是我第一次要正面迎戰這樣的資料。以前我遇到這種資料，都是先亂七八糟的解掉，反正當下能用就好了。但是在寫Client的時候，這樣的解決方法是不能讓人滿意的！</p>
+<div id="亂七八糟的解法" class="section level6">
+<h6>亂七八糟的解法：</h6>
+<pre class="r"><code>library(magrittr)
+src # 剛剛的文字資料
+strsplit(src, &quot;\n&quot;) %&gt;% sapply(fromJSON)</code></pre>
+<p>話說最近用<code>magrittr</code>的pipeline style寫程式碼真的上癮了，害我寫python的時候覺得python更難用了… 而且還找不到這種pipeline style。抱歉扯遠了！</p>
+<p>所以在<del>不能漏氣</del>驅使自己進步的動力下，我開始運用過去和JSON打交道的經驗簡單研究一下，目前在R 之中，要如何漂亮的處理這類的資料。</p>
+<p><img src="http://i.imgur.com/37p58o2.gif" alt="Imgur" /> <img src="http://i.imgur.com/SZFVWCc.png" alt="Imgur" /></p>
+</div>
+<div id="r中處理json的套件" class="section level3">
+<h3>R中處理JSON的套件</h3>
+<p>相信碰過這個問題的朋友不在少數，而大家的想法大概都類似：找個套件把問題解決掉就好啦！</p>
+<p>但是處理JSON的套件在R裡面就有好幾個，這裡列出我用過的套件：</p>
+<ul>
+<li><a href="https://cran.r-project.org/web/packages/rjson/index.html">rjson</a></li>
+<li><a href="https://cran.r-project.org/web/packages/RJSONIO/index.html">RJSONIO</a></li>
+<li><a href="https://cran.r-project.org/web/packages/jsonlite/index.html">jsonlite</a></li>
+</ul>
+<p>而三個套件都提供了<code>fromJSON</code>函數，而偏偏三個函數的<code>fromJSON</code>都不能用：</p>
+<div id="rjson" class="section level4">
+<h4>rjson</h4>
+<p><code>rjson::fromJSON</code>只處理第一行，後面的資料就當成沒看到了。</p>
+<pre><code>&gt; rjson::fromJSON(src)
+$Sepal.Length
+[1] &quot;5.1&quot;
+
+$Sepal.Width
+[1] &quot;3.5&quot;
+
+$Petal.Length
+[1] &quot;1.4&quot;
+
+$Petal.Width
+[1] &quot;0.2&quot;
+
+$Species
+[1] &quot;setosa&quot;</code></pre>
+</div>
+<div id="rjsonio" class="section level4">
+<h4>RJSONIO</h4>
+<p><code>RJSONIO::fromJSON</code>則回傳了意味不明的一個… 東西？</p>
+<pre><code>&gt; RJSONIO::fromJSON(src)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              Sepal.Length 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     &quot;5.1&quot; 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               Sepal.Width 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     &quot;3.5&quot; 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              Petal.Length 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     &quot;1.4&quot; 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               Petal.Width 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     &quot;0.2&quot; 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   Species 
+&quot;setosa\&quot;}{\&quot;Sepal.Length\&quot;:\&quot;4.9\&quot;,\&quot;Sepal.Width\&quot;:\&quot;3.0\&quot;,\&quot;Petal.Length\&quot;:\&quot;1.4\&quot;,\&quot;Petal.Width\&quot;:\&quot;0.2\&quot;,\&quot;Species\&quot;:\&quot;setosa\&quot;}{\&quot;Sepal.Length\&quot;:\&quot;4.7\&quot;,\&quot;Sepal.Width\&quot;:\&quot;3.2\&quot;,\&quot;Petal.Length\&quot;:\&quot;1.3\&quot;,\&quot;Petal.Width\&quot;:\&quot;0.2\&quot;,\&quot;Species\&quot;:\&quot;setosa\&quot;}{\&quot;Sepal.Length\&quot;:\&quot;4.6\&quot;,\&quot;Sepal.Width\&quot;:\&quot;3.1\&quot;,\&quot;Petal.Length\&quot;:\&quot;1.5\&quot;,\&quot;Petal.Width\&quot;:\&quot;0.2\&quot;,\&quot;Species\&quot;:\&quot;setosa\&quot;}{\&quot;Sepal.Length\&quot;:\&quot;5.0\&quot;,\&quot;Sepal.Width\&quot;:\&quot;3.6\&quot;,\&quot;Petal.Length\&quot;:\&quot;1.4\&quot;,\&quot;Petal.Width\&quot;:\&quot;0.2\&quot;,\&quot;Species\&quot;:\&quot;setosa\&quot;}{\&quot;Sepal.Length\&quot;:\&quot;5.4\&quot;,\&quot;Sepal.Width\&quot;:\&quot;3.9\&quot;,\&quot;Petal.Length\&quot;:\&quot;1.7\&quot;,\&quot;Petal.Width\&quot;:\&quot;0.4\&quot;,\&quot;Species\&quot;:\&quot;setosa&quot; </code></pre>
+<p>由於太過驚嚇，所以我只好趕快檢查一下這東西到底是什麼：</p>
+<pre class="r"><code>&gt; str(.Last.value)
+ Named chr [1:5] &quot;5.1&quot; &quot;3.5&quot; &quot;1.4&quot; &quot;0.2&quot; ...
+ - attr(*, &quot;names&quot;)= chr [1:5] &quot;Sepal.Length&quot; &quot;Sepal.Width&quot; &quot;Petal.Length&quot; &quot;Petal.Width&quot; ...</code></pre>
+<p>看起來是個… 長度五的向量??? 阿彌陀佛！</p>
+<p><small>出處：<a href="http://www.appledaily.com.tw/appledaily/article/headline/20141103/36185130/" class="uri">http://www.appledaily.com.tw/appledaily/article/headline/20141103/36185130/</a></small></p>
+</div>
+<div id="jsonlite" class="section level4">
+<h4>jsonlite</h4>
+<p><code>jsonlite</code>則是直接噴錯，簡單明瞭！</p>
+<pre class="r"><code>&gt; jsonlite::fromJSON(src)
+Error: parse error: trailing garbage
+          h&quot;:&quot;0.2&quot;,&quot;Species&quot;:&quot;setosa&quot;} {&quot;Sepal.Length&quot;:&quot;4.9&quot;,&quot;Sepal.Wi
+                     (right here) ------^</code></pre>
+<p>我其實比較喜歡這樣子的風格：凡是不能處理的資料就噴錯，不要像<code>rjson</code>一樣不噴錯但是給<del>錯誤</del>不預期的結果。要是我沒注意到有掉資料，直接用到產品之中，就…</p>
+</div>
+</div>
+<div id="革命尚未成功同志仍需努力" class="section level3">
+<h3>革命尚未成功，同志仍需努力</h3>
+<p>由於這種jsonlines格式的資料是非常非常的常見，所以如果R 沒有處理這類函數的功能，也太扯了吧！</p>
+<p>所以於是我就看了一下這三個套件有沒有issues區可以討論，而目前看起來，只有<code>jsonlite</code>有上github。但是簡單看一下目前有開的issues，居然沒有要求這個套件處理jsonlines！這通常表示，問題可能已經被解決了…</p>
+<p>離題一下，在造訪<code>jsonlite</code>套件的過程中，我也注意到原來<code>jsonlite</code>是<code>RJSONIO</code>的繼承者阿！喵了一下Reverse Depends、Reverse Imports的套件名單，看來都和Hadley大大那幫人有扯上關係（httr、curl）。</p>
+<p>果然，我找到了作者Jeroen Ooms在今年useR!研討會的一份投影片：<a href="https://jeroenooms.github.io/mongo-slides/#1">Streaming Data IO in R</a>還熱騰騰的！</p>
+<p>裡面提到的<code>stream_in</code>這個函數，看起來不但是我需要的，而且還提供給R使用者以Streaming Style處理大量JSON物件的能力。引述Jeroen Ooms投影片的內容：</p>
+<pre class="r"><code># This doesn&#39;t work...
+fromJSON(&quot;hugefile.json&quot;)
+Error: cannot allocate vector of size 8.1 Gb</code></pre>
+<p>在處理大量數據時，如果電腦不夠力，記憶體不夠，大家都常常會看到這類錯誤。</p>
+<p>而Streaming Style是許多R 使用者陌生，但是在記憶體不足時非常有用的一種技巧。透過以下的Demo（也是取自Jeroen Ooms的投影片）：</p>
+<pre class="r"><code># Calculate delay for flights over 1000 miles
+library(dplyr)
+library(curl)
+con &lt;- gzcon(curl(&quot;http://jeroenooms.github.io/data/nycflights13.json.gz&quot;))
+output &lt;- file(tmp &lt;- tempfile(), open = &quot;wb&quot;)
+stream_in(con, function(df){
+  df &lt;- filter(df, distance &gt; 1000)
+  df &lt;- mutate(df, delta = dep_delay - arr_delay)
+  stream_out(df, output, verbose = FALSE)
+})
+close(output)</code></pre>
+<p>這段程式碼中，R 先透過<code>curl</code>拿到一個來自網路的<code>connection</code>，然後串接到<code>gzcon</code>、<code>stream_in</code>、中間處理資料的邏輯，最後由<code>stream_out</code>輸出到硬碟上。</p>
+<p><img src="http://i.imgur.com/wCtVK2U.jpg" alt="Imgur" />
+<small>圖片出處：<a href="https://en.wikipedia.org/wiki/Production_line#/media/File:Krispy_Kreme_Doughnuts.jpg" class="uri">https://en.wikipedia.org/wiki/Production_line#/media/File:Krispy_Kreme_Doughnuts.jpg</a></small></p>
+<p>其實這類connection的操作，我也是學R過後好久才知道的。不熟悉的朋友可以想像一下，上面的程式碼就是一段不停運作的生產線。</p>
+<ul>
+<li><code>curl("")</code>就是原料供應處，不斷把未加工的資料放到生產線上。</li>
+<li><code>gzcon</code>，不斷的以<a href="https://zh.wikipedia.org/zh-tw/Gzip">gzip</a>格式將生產線上的資料解壓縮，再放回生產線上。</li>
+<li><code>stream_in</code>再不斷的讀取生產線上的資料，依照JSON的格式做解釋，並且轉換成R物件，放回生產線</li>
+<li><code>function(df) { ... }</code>則把生產線上的R物件拿出來，做過濾，再放回生產線上</li>
+<li><code>stream_out</code>則把生產線上的物件再以JSON的格式寫到硬碟之中</li>
+</ul>
+<p>在組裝生產線的時候，除了定義各種操作之外，就是要安排順序。而R擁有許多的<code>connection</code>相關的函數，都是吃一個<code>connection</code>，再吐出一個<code>connection</code>。這種設計就是要讓使用者組裝生產線。</p>
+<p>ps. 在軟體工程中，這是一種叫做<a href="https://en.wikipedia.org/wiki/Decorator_pattern">Decorator Pattern</a>的設計模式的範例。</p>
+<p>因此，<code>curl</code>回傳一個<code>connection</code>，<code>gzcon</code>接過去處理、再來是<code>stream_in</code>… 以此類推。用這種寫法寫出來的程式，不需要一次把所有資料裝到記憶體之中（這就是<code>fromJSON</code>做的事情）。在資料爆炸的現代來說，這種技巧是窮人在機器記憶體不夠時，還是能用高效率處理問題的一種方法。對於很多資工背景的朋友來說，這種技巧可能是很基礎的吧！可是對於非資工背景出身的我來說，其實也是寫程式寫了好多年，才注意到這種技術。</p>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-130199267-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </body>
+</html>
+

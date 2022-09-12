@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.102.3" />
+
+
+<title>R: DateTime格式的心得 - Wush &lt;- &#39;儒爸&#39;</title>
+<meta property="og:title" content="R: DateTime格式的心得 - Wush &lt;- &#39;儒爸&#39;">
+
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/meme.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/wush978">GitHub</a></li>
+    
+    <li><a href="https://hahow.in/cr/r-hands-on">Hahow R語言入門</a></li>
+    
+    <li><a href="https://www.linkedin.com/in/wush978/">My LinkedIn Profile</a></li>
+    
+    <li><a href="https://datascienceandr.org">R語言翻轉教室</a></li>
+    
+    <li><a href="https://gitter.im/wush978/DataScienceAndR">聊天室</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">1 min read</span>
+    
+
+    <h1 class="article-title">R: DateTime格式的心得</h1>
+
+    
+    <span class="article-date">2012-02-29</span>
+    
+
+    <div class="article-content">
+      
+
+
+<ul>
+<li><a href="#overview">概述</a></li>
+<li><a href="#functions">函數心得</a>
+<ul>
+<li>取得當前的時間
+<ul>
+<li><a href="#Sys.time">Sys.time</a></li>
+<li><a href="#Sys.Date">Sys.Date</a></li>
+</ul></li>
+<li>時間格式間的轉換
+<ul>
+<li><a href="#mktime">mktime</a></li>
+<li><a href="#localtime">localtime</a></li>
+<li><a href="#gmtime">gmtime</a></li>
+</ul></li>
+<li>時間和字串間的轉換
+<ul>
+<li><a href="#strftime">strftime</a></li>
+<li><a href="#strptime">strptime</a></li>
+</ul></li>
+<li><a href="#trunc">trunc</a></li>
+</ul></li>
+<li><a href="#reference">參考資料</a></li>
+</ul>
+<hr />
+<h2 id="overview">
+概述
+</h2>
+<p>R中主要的時間物件為<code>POSIXct</code>和<code>POSIXlt</code>。<a href="http://www.r-project.org/doc/Rnews/Rnews_2001-2.pdf">Date-Time Classes</a>第8頁內提到設計者們在設計這類物件的考量：</p>
+<ul>
+<li>日期格式應該由<a href="http://en.wikipedia.org/wiki/Locale">locale</a>參數來決定。</li>
+<li>時間應該由電腦的Time zones來決定。</li>
+<li>參考資料庫標準(SQL99 ISO)中使用的時間格式<code>timestamp with time zone</code></li>
+<li>考量到跨平台，使用[POSIX]</li>
+</ul>
+<p>[POSIX]是以<a href="Coordinated%20Universal%20Time">UTC</a>為基準，以c語言的<code>double</code>型態來儲存的時間格式，
+而<code>POSIXct</code>則是代表以這種絕對座標所表示的時間。<code>POSIXlt</code>則是另一種包含timezones的格式
+(lt代表local time)。其中timezone是以屬性tzone來代表的。</p>
+<p>以以下的程式碼為例：
+<code>rout example from [Date-Time Classes] &gt; file.info(dir())[, "mtime", drop=FALSE] data                  2012-02-29 21:18:11</code>
+在預設下，是以ISO標準格式來表示日期時間。
+<code>r example from [Date-Time Classes] &gt; file_time &lt;- file.info(dir())[, "mtime", drop=FALSE] &gt; file_time data                  2012-02-29 21:18:11 &gt; format(file_time, format="%x %X") data                  2012/2/29 下午 09:18:11</code></p>
+<p>另外再列了幾個<a href="http://www.r-project.org/doc/Rnews/Rnews_2001-2.pdf">Date-Time Classes</a>內的範例</p>
+<h2 id="functions">
+函數心得
+</h2>
+<h3 id="Sys.time">
+Sys.time
+</h3>
+<p><code>r Sys.time function ()</code>
+回傳<code>POSIXct</code>物件來表示現在的時間</p>
+<h3 id="Sys.Date">
+Sys.Date
+</h3>
+<p><code>r Sys.time function () {as.Date(as.POSIXlt(Sys.time()))}</code>
+回傳<code>Date</code>物件來表示現在的日期</p>
+<h3 id="trunc">
+trunc
+</h3>
+<p><code>r trunc.POSIXt function (x, units = c("secs", "mins", "hours", "days"), ...)</code>
+將<code>x</code>的時間格式轉換為以<code>units</code>為單位</p>
+<h2 id="reference">
+參考資料
+</h3>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-130199267-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </body>
+</html>
+

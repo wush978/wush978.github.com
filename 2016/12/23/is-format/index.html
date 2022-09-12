@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.102.3" />
+
+
+<title>資料分析所採用的資料格式 - Wush &lt;- &#39;儒爸&#39;</title>
+<meta property="og:title" content="資料分析所採用的資料格式 - Wush &lt;- &#39;儒爸&#39;">
+
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/meme.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/wush978">GitHub</a></li>
+    
+    <li><a href="https://hahow.in/cr/r-hands-on">Hahow R語言入門</a></li>
+    
+    <li><a href="https://www.linkedin.com/in/wush978/">My LinkedIn Profile</a></li>
+    
+    <li><a href="https://datascienceandr.org">R語言翻轉教室</a></li>
+    
+    <li><a href="https://gitter.im/wush978/DataScienceAndR">聊天室</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">1 min read</span>
+    
+
+    <h1 class="article-title">資料分析所採用的資料格式</h1>
+
+    
+    <span class="article-date">2016-12-23</span>
+    
+
+    <div class="article-content">
+      
+
+
+<p>數據分析已經是一個悠久的需求，也因此對於數據分析所需的需求，其實也有很多解法了。分析可以分成已知需求的分析與未知需求的分析。前者常常被分類到BI的範疇，而後者則是被歸類為分析的範疇。</p>
+<p>若已知分析面向，我們可以在系統處理事物性需求時，做出即時的統計數據。舉例來說，在做RTB時，只要在每次收到win notice時將需要支付的金額更新到如redis的資料庫中，就可以了解最新的已花費金額。這樣的查詢，可以花費很少的力氣做到即時數據與即時的Dashboard。</p>
+<p>但這種做法的缺點，是在規劃時，就限制了分析能查看的面向。若我們只累計金額，就只能查詢已花費的總金額。要查詢個別campaign花費的金額時，就只能回去爬log。如果我們儲存金額時，額外放入campaign的資訊，那無論是總金額或是各別campaign的金額，都能夠做到即時查詢，但是creative的花費就沒辦法查詢。若是反過來，紀錄各別creative的金額，那無論是總金額，或是各別campaign的消費，與個別creative的消費，就都能即時查詢。而無論是紀錄總金額、campaign的花費、或是creative的花費，都沒辦法查詢個別app上的花費。當然，我們可以同時記錄creative的花費與app上的花費，讓這樣的需求都可以即時查詢。</p>
+<p>ps. 在廣告中，每個creative一定屬於某個campaign，而一個campaign會包含多個creative。</p>
+<p>以上的做法，就是在事先知道查詢需求時，可以用很少的工程資源做出來的即時dashboard的方法。這樣的代價則是，查詢的需求是受到規劃的限制，並且在沒有規劃時，也沒辦法做交叉查詢。舉例來說，即使我們記錄了creative的消費與app的消費，也沒辦法查詢creative-app的消費。另一個取捨，則是效能與允許的查詢面向有關。如果我們要查creative、app、user的各種屬性、… 那即時記錄的成本就會越來越高，進而影響到系統效能。而且這樣的方式，只能記錄累計的資訊。</p>
+<p>如果我們希望分析更廣泛的面向，並且是事先不確定的面向，那我的建議是搭建高效能的爬log的系統或是搭建SQL Database。而這樣做的代價是，我們的查詢會從即時的結果，變成需要等待，而且等待的時間是從數秒鐘到數小時都有可能，一切取決於資料量，以及資料庫的設計。這是一門很深的學問。</p>
+<p>過去，在遇到這樣分析的需求時，工程師的第一種想法可能是搭建資料庫(無論是關聯式或非關聯式)，搭配適當的Schema設計讓分析師使用。更有彈性的BI報表可能會這樣設計，但是背後需要理解資料庫的DBA設計資料庫的結構，否則資料一大，等待的時間就會線性的成長。這種做法的取捨，是要放大效能時，在採用加機器的方式比較不容易；就是當資料結構改變時，Database的Schema要做變更比較挑戰；當寫入與讀取相同的表格時，也有機會互相干擾。基於以上的因素，我認為這個方向的解決辦法，是很消耗工程資源的:需要公司提供一名經驗豐富的DBA或後端工程師來支援才能達到合理的效能。</p>
+<p>我在進行RTB的專案時，主管提供一組mongodb cluster給我使用:寫入master, 讀取slave。但是這樣的架構在某次slave崩潰後，造成了不可回復的災難:slave要追回原本的資料，但是master不停的情況下追不上。最終，由於我個人對mongodb的錯誤回復不熟悉，公司又沒有其他工程師能支援，所以我放棄了這個方法。</p>
+<p>對於缺乏工程資源的團隊，我還是比較推薦直接使用HDFS-like的檔案系統即可。無論是Amazon的S3或是Google Cloud Platform的Cloud Storage都是很好的選向。這類的檔案系統，暫時不用擔心存取的效能不足。紀錄已protobuf或avro寫入之後，再透過如Google的Dataflow來進行清理，並將資料寫入BigQuery，所需的工程資源並不大。當資料格式變化時，要更新Schema也容易，因為這些格式都擁有向下相容的功能。而BigQuery透過Column Based的方式儲存資料，讓我們對他做任意面向的查詢，效能是非常高的。筆者在對千萬級~億量級的資料做樞紐分析，都是在一分鐘上下完成。</p>
+<p>BigQuery能這麼快速的理由，其實和他儲存的資料格式相關:他們是用Column Based的方式做儲存的。之前介紹的資料格式，無論是JSON、Protocol Buffer或Avro，都是以Row Based的為主。這是因為系統在寫入資料的時候，資料是一筆一筆的進入，一筆一筆的出去，所以每一筆資料自成一個單位。但是當我們將大量資料倒入Big Query的時候，系統就可以依照Schema把資料轉成以欄位為主來做儲存。這種做法最大的好處，就是當我們在分析資料時，大大的降低需要讀取的資料量。</p>
+<p>舉例來說，如果要在RTB的紀錄中觀察creative-app的出價資料，我們只需要每次讀取三個欄位:creative, app, 與出價。但是一個RTB的紀錄中，包含很多很多資料。如果我們用Row based的方式儲存，電腦就會得一筆一筆的掃描資料。但是若以Column based的方式儲存，電腦就只需要掃過目標欄位即可。使用Big Query時使用者可以看到估計的處理資料量。只要讀取的欄位不多，其實資料量就會少，當然效能也跟著快了。</p>
+<p>如果不考慮雲端系統，我就建議使用HDFS搭配Apache Parquet與Spark SQL來做出類似的效果。只是在工程資源有限的團隊，絕對不要自己搭建資料系統。因為這是很消耗工程資源的事情，而且不同等級的資料量，往往最適合、CP值最高的架構也不同，而架構的轉換是非常耗時的。若使用雲端系統時，在專案初期資料量少時費用也便宜，後續擴充也快速不用改架構，等到太昂貴需要自建時，想必企業也成長到能夠負荷足夠的工程能量。</p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-130199267-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </body>
+</html>
+

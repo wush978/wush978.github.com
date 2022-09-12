@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.102.3" />
+
+
+<title>Rcpp Modules 的進階筆記 - Wush &lt;- &#39;儒爸&#39;</title>
+<meta property="og:title" content="Rcpp Modules 的進階筆記 - Wush &lt;- &#39;儒爸&#39;">
+
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/meme.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/wush978">GitHub</a></li>
+    
+    <li><a href="https://hahow.in/cr/r-hands-on">Hahow R語言入門</a></li>
+    
+    <li><a href="https://www.linkedin.com/in/wush978/">My LinkedIn Profile</a></li>
+    
+    <li><a href="https://datascienceandr.org">R語言翻轉教室</a></li>
+    
+    <li><a href="https://gitter.im/wush978/DataScienceAndR">聊天室</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">2 min read</span>
+    
+
+    <h1 class="article-title">Rcpp Modules 的進階筆記</h1>
+
+    
+    <span class="article-date">2016-08-23</span>
+    
+
+    <div class="article-content">
+      
+
+
+<p>雖然我Rcpp用很久了，但是一些技巧還是常常忘記。所以這裡列一些我花許多時間摸出來的技術。</p>
+<div id="package-中使用-rcpp-modules-的命名衝突問題" class="section level2">
+<h2>Package 中使用 Rcpp Modules 的命名衝突問題</h2>
+<p>由於新的Rcpp中已經不建議使用<code>loadRcppModules</code>了，所以我想依照警告訊息，改用<code>loadModule</code>。</p>
+<p>我的C++中已經寫了：</p>
+<pre class="cpp"><code>#include &lt;Rcpp.h&gt;
+using namespace Rcpp;
+
+RCPP_MODULE(MemorySparseArray) {
+  
+  class_&lt;MemorySparseArray&gt;(&quot;MemeorySparseArray&quot;)
+    .constructor&lt;int&gt;()
+    ;
+
+}</code></pre>
+<p>根據文件，本來的：</p>
+<pre class="r"><code>.onLoad &lt;- function(libname, pkgname) {
+  loadRcppModules()
+}</code></pre>
+<p>要改成：</p>
+<pre class="r"><code>loadModule(&quot;MemorySparseArray&quot;)</code></pre>
+<p>但是編譯時馬上遇到Linking Error：</p>
+<pre><code>Error in .doLoadActions(where, attach) : 
+  error in load action .__A__.1 for package CountingTF: loadModule(module = &quot;Array&quot;, what = TRUE, env = ns, loadNow = TRUE): Unable to load module &quot;Array&quot;: Failed to initialize module pointer: Error in FUN(X[[i]], ...): no such symbol _rcpp_module_boot_Array in package CountingTF</code></pre>
+<p>網路上找不到類似的錯誤。經過思考後，我想到可能是撞名衝突。</p>
+<p>就我所知，由於Rcpp和R的連結，還是要回到C，所以C++的function overloading會失效，而症狀就是Linking Error。
+ps. C++編譯器會把參數型態放到編譯後的函數名稱中，但是C不會。所以當撞名時，編譯時有一個名字的版本會被標注要參照C的命名方式，令一個則不會，因此R載入時（R的底層是C)就找不到函數了。所以當C++遇到同名函數時，就有可能編譯沒問題，但是Linking時出錯。</p>
+<p>果然，把原始碼改成：</p>
+<pre class="cpp"><code>#include &lt;Rcpp.h&gt;
+using namespace Rcpp;
+
+RCPP_MODULE(Array) {
+  
+  class_&lt;MemorySparseArray&gt;(&quot;MemorySparseArray&quot;)
+    .constructor&lt;int&gt;()
+    ;
+
+}</code></pre>
+<p>就沒問題了。</p>
+</div>
+<div id="載入c-extension後才執行namespace的輸出" class="section level2">
+<h2>載入C Extension後才執行Namespace的輸出</h2>
+<p>上述的解決方法，在安裝套件後，<code>MemorySparseArray</code>並沒有從Namespace中匯出(export)。</p>
+<p>舉例來說：</p>
+<pre class="r"><code>&gt; library(CountingTF)
+&gt; MemorySparseArray
+Error: object &#39;MemorySparseArray&#39; not found</code></pre>
+<p>我們要在<code>NAMESPACE</code>中輸出<code>MemorySparseArray</code>：</p>
+<pre class="r"><code>#&#39;@useDynLib CountingTF
+#&#39;@importFrom Rcpp loadModule cpp_object_initializer
+#&#39;@export MemorySparseArray
+loadModule(&quot;Array&quot;, TRUE)</code></pre>
+</div>
+<div id="s4-method的客製化" class="section level2">
+<h2>S4 Method的客製化</h2>
+<p>我們可以在R中透過S4的API來客製化Rcpp Modules所匯入的C++物件。</p>
+<p>舉例來說，我們可以查詢內建的<code>show</code>:</p>
+<pre class="r"><code>&gt; getMethod(&quot;show&quot;, MemorySparseArray)
+Error in getMethod(&quot;show&quot;, MemorySparseArray) : 
+  no method found for function &#39;show&#39; and signature Rcpp_MemorySparseArray</code></pre>
+<p>此時R會直接調用在<code>.xData</code>屬性的環境中的<code>show</code>。（這應該是R6物件的特性…)</p>
+<p>我們可以寫：</p>
+<pre class="r"><code>#&#39;@useDynLib CountingTF
+#&#39;@importFrom Rcpp loadModule cpp_object_initializer
+#&#39;@export MemorySparseArray
+loadModule(&quot;Array&quot;, TRUE)
+
+setMethod(&quot;show&quot;, MemorySparseArray, definition = function(object) {
+  cat(&quot;This is the customized show method\n&quot;)
+})</code></pre>
+<p>如果你把<code>setMethod(...)</code>在console中跑是沒問題的，但是編譯套件時會出錯：</p>
+<pre class="shell"><code>Error in matchSignature(signature, fdef, where) : 
+  object &#39;MemorySparseArray&#39; not found
+Error : unable to load R code in package ‘CountingTF’
+ERROR: lazy loading failed for package ‘CountingTF’</code></pre>
+<p>理由是因為<code>MemorySparseArray</code>是載入dynamic library時才會建立，所以出錯了。</p>
+<p>我們可以用：</p>
+<pre class="r"><code>#&#39;@useDynLib CountingTF
+#&#39;@importFrom Rcpp loadModule cpp_object_initializer
+#&#39;@export MemorySparseArray
+loadModule(&quot;Array&quot;, TRUE)
+
+evalqOnLoad({
+  setMethod(&quot;show&quot;, MemorySparseArray, definition = function(object) {
+    cat(&quot;This is the customized show method\n&quot;)
+  })
+})</code></pre>
+<p>來延後建立<code>show</code>方法的時間點，避開這個錯誤。</p>
+</div>
+<div id="module-method-c11-lambda" class="section level2">
+<h2>Module method + C++11 Lambda</h2>
+<p>根據C++11的標準： 不capture外部環境的lambda expression可以轉換為function pointer。
+所以我們可以這樣寫：</p>
+<pre class="cpp"><code>class_&lt;MemorySparseArray&gt;(&quot;MemorySparseArray&quot;)
+.constructor&lt;int&gt;()
+.method(&quot;dim&quot;, static_cast&lt;IntegerVector(*)(MemorySparseArray*)&gt;([](MemorySparseArray* pmsa) {
+  const auto&amp; reference(*(pmsa-&gt;get_pencode_reference()));
+  IntegerVector retval(reference.size(), 0);
+  for(R_len_t i = 0;i &lt; retval.size();i++) {
+    retval[i] = reference[i].size();
+  }
+  return retval;
+}))
+;</code></pre>
+<p>其中：</p>
+<pre class="cpp"><code>[](MemorySparseArray* pmsa) {
+  // ...
+}</code></pre>
+<p>是一個lambda expression。接著透過<code>static_cast</code>轉換成function pointer後再交給<code>RCPP_MODULE</code>去expose。</p>
+</div>
+<div id="rcpp-module-oop" class="section level2">
+<h2>Rcpp Module + OOP</h2>
+<p>Reference: <a href="http://romainfrancois.blog.free.fr/index.php?post/2012/11/05/OOP-with-Rcpp-modules" class="uri">http://romainfrancois.blog.free.fr/index.php?post/2012/11/05/OOP-with-Rcpp-modules</a></p>
+<p>但是我的狀況比較複雜。我實做的<code>SparseArray</code>是abstract class，所以寫法要改成：</p>
+<pre class="cpp"><code>class_&lt;SparseArray&gt;(&quot;SparseArray&quot;)
+.method(&quot;dim&quot;, static_cast&lt;SEXP(*)(SparseArray*)&gt;([](SparseArray* pmsa) {
+  return wrap(pmsa-&gt;dim());
+}))
+;
+
+class_&lt;MemorySparseArray&gt;(&quot;MemorySparseArray&quot;)
+.derives&lt;SparseArray&gt;(&quot;SparseArray&quot;)
+.constructor&lt;int&gt;()
+;</code></pre>
+<p>也因為<code>SparseArray</code>是Abstract class，所以不能放constructor, 會爆炸。</p>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-130199267-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </body>
+</html>
+

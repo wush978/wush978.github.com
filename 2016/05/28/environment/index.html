@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.102.3" />
+
+
+<title>客製化R的開發環境 - Wush &lt;- &#39;儒爸&#39;</title>
+<meta property="og:title" content="客製化R的開發環境 - Wush &lt;- &#39;儒爸&#39;">
+
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/meme.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/wush978">GitHub</a></li>
+    
+    <li><a href="https://hahow.in/cr/r-hands-on">Hahow R語言入門</a></li>
+    
+    <li><a href="https://www.linkedin.com/in/wush978/">My LinkedIn Profile</a></li>
+    
+    <li><a href="https://datascienceandr.org">R語言翻轉教室</a></li>
+    
+    <li><a href="https://gitter.im/wush978/DataScienceAndR">聊天室</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">1 min read</span>
+    
+
+    <h1 class="article-title">客製化R的開發環境</h1>
+
+    
+    <span class="article-date">2016-05-28</span>
+    
+
+    <div class="article-content">
+      
+
+
+<p>這幾年來，隨著R越玩越深，R已經變成我日常工作很自然的一部份了。舉例來說，最近主管要求要我每日寄工作報告給他，我又懶得每天去輸入那些寄信的細節，就用R兜了一個簡易的命令列應用，讓我只要寫好報告後，在命令列打一行就會自動發信。有興趣的朋友可以看看： <a href="https://github.com/gmobi-wush/DailyReport" class="uri">https://github.com/gmobi-wush/DailyReport</a></p>
+<p>這幾年下來，我也累積了一些小技巧，讓自己開發R應用時能夠更順手。這裡想趁機筆記一些，給未來的自己<del>複製貼上用</del>。</p>
+<div id="機器上的預先載入功能" class="section level2">
+<h2>機器上的預先載入功能</h2>
+<p>在使用R時，我們可以透過<code>.Rprofile</code>來讓每次R開始執行時，預先執行的指令。通常我會把一些使用者帳號密碼，以及網路服務的API key存放在這。舉例來說，我習慣會寫一個<code>callme</code>函數，讓R可以發訊息到我自己有使用的IM服務。最近的新歡是：<a href="https://gitter.im">Gitter</a>。</p>
+<p>由於這樣的功能，是「跨專案」的，所以我會在家目錄（你可以輸入：<code>normalizePath("~")</code>來問R你的家目錄的位置）底下儲存一個檔案，叫：<code>.Rprofile</code>（這是完整的檔名，結尾不包含<code>.R</code>）。而他的內容是：</p>
+<pre><code>callme &lt;- function(msg) {
+    hostname &lt;- system(&quot;hostname&quot;, intern = TRUE)
+    msg &lt;- sprintf(&quot;%s (%s) \n```\n%s\n```&quot;, hostname, Sys.time(), msg)
+    httr::POST(url = &quot;https://api.gitter.im/v1/rooms/&lt;room id&gt;/chatMessages&quot;,
+               httr::add_headers(&quot;Authorization&quot; = &quot;Bearer &lt;my gitter api key&gt;&quot;),
+               encode = &quot;json&quot;,
+               body = list(text = msg)
+    )
+}</code></pre>
+<p>這樣只要當我跑一個需要等的指令時，只要在最後加一個：<code>callme("xxx job is done")</code>，就可以在完成工作時自動發送訊息到我的IM service，如果手機上有裝app並且開啟通知，就… 可以先去忙別的事情，等到手機震動了再切回來繼續忙。用身體來學什麼是asynchronous I/O！</p>
+<p>有興趣的朋友可以去github與gitter註冊帳戶後，開一個自己的room，然後把上面程式碼中room id與gitter api key換掉後，就可以自己玩玩看啦！</p>
+<p>R好棒~~~</p>
+</div>
+<div id="rprofile的地雷" class="section level2">
+<h2><code>.Rprofile</code>的地雷</h2>
+<p>另一種常見的狀況，是預先載入常用的套件。舉例來說，在<code>.Rprofile</code>輸入：</p>
+<pre><code>library(dplyr)</code></pre>
+<p>就能在每次進入R之後載入dplyr套件。但直接這樣寫會有個問題，就是如果還沒安裝dplyr套件時，你不但會出錯，而且裝dplyr套件可能還會失敗。這是因為R在安裝套件時，會開另一個R Process來檢查安裝有沒有成功。這個R process當然也會受到<code>.Rprofile</code>的影響，所以也會預先載入dplyr。所以：</p>
+<ol style="list-style-type: decimal">
+<li>輸入<code>install.packages('dplyr')</code></li>
+<li>R 開始安裝dplyr與其他相依套件，例如Rcpp</li>
+<li>安裝完Rcpp後，R要檢查Rcpp能否正常運作，開啟一個新的R Process要載入Rcpp</li>
+<li>新的R Process受到<code>.Rprofile</code>的影響，要載入dplyr，導致失敗</li>
+<li>R發現載入Rcpp的R失敗，所以判定Rcpp安裝失敗</li>
+<li>dplyr因為Rcpp裝不起來，所以安裝失敗</li>
+<li>回到1</li>
+</ol>
+<p>想當年我第一次這樣玩的時候，就在<code>.Rprofile</code>放越來越多的套件，然後有一天裝套件的時候就出事了。</p>
+<p>一種避免上面失敗循環的方是，就是在<code>.Rprofile</code>中限定R只有在與使用者互動的模式下才預先載入套件：</p>
+<pre><code>if (interactive()) {
+  library(dplyr)
+}</code></pre>
+<p>這樣在上面的失敗循環的步驟4時，因為這個檢查Rcpp的Process不會和使用者互動，所以就不會預先載入dplyr，我們就跳脫了失敗循環了！而且這樣的條件判斷也很符合邏輯：只有在人與R要互動的時刻，R才會幫我們預先載入我們常用的套件。如果是其他自動化程序的R，或背景執行的R，就不需要為了使用者方便而載入這些套件。</p>
+</div>
+<div id="出錯時自動發訊息" class="section level2">
+<h2>出錯時自動發訊息</h2>
+<p>R 的錯誤處理是可以客製化的。搭配剛剛的<code>callme</code>函數，我們可以這樣子設定：</p>
+<pre><code>option(error = function() {
+  msg &lt;- geterrmessage()
+  callme(msg)
+  stop(msg)
+})</code></pre>
+<p>如此，只要在錯誤發生時，R就會先抓取錯誤訊息，然後透過上述的callme函數，發送錯誤到我們的手機。如此一來，我們就讓自己on call了呢！</p>
+<p>R是老闆~~~</p>
+</div>
+<div id="專案的客製化環境" class="section level2">
+<h2>專案的客製化環境</h2>
+<p>由於目前玩的專案越來越複雜，而且還常常牽涉到R套件的開發。早期我常常發生：A專案相依於B套件，而開發B套件時，因為突發事件要切換到專案A，但是套件B又屬於開發中不穩定的狀態… A就被B打死啦！</p>
+<p>另外一個常見的情境，是有時候當套件更新時，原本的功能就失效了。所以如果我們承接了一段久遠的程式碼，要保證它可以繼續安全的運作，最好就是把久遠的R套件與久遠的R都凍結起來，不要去碰它們。R的許多套件都不保證向下相容的！（也就是更新後，原本的指令可能就不能跑了）</p>
+<p>所以現在我都採用每個專案有自己的套件目錄的方式。</p>
+<p>舉例來說，在專案A的根目錄（打開Rstudio後輸入<code>getwd()</code>的目錄）下建立：</p>
+<pre><code>if (file.exists(&quot;~/.Rprofile&quot;)) source(&quot;~/.Rprofile&quot;)
+if (!dir.exists(&quot;.lib&quot;)) dir.create(&quot;.lib&quot;)
+.libPaths(new = &quot;.lib&quot;)</code></pre>
+<p>這樣只要在專案A下裝套件時，就都只會裝到這個<code>.lib</code>的目錄下，而不會影響到別的專案。</p>
+<p>同理，開發B套件時也如法泡製，這樣在開發時，A專案使用的B套件就不會變動。這是因為開發時，更改的是：<code>&lt;B專案的根目錄&gt;/.lib/B套件</code>，而A專案載入的B套件是：<code>&lt;A專案的根目錄&gt;/.lib/B套件</code>，兩者被切割開來，不會互相干擾了。</p>
+<p>學會了以上的技巧後，我們可以再透過<code>PATH</code>這個環境變數來解決R版本的問題。因此，我們就可以凍結一個歷史悠久的專案中執行的R套件與R環境，而其他專案就可以不用顧慮這個老大哥，繼續快樂的更新套件與使用最新的R技術。</p>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-130199267-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </body>
+</html>
+

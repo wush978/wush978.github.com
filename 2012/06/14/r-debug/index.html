@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.102.3" />
+
+
+<title>R debug - Wush &lt;- &#39;儒爸&#39;</title>
+<meta property="og:title" content="R debug - Wush &lt;- &#39;儒爸&#39;">
+
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/meme.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/wush978">GitHub</a></li>
+    
+    <li><a href="https://hahow.in/cr/r-hands-on">Hahow R語言入門</a></li>
+    
+    <li><a href="https://www.linkedin.com/in/wush978/">My LinkedIn Profile</a></li>
+    
+    <li><a href="https://datascienceandr.org">R語言翻轉教室</a></li>
+    
+    <li><a href="https://gitter.im/wush978/DataScienceAndR">聊天室</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">3 min read</span>
+    
+
+    <h1 class="article-title">R debug</h1>
+
+    
+    <span class="article-date">2012-06-14</span>
+    
+
+    <div class="article-content">
+      
+
+
+<div id="簡介" class="section level1">
+<h1>簡介</h1>
+<p>很少人能夠第一次寫程式就能寫對，就連最專業的程式設計師也會花大把大把的時間在除錯。
+所以熟悉除錯的工具也是能夠顯著的提昇寫程式的效率。</p>
+<p>其實作者我在寫這篇文章之前也完全沒用過除錯工具！想到又能提昇自己的coding效率又讓我熊熊的燃燒起來！！</p>
+</div>
+<div id="除錯函數" class="section level1">
+<h1>除錯函數</h1>
+<p>R 提供了以下的除錯功能:</p>
+<ul>
+<li><code>traceback</code></li>
+<li><code>browser</code></li>
+<li><code>debug</code></li>
+<li><code>trace</code></li>
+</ul>
+<p>就讓我來一個個探索吧！</p>
+<div id="traceback" class="section level2">
+<h2>traceback</h2>
+<p>所謂的traceback功能主要的目的，是找出錯誤發生時最後執行的函數：</p>
+<p><code>r traceback-example-1 fail_func1 &lt;- function(size) {     b &lt;- 5     b &lt;- b + size     b &lt;- b * 2     b &lt;- b^2     b } fail_func2 &lt;- function(size) {     b &lt;- fail_func1(size)     a &lt;- sample(0:1,size,FALSE)     a } fail_func2(12) traceback() fail_func2('test') traceback()</code></p>
+<p>運行結果：</p>
+<p><code>rconsole traceback-example-1-output &gt; fail_func2(12) Error in sample(0:1, size, FALSE) :    cannot take a sample larger than the population when 'replace = FALSE' &gt; traceback() 2: sample(0:1, size, FALSE) at #3 1: fail_func2(12) &gt; fail_func2('test') Error in b + size : non-numeric argument to binary operator &gt; traceback() 2: fail_func1(size) at #2 1: fail_func2("test") &gt;</code></p>
+<p>可以看出traceback確實的找出最後一個丟出錯誤的函數。</p>
+</div>
+<div id="browser" class="section level2">
+<h2>browser</h2>
+<p>traceback只能指出錯誤的發生處，並不能幫助使用者找出程式的錯誤。
+接下來的<code>browser</code>指令則提供互動式的除錯功能：</p>
+<ul>
+<li>暫停程式碼的執行</li>
+<li>讓使用者能察看某個時間點的變數狀態，甚至是修改變數狀態。此時以下的指令變成有特殊意義：
+<ul>
+<li><code>c</code> 讓程式繼續進行</li>
+<li><code>n</code> 執行下一行</li>
+<li><code>Q</code> 中斷</li>
+</ul></li>
+<li>繼續執行</li>
+</ul>
+<p>ps. 如果在中斷期間要查詢名稱為<code>c</code>、<code>n</code>、<code>Q</code>的變數內容，請用<code>print</code>指令。
+但是我個人是認為不應該把變數取這類名稱！！</p>
+<p>如果運行以下的指令：</p>
+<p><code>r browser-example-1 global_env &lt;- 1 fail_func1 &lt;- function(size) {   fail_func1_env &lt;- 5   browser()   fail_func1_env &lt;- 6   fail_func1_env &lt;- 7   fail_func1_env } fail_func2 &lt;- function(size) {   fail_func2_env &lt;- 1   b &lt;- fail_func1(size)   a &lt;- sample(0:1,size,FALSE)   a } fail_func2(12)</code></p>
+<p>應該會看到類似以下的結果：</p>
+<p><code>rconsole browser-example-1-output &gt; fail_func2(12) Called from: fail_func1(size) Browse[1]&gt; global_env [1] 1 Browse[1]&gt; fail_func1_env [1] 5 Browse[1]&gt; fail_func2_env Error: object 'fail_func2_env' not found Browse[1]&gt; size [1] 12 Browse[1]&gt; n debug at #4: fail_func1_env &lt;- 6 Browse[2]&gt; fail_func1_env [1] 5 Browse[2]&gt; n debug at #5: fail_func1_env &lt;- 7 Browse[2]&gt; fail_func1_env [1] 6 Browse[2]&gt; n debug at #6: fail_func1_env Browse[2]&gt; fail_func1_env [1] 7</code></p>
+<p>在程式跑到<code>browser</code>時就暫停了。
+因為<code>browser</code>是插入在<code>fail_func1</code>的第二行，所以變數應該和該時間點相同，
+值得注意的是此時也只能存取該function environment內的變數</p>
+</div>
+<div id="debug" class="section level2">
+<h2>debug</h2>
+<p>我們可以把上一節的<code>browser</code>視為一種_中斷點_，
+而<code>debug</code>函數則可以幫一個函數的每一行加入中斷點。
+在對內建函數除錯的時候非常有用：</p>
+<p><code>r debug-example-1 debug(lm) lm(Sepal.Length~Species,iris)</code></p>
+<p><code>rconsole debug-example-1-output &gt; lm(Sepal.Length~Species,iris) debugging in: lm(Sepal.Length ~ Species, iris) debug: {     ret.x &lt;- x     ret.y &lt;- y ... 略 ...     z } Browse[2]&gt; n debug: ret.x &lt;- x Browse[2]&gt; n debug: ret.y &lt;- y Browse[2]&gt; n debug: cl &lt;- match.call()</code></p>
+<p>除錯完畢後可用<code>undebug</code>來將中斷點移除。</p>
+</div>
+<div id="trace" class="section level2">
+<h2>trace</h2>
+<p>有時候只是檢視或修改變數並不夠。
+<code>trace</code>函數能在除錯時插入程式碼到某個函數，
+並在<code>untrace</code>後還原該函數。</p>
+<p><code>rconsole str(trace) &gt; str(trace) function (what, tracer, exit, at, print, signature, where = topenv(parent.frame()),      edit = FALSE)</code></p>
+<ul>
+<li><code>what</code>: 要修改的函數名稱</li>
+<li><code>tracer</code>: 要插入的函數或expression。<code>trace</code>會在<code>at</code>給的行數之前執行，或是<code>what</code>開始之前執行。</li>
+<li><code>exit</code>: 當<code>what</code>結束之後執行的函數或expression</li>
+<li><code>at</code>: <code>trace</code>執行的行數。</li>
+</ul>
+<p>其他的參數請參閱trace的說明。</p>
+<p>測試一下：
+<code>r trace-example-1 test_func &lt;- function() {   a &lt;- 1   a &lt;- 2   a &lt;- 3 } trace(test_func, browser, browser) test_func()</code></p>
+<p><code>rconsole trace-example-1-output &gt; test_func() Tracing test_func() on entry  Called from: eval(expr, envir, enclos) Browse[1]&gt; a Error: object 'a' not found Browse[1]&gt; c Tracing test_func() on exit  Called from: eval(expr, envir, enclos) Browse[1]&gt; a [1] 3 Browse[1]&gt; c &gt;</code></p>
+<p>可以看到第一次browser是在執行test_func之前，所以<code>a</code>不存在。
+第二次則是離開的時候，所以<code>a</code>為<code>3</code>。</p>
+<p><code>r trace-example-2 test_func &lt;- function() {   a &lt;- 1   a &lt;- 2   a &lt;- 3 } trace(test_func, quote(print(a)), at=3:4) #利用quote直接插入print(a)到程式中 body(test_func) test_func()</code></p>
+<p><code>rconsole trace-example-2-output &gt; body(test_func) {     a &lt;- 1     {         .doTrace(print(a), "step 3")         a &lt;- 2     }     {         .doTrace(print(a), "step 4")         a &lt;- 3     } } &gt; test_func() Tracing test_func() step 3  [1] 1 Tracing test_func() step 4  [1] 2 &gt;</code></p>
+<p>搭配quote使用可以直接更改function的程式碼，好用好用！
+注意at參數所代表的位置！！(讓我滿意外的)</p>
+</div>
+<div id="自動debug" class="section level2">
+<h2>自動debug</h2>
+<p>輸入</p>
+<pre class="r"><code>options(error = browser)</code></pre>
+<p>可以在發生錯誤時候進入browser</p>
+<p>更強大的debug設定是</p>
+<pre class="r"><code>options(error = recover)</code></pre>
+<p>在錯誤發生時候會印出stack，並且可以選擇要進入哪層stack來<code>browser</code></p>
+</div>
+</div>
+<div id="reference" class="section level1">
+<h1>Reference</h1>
+<p><a href="http://www.math.ncu.edu.tw/~chenwc/R_note/reference/debug/Rdebug.pdf">Rdebug</a>
+<a href="http://rstudio.github.com/shiny/tutorial/#run-and-debug">Shiny Tutorial</a></p>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-130199267-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </body>
+</html>
+

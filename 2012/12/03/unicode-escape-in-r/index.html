@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.102.3" />
+
+
+<title>unicode escape in R - Wush &lt;- &#39;儒爸&#39;</title>
+<meta property="og:title" content="unicode escape in R - Wush &lt;- &#39;儒爸&#39;">
+
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/meme.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/wush978">GitHub</a></li>
+    
+    <li><a href="https://hahow.in/cr/r-hands-on">Hahow R語言入門</a></li>
+    
+    <li><a href="https://www.linkedin.com/in/wush978/">My LinkedIn Profile</a></li>
+    
+    <li><a href="https://datascienceandr.org">R語言翻轉教室</a></li>
+    
+    <li><a href="https://gitter.im/wush978/DataScienceAndR">聊天室</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">1 min read</span>
+    
+
+    <h1 class="article-title">unicode escape in R</h1>
+
+    
+    <span class="article-date">2012-12-03</span>
+    
+
+    <div class="article-content">
+      
+
+
+<div id="簡介" class="section level1">
+<h1>簡介</h1>
+<p>最近需要分析中文資料，就遇到了unicode escape的問題。</p>
+<p>除了抓下來的資料問題外，就是轉JSON的時候也會跑出來</p>
+<pre class="r"><code>library(rjson)
+toJSON(&quot;測試&quot;)
+toJSON(&quot;測試&quot;, &quot;R&quot;)</code></pre>
+<pre class="sh"><code>&gt; library(rjson)
+&gt; toJSON(&quot;測試&quot;)
+[1] &quot;\&quot;\\u6e2c\\u8a66\&quot;&quot;
+&gt; toJSON(&quot;測試&quot;, &quot;R&quot;)
+[1] &quot;\&quot;測試\&quot;&quot;
+&gt; </code></pre>
+<p>中間的<code>\u6e2c\u8a66</code>就是unicode escape</p>
+</div>
+<div id="解法原理" class="section level1">
+<h1>解法原理</h1>
+<p>上面的<code>\u6e2c</code>中，<code>\u</code>是header，<code>6e2c</code>是__UTF16BE__編碼的hex code。</p>
+<p>了解這點之後，就很容易自己做出解決方法：</p>
+<ul>
+<li>利用regular expression(如<code>gregexpr</code>)定位<code>\\u[0-9a-f]{4,4}</code></li>
+<li>利用iconv把後面的兩個byte從__UTF16BE__轉換回__UTF8__</li>
+</ul>
+</div>
+<div id="很弱的實作" class="section level1">
+<h1>很弱的實作</h1>
+<p>但是我在R裏面沒有找到原生的hex轉string的函數，最後就自己刻了兩個函數，效能很差。</p>
+<ul>
+<li><a href="git://gist.github.com/4193275.git"><code>hex2str</code></a></li>
+<li><a href="git://gist.github.com/4193405.git"><code>remove_unicode_escape</code></a></li>
+</ul>
+<p>但是原理知道了，所以之後我有空可能刻個C++的解決方案。</p>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-130199267-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </body>
+</html>
+

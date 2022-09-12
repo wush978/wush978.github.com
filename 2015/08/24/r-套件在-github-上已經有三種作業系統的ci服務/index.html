@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.102.3" />
+
+
+<title>R 套件在 github 上已經有三種作業系統的CI服務 - Wush &lt;- &#39;儒爸&#39;</title>
+<meta property="og:title" content="R 套件在 github 上已經有三種作業系統的CI服務 - Wush &lt;- &#39;儒爸&#39;">
+
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/meme.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/wush978">GitHub</a></li>
+    
+    <li><a href="https://hahow.in/cr/r-hands-on">Hahow R語言入門</a></li>
+    
+    <li><a href="https://www.linkedin.com/in/wush978/">My LinkedIn Profile</a></li>
+    
+    <li><a href="https://datascienceandr.org">R語言翻轉教室</a></li>
+    
+    <li><a href="https://gitter.im/wush978/DataScienceAndR">聊天室</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">1 min read</span>
+    
+
+    <h1 class="article-title">R 套件在 github 上已經有三種作業系統的CI服務</h1>
+
+    
+    <span class="article-date">2015-08-24</span>
+    
+
+    <div class="article-content">
+      
+
+
+<p>R 目前在開發套件時，最多人使用的作業系統就是：</p>
+<ul>
+<li>Windows</li>
+<li>OS X</li>
+<li>Ubuntu</li>
+</ul>
+<p>謎之音：Solaris… 聽說全世界只有那個人在用它跑R的作業系統</p>
+<p><img src="http://civicio.files.wordpress.com/2013/03/github.png?w=256&amp;h=256" /></p>
+<p>現在如果在<a href="https://github.com">github</a>上做R套件的開發，已經可以免費的同時在三種作業系統上進行套件測試了。這樣就應該可以降低那個人的維護負擔吧！</p>
+<div id="travis-ci" class="section level2">
+<h2><a href="https://travis-ci.org">Travis CI</a></h2>
+<p><img src="https://i.imgur.com/wPQ1cUW.jpg" /></p>
+<p>Travis CI目前提供Ubuntu和OS X環境的測試。如果有Github帳號，要註冊Travis CI是非常簡單的。</p>
+<div id="ubuntu" class="section level3">
+<h3>Ubuntu</h3>
+<p>Ubuntu上的測試可以參考<a href="http://docs.travis-ci.com/user/languages/r/">Building an R Project</a>的說明文件。這部份要感謝許多R界的大大們的努力。</p>
+</div>
+<div id="os-x" class="section level3">
+<h3>OS X</h3>
+<p>在OS X上的測試是透過objective-c去改出來的。我fork了<a href="https://github.com/wertion/r-travis-mac">wertion/r-travis-mac</a>，更新了R的版本，CRAN上只有放最新的binary。如果已經會寫<code>.travis.yml</code>的朋友，可以參考<a href="https://github.com/wush978/FeatureHashing/blob/osx/.travis.yml">FeatureHashing上給OS X測試的.travis.ci</a>，應該很快就會上手了。</p>
+<p>我這裡補充一些細節：</p>
+<ul>
+<li>由於我沒有設定latex環境，所以<code>R_BUILD_ARGS</code>和<code>R_CHECK_ARGS</code>上都要放<code>--no-manual</code></li>
+<li><a href="https://github.com/wush978/FeatureHashing">FeatureHashing</a>的vignette是透過Rmd寫的，不需要Latex，所以我沒有加<code>--no-vignette</code>。如果你的套件的vignette有用latex，可能就要自己再改這邊的測試參數了。</li>
+</ul>
+<p>其他的部份，如果大家有問題，歡迎再問我。</p>
+</div>
+</div>
+<div id="appveyor" class="section level2">
+<h2><a href="https://ci.appveyor.com/">AppVeyor</a></h2>
+<p><img src="https://i.imgur.com/rxCbVAM.png" /></p>
+<p>這個CI服務提供Windows上的測試。只要有Github，要註冊也是非常簡單的。</p>
+<div id="windows" class="section level3">
+<h3>Windows</h3>
+<p>Windows上的測試也是需要透過<a href="https://github.com/krlmlr/r-appveyor">krlmlr/r-appveyor</a>的專案來達成。</p>
+<p>有興趣的讀者可以參考<a href="https://github.com/wush978/FeatureHashing/blob/master/appveyor.yml">FeatureHashing上給Windows測試的appveyor.yml</a>，我覺得只要熟悉<code>.travis.yml</code>的語法的話，應該是不會感到陌生的。</p>
+<p>這部份也許還有其他的功能，不過目前我就只有摸索到這了，有機會的話再做筆記。</p>
+</div>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-130199267-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </body>
+</html>
+

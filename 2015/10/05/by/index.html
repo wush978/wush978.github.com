@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.102.3" />
+
+
+<title>dplyr::group_by 的進階運用 - Wush &lt;- &#39;儒爸&#39;</title>
+<meta property="og:title" content="dplyr::group_by 的進階運用 - Wush &lt;- &#39;儒爸&#39;">
+
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/meme.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/wush978">GitHub</a></li>
+    
+    <li><a href="https://hahow.in/cr/r-hands-on">Hahow R語言入門</a></li>
+    
+    <li><a href="https://www.linkedin.com/in/wush978/">My LinkedIn Profile</a></li>
+    
+    <li><a href="https://datascienceandr.org">R語言翻轉教室</a></li>
+    
+    <li><a href="https://gitter.im/wush978/DataScienceAndR">聊天室</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">2 min read</span>
+    
+
+    <h1 class="article-title">dplyr::group_by 的進階運用</h1>
+
+    
+    <span class="article-date">2015-10-05</span>
+    
+
+    <div class="article-content">
+      
+
+
+<p>大家好，今天想跟大家介紹一個使用<code>dplyr</code>時的一個小撇步。他可以讓我們在使用<code>group_by</code>之後，有更多的彈性，並會更理解<code>group_by</code>這好用功能的原理。</p>
+<div id="背景簡介" class="section level2">
+<h2>背景簡介</h2>
+<p>我由於工作上要研究網路廣告，常常要比較各種不同方法間的數據。舉例來說，我可能手上有一大筆看起來像這樣的資料：</p>
+<!-- html table generated in R 3.2.2 by xtable 1.7-4 package -->
+<!-- Tue Oct  6 00:24:24 2015 -->
+<table border="1">
+<tr>
+<th>
+</th>
+<th>
+廣告
+</th>
+<th>
+網站
+</th>
+<th>
+點擊
+</th>
+</tr>
+<tr>
+<td align="right">
+1
+</td>
+<td>
+廣告D
+</td>
+<td>
+網站C
+</td>
+<td align="right">
+0
+</td>
+</tr>
+<tr>
+<td align="right">
+2
+</td>
+<td>
+廣告A
+</td>
+<td>
+網站C
+</td>
+<td align="right">
+0
+</td>
+</tr>
+<tr>
+<td align="right">
+3
+</td>
+<td>
+廣告A
+</td>
+<td>
+網站C
+</td>
+<td align="right">
+0
+</td>
+</tr>
+<tr>
+<td align="right">
+4
+</td>
+<td>
+廣告B
+</td>
+<td>
+網站C
+</td>
+<td align="right">
+1
+</td>
+</tr>
+<tr>
+<td align="right">
+5
+</td>
+<td>
+廣告B
+</td>
+<td>
+網站B
+</td>
+<td align="right">
+0
+</td>
+</tr>
+<tr>
+<td align="right">
+6
+</td>
+<td>
+廣告B
+</td>
+<td>
+網站B
+</td>
+<td align="right">
+0
+</td>
+</tr>
+</table>
+<p>而我想要知道各種廣告在<code>網站A</code>上的表現。透過<code>dplyr</code>，這並不困難：</p>
+<pre class="r"><code>filter(sample, 網站 == &quot;網站A&quot;) %&gt;%
+  group_by(廣告) %&gt;%
+  summarise(曝光 = length(點擊), 點擊數 = sum(點擊))</code></pre>
+<!-- html table generated in R 3.2.2 by xtable 1.7-4 package -->
+<!-- Tue Oct  6 00:25:23 2015 -->
+<table border="1">
+<tr>
+<th>
+</th>
+<th>
+廣告
+</th>
+<th>
+曝光
+</th>
+<th>
+點擊數
+</th>
+</tr>
+<tr>
+<td align="right">
+1
+</td>
+<td>
+廣告A
+</td>
+<td align="right">
+329
+</td>
+<td align="right">
+0
+</td>
+</tr>
+<tr>
+<td align="right">
+2
+</td>
+<td>
+廣告B
+</td>
+<td align="right">
+588
+</td>
+<td align="right">
+4
+</td>
+</tr>
+<tr>
+<td align="right">
+3
+</td>
+<td>
+廣告C
+</td>
+<td align="right">
+81
+</td>
+<td align="right">
+0
+</td>
+</tr>
+<tr>
+<td align="right">
+4
+</td>
+<td>
+廣告D
+</td>
+<td align="right">
+71
+</td>
+<td align="right">
+0
+</td>
+</tr>
+</table>
+<p>然而，以這個資料來說，我並不確定<code>廣告C</code>和<code>廣告D</code>的成效是不是明顯的不同。我想大家能同意，廣告的點擊是有機率在背後的，所以我們必須要透過一些計算才能知道，數據上顯示的：「<code>廣告B</code>比其他廣告好」，是運氣比較好，還是真的比較好。</p>
+<p>R 有一個製作95%信賴區間很方便的套件：<code>binom</code>。只要簡單利用<code>binom.confint</code>，就可以快速算出各種方法的confidence interval。
+以下就是一個簡單的範例，我們使用預設的95%信心水準（可以使用參數<code>conf.level</code>來調整），統計方法是<code>"exact"</code>（由Clopper and Pearson (1934)所設計出來的方法）。<code>binom</code>套件提供了10種方法給使用者計算信賴區間。</p>
+<pre class="r"><code>library(binom)
+channel.a.summary &lt;- filter(sample, 網站 == &quot;網站A&quot;) %&gt;%
+  group_by(廣告) %&gt;%
+  summarise(曝光 = length(點擊), 點擊數 = sum(點擊))
+binom.confint(x = channel.a.summary$點擊數, n = channel.a.summary$曝光, methods = &quot;exact&quot;)</code></pre>
+<!-- html table generated in R 3.2.2 by xtable 1.7-4 package -->
+<!-- Tue Oct  6 00:25:23 2015 -->
+<table border="1">
+<tr>
+<th>
+</th>
+<th>
+method
+</th>
+<th>
+x
+</th>
+<th>
+n
+</th>
+<th>
+mean
+</th>
+<th>
+lower
+</th>
+<th>
+upper
+</th>
+</tr>
+<tr>
+<td align="right">
+1
+</td>
+<td>
+exact
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+329
+</td>
+<td align="right">
+0.00
+</td>
+<td align="right">
+0.00
+</td>
+<td align="right">
+0.01
+</td>
+</tr>
+<tr>
+<td align="right">
+2
+</td>
+<td>
+exact
+</td>
+<td align="right">
+4
+</td>
+<td align="right">
+588
+</td>
+<td align="right">
+0.01
+</td>
+<td align="right">
+0.00
+</td>
+<td align="right">
+0.02
+</td>
+</tr>
+<tr>
+<td align="right">
+3
+</td>
+<td>
+exact
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+81
+</td>
+<td align="right">
+0.00
+</td>
+<td align="right">
+0.00
+</td>
+<td align="right">
+0.04
+</td>
+</tr>
+<tr>
+<td align="right">
+4
+</td>
+<td>
+exact
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+71
+</td>
+<td align="right">
+0.00
+</td>
+<td align="right">
+0.00
+</td>
+<td align="right">
+0.05
+</td>
+</tr>
+</table>
+<p>所以根據<code>binom.confint</code>的結果，其實這樣的差距很有可能是來自於運氣，因為他們的信賴區間交錯的不少。</p>
+</div>
+<div id="結合group_by-binom.confint" class="section level2">
+<h2>結合<code>group_by</code> + <code>binom.confint</code></h2>
+<p>然而剛剛的程式碼，其實可以利用<code>dplyr</code>的<code>do</code>來改進：</p>
+<pre class="r"><code>filter(sample, 網站 == &quot;網站A&quot;) %&gt;%
+  group_by(廣告) %&gt;%
+  do(binom.confint(sum(.$點擊), length(.$點擊), methods = &quot;exact&quot;))</code></pre>
+<!-- html table generated in R 3.2.2 by xtable 1.7-4 package -->
+<!-- Tue Oct  6 00:25:23 2015 -->
+<table border="1">
+<tr>
+<th>
+</th>
+<th>
+廣告
+</th>
+<th>
+method
+</th>
+<th>
+x
+</th>
+<th>
+n
+</th>
+<th>
+mean
+</th>
+<th>
+lower
+</th>
+<th>
+upper
+</th>
+</tr>
+<tr>
+<td align="right">
+1
+</td>
+<td>
+廣告A
+</td>
+<td>
+exact
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+329
+</td>
+<td align="right">
+0.00
+</td>
+<td align="right">
+0.00
+</td>
+<td align="right">
+0.01
+</td>
+</tr>
+<tr>
+<td align="right">
+2
+</td>
+<td>
+廣告B
+</td>
+<td>
+exact
+</td>
+<td align="right">
+4
+</td>
+<td align="right">
+588
+</td>
+<td align="right">
+0.01
+</td>
+<td align="right">
+0.00
+</td>
+<td align="right">
+0.02
+</td>
+</tr>
+<tr>
+<td align="right">
+3
+</td>
+<td>
+廣告C
+</td>
+<td>
+exact
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+81
+</td>
+<td align="right">
+0.00
+</td>
+<td align="right">
+0.00
+</td>
+<td align="right">
+0.04
+</td>
+</tr>
+<tr>
+<td align="right">
+4
+</td>
+<td>
+廣告D
+</td>
+<td>
+exact
+</td>
+<td align="right">
+0
+</td>
+<td align="right">
+71
+</td>
+<td align="right">
+0.00
+</td>
+<td align="right">
+0.00
+</td>
+<td align="right">
+0.05
+</td>
+</tr>
+</table>
+<p>這裡的<code>do</code>是一個很有趣的函數。當我們傳遞一個<code>group_by</code>處理過得的table，<code>do</code>會依照<code>group_by</code>的欄位將原本的table切割成若干的子table，並且運用變數<code>.</code>來代表這個子table。然後，再利用<code>do</code>的參數函數來個別計算出結果，最後再拼裝成原本的輸出。</p>
+<p><code>do</code>和原本<code>summarise</code>的差別，就是更有彈性，並且可以一次輸出多欄位。舉例來說，上述的<code>binom.confint</code>就一次輸出<code>mean</code>、<code>lower</code>和<code>upper</code>等資訊，而不像summarise，裡面使用的函數一次只能輸出一個值。</p>
+</div>
+<div id="do細解" class="section level2">
+<h2><code>do</code>細解</h2>
+<p>接下來，我簡單說明<code>do</code>的用法。請有興趣的朋友執行以下的程式碼：</p>
+<pre class="r"><code>group_by(iris, Species) %&gt;% do(browser())</code></pre>
+<p>由於<code>browser</code>的緣故，在<code>do</code>處理子table的時候會暫停，所以各位朋友就可以看到：</p>
+<pre class="r"><code>Browse[1]&gt; .
+Source: local data frame [50 x 5]
+
+   Sepal.Length Sepal.Width Petal.Length Petal.Width Species
+          (dbl)       (dbl)        (dbl)       (dbl)  (fctr)
+1           5.1         3.5          1.4         0.2  setosa
+2           4.9         3.0          1.4         0.2  setosa
+3           4.7         3.2          1.3         0.2  setosa
+4           4.6         3.1          1.5         0.2  setosa
+5           5.0         3.6          1.4         0.2  setosa
+6           5.4         3.9          1.7         0.4  setosa
+7           4.6         3.4          1.4         0.3  setosa
+8           5.0         3.4          1.5         0.2  setosa
+9           4.4         2.9          1.4         0.2  setosa
+10          4.9         3.1          1.5         0.1  setosa
+..          ...         ...          ...         ...     ...
+Browse[1]&gt; nrow(.)
+[1] 50</code></pre>
+<p>第一次暫停的時候，這個<code>.</code>就代表所有<code>Species</code>等於<code>"setosa"</code>的table，也就是<code>filter(iris, Species == "setosa")</code>的結果。
+各位可以從<code>nrow(.)</code>得到<code>50</code>看出。</p>
+<p>這樣的暫停會有三次，第二次是<code>filter(iris, Species == "versicolor")</code>，第三次是<code>filter(iris, Species == "virginica")</code>。</p>
+<p><code>do</code>裡面的函數必須輸出<code>data.frame</code>讓<code>dplyr</code>最後做組裝。舉例來說：</p>
+<pre class="r"><code>group_by(iris, Species) %&gt;% do(sum(.$Petal.Width))</code></pre>
+<pre><code>## Error: Results are not data frames at positions: 1, 2, 3</code></pre>
+<p>由於<code>sum(.$Petal.Width)</code>不是一個<code>data.frame</code>，所以就發生錯誤了。必須要用：</p>
+<pre class="r"><code>group_by(iris, Species) %&gt;% do(data.frame(sum = sum(.$Petal.Width)))</code></pre>
+<pre><code>## Source: local data frame [3 x 2]
+## Groups: Species [3]
+## 
+##      Species   sum
+##       (fctr) (dbl)
+## 1     setosa  12.3
+## 2 versicolor  66.3
+## 3  virginica 101.3</code></pre>
+</div>
+<div id="結語" class="section level2">
+<h2>結語</h2>
+<p>透過<code>group_by</code> + <code>do</code>，我們就可以再簡化程式碼，一次<code>group_by</code>就可以輸出信賴區間相關的分析結果，程式碼也簡潔。這一招是我最近學到的密技，今天就簡單跟大家作個說明，希望以上的內容能幫上大家囉。</p>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-130199267-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </body>
+</html>
+

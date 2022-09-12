@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.102.3" />
+
+
+<title>資料工程的挑戰 --- 乾淨的資料 - Wush &lt;- &#39;儒爸&#39;</title>
+<meta property="og:title" content="資料工程的挑戰 --- 乾淨的資料 - Wush &lt;- &#39;儒爸&#39;">
+
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/meme.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/wush978">GitHub</a></li>
+    
+    <li><a href="https://hahow.in/cr/r-hands-on">Hahow R語言入門</a></li>
+    
+    <li><a href="https://www.linkedin.com/in/wush978/">My LinkedIn Profile</a></li>
+    
+    <li><a href="https://datascienceandr.org">R語言翻轉教室</a></li>
+    
+    <li><a href="https://gitter.im/wush978/DataScienceAndR">聊天室</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">1 min read</span>
+    
+
+    <h1 class="article-title">資料工程的挑戰 --- 乾淨的資料</h1>
+
+    
+    <span class="article-date">2015-09-01</span>
+    
+
+    <div class="article-content">
+      
+
+
+<p>這陣子我聽了一系列Felix在MLDM Monday跟大家分享，關於資料工程的一些心得。這除了要感謝Felix的熱情分享以外，還要感謝萬惡之首 家齊的大力推坑！</p>
+<p>恰巧，這個領域也是我一直在思考的問題。一系列的討論下來，也讓我對這個問題有接近最本質的看法。</p>
+<p>Felix的演講雖然著重在技術面，著重在<strong>效能</strong>，但是他也點出了一個資料工程的觀點：資料要乾淨，後面的人才好做事。而根據我自己聽下來的心得，以及自己工作中的心得，我認為這部份其實包含了兩個面向：<strong>乾淨</strong>和<strong>正確</strong>。而這三點恰巧是我目前想到的，資料工程最重要的三個要點。</p>
+<p>這篇文章想分享，在最近事件所激發出我對於<strong>乾淨的資料</strong>的一些想像。</p>
+<p><img src="http://i.imgur.com/QSgTaAo.jpg" /></p>
+<div id="資料的乾淨度" class="section level2">
+<h2>資料的乾淨度</h2>
+<p>乾淨度其實牽涉到後續在取用資料時，能不能取得資料，以及後續方便性的問題。KKBOX在今年年會的時候，就很具體的描述，當一個分析師開始想要在企業內部取用資料時，會發生的種種狀況（<a href="http://www.slideshare.net/tw_dsconf/kkbox-51962632">投影片</a>）。</p>
+<p>類似的問題在<a href="https://www.facebook.com/groups/odtwn">OpenData</a>社群也有許多討論，有興趣的朋友可以也在<a href="https://www.facebook.com/groups/odtwn/permalink/1252416351439447" class="uri">https://www.facebook.com/groups/odtwn/permalink/1252416351439447</a>看到一些討論的過程（感謝Ronny Wang的提供）。我自己在今年的年會中，也和慕約大大就這個議題有過簡短的交流。</p>
+<p>那在一個企業之中，要怎麼要訂定資料乾淨度的KPI呢？我想到了一個有趣的作法：<strong>直接利用企業中資料科學團隊取用資料時，所撰寫的程式碼，並且分析整段抓取資料的程式碼和邏輯。這段程式碼的複雜度，就是資料的乾淨程度的反指標。</strong></p>
+<div id="資料不乾淨的一些範例" class="section level3">
+<h3>資料不乾淨的一些範例</h3>
+<p>舉例來說，儲存資料所採用的格式是不是乾淨的？我們可以觀察，資料科學家能不能用既有的分析工具（如R、Python、Excel、SAS或SPSS），簡單數行就可以把資料讀進分析軟體之中。這樣的想法，是能涵蓋目前我知道的，關於「資料不乾淨」的現象。</p>
+<div id="資料讀取的問題" class="section level4">
+<h4>資料讀取的問題</h4>
+<p>舉例來說，在我處理過得資料中，<a href="https://en.wikipedia.org/wiki/User_agent">瀏覽器的用戶代理（User Agent）</a>就是常常就夾雜著許多亂七八糟的符號，甚至是斷行符號，而資料科學家光要整理這樣的資料，絕對會寫出嚇死人的程式碼。</p>
+<p>又如果資料儲存的格式不是常見的標準格式，那資料科學家就要自己寫Parser，那程式碼的複雜度也是很高的。</p>
+<p>另外一個常見的讀取問題，就是編碼問題。我自己就遇過，同樣的檔案中有使用不同編碼的片段，處理起來，程式碼也是非常非常的醜。甚至還有BOM的判斷，這也是很討人厭的。</p>
+</div>
+<div id="特殊意義的符號是否有清楚的定義" class="section level4">
+<h4>特殊意義的符號是否有清楚的定義</h4>
+<p>在R來說，特殊的符號就有：NA（通常代表缺失值）或是NULL（空值）。我有看過一些<em>很不乾淨</em>的資料集用99或是一些魔術數字來作特別的意義，結果就是在分析之前，要寫一大堆邏輯來把這類魔術數字替換成NA。</p>
+</div>
+<div id="資料規格變動的問題" class="section level4">
+<h4>資料規格變動的問題</h4>
+<p>分析所需要的資料絕對是會一直變動的，這是實務資料科學和學校中的資料分析差異很大的地方！而如果企業沒有適當的管理這類變動的狀況，那資料科學家在使用資料的時候，可能就要處理很多exception，或是檢驗欄位是否存在的if-else。</p>
+</div>
+</div>
+<div id="如何解決不乾淨的資料呢" class="section level3">
+<h3>如何解決不乾淨的資料呢？</h3>
+<p>目前我對於上述我已知的、遇到過得問題，也都有一些基本的對應手法了（<s>真羨慕已經和資料工程師合作的資料科學家</s>）。</p>
+<div id="資料格式" class="section level4">
+<h4>資料格式</h4>
+<p>以資料的工程面來說，在傳遞資料時，使用一些可擴充、無關工具的資料交換格式，如：XML、JSON或Protobuf，並且嚴謹的定義特殊符號，並且主動統一資料的編碼。以長期來說，是比較好的。如果使用XML或JSON，記得在欄位內主動加上版本號。Protobuf的話，因為有定義schema，所以可以把schema加入版控來管理。</p>
+<p>然而這類資料，都是屬於非結構化的資料格式，對分析軟體是比較不友善的。目前主流分析軟體，還是擅長處理結構化的資料，例如CSV、Parquet。我以為，把非結構化的資料轉換到結構化的資料，是屬於資料工程團隊內重要的工作內容。</p>
+</div>
+<div id="取用資料的客製化套件" class="section level4">
+<h4>取用資料的客製化套件</h4>
+<p>由於每個企業的資料取用方法都是多變的，所以如果能針對資料科學團隊所使用的工具，開發鍵接資料的套件，讓分析師只要一行就可以撈出他需要的表格。這部份我覺得是R和Python這些軟體的強項，因為要開發他們的套件，是非常容易的，網路上是滿滿的文件，就連我過去也順手寫過：五分鐘學會「如何使用Rstudio建立R套件」</p>
+<p><a href="https://www.youtube.com/watch?v=OCQU6M4pPiw"><img src="http://img.youtube.com/vi/OCQU6M4pPiw/0.jpg" alt="五分鐘學會「如何使用Rstudio建立R套件」" /></a>。</p>
+<p>更有甚者，資料取用的邏輯也都可以整合進套件中，搭配先進的IDE，API就變成了文件呢！</p>
+</div>
+</div>
+<div id="程式碼可以告訴我們目前資料不乾淨的點" class="section level3">
+<h3>程式碼可以告訴我們，目前資料不乾淨的點</h3>
+<p>而如果我們真的<strong>直接利用企業中資料科學團隊取用資料時，所撰寫的程式碼，來判斷資料的乾淨程度</strong>，我們是可以有效的偵測出資料不乾淨的地方。而且程式碼的邏輯就會很具體的告訴我們，目前做不好的部份，讓資料工程團隊可以對症下藥。</p>
+<p><small>設計情境：什麼？撈資料居然要先對時間，那表示時間欄位一定不一致，有問題。</small></p>
+<p>而取用資料的套件，恰巧就會成為一個很棒的界面，把所有資料工程團隊要負責的邏輯（格式、效能的優化、正確性…）部份包裝起來，讓資料科學家們不用去碰觸這一塊。而這其實就是目前<em>資料工程師的我</em>每天需要幫<em>資料科學家的我</em>所進行的工作呀。</p>
+</div>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-130199267-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </body>
+</html>
+

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.102.3" />
+
+
+<title>在伺服器上跑R 的上手須知 - Wush &lt;- &#39;儒爸&#39;</title>
+<meta property="og:title" content="在伺服器上跑R 的上手須知 - Wush &lt;- &#39;儒爸&#39;">
+
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/meme.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/wush978">GitHub</a></li>
+    
+    <li><a href="https://hahow.in/cr/r-hands-on">Hahow R語言入門</a></li>
+    
+    <li><a href="https://www.linkedin.com/in/wush978/">My LinkedIn Profile</a></li>
+    
+    <li><a href="https://datascienceandr.org">R語言翻轉教室</a></li>
+    
+    <li><a href="https://gitter.im/wush978/DataScienceAndR">聊天室</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">3 min read</span>
+    
+
+    <h1 class="article-title">在伺服器上跑R 的上手須知</h1>
+
+    
+    <span class="article-date">2016-06-27</span>
+    
+
+    <div class="article-content">
+      
+
+
+<p>在伺服器上跑R, 要了解更多作業系統的運作的知識，而不只是R 的知識。
+以下假設你用的是Linux伺服器，那你應該一步一步的照以下的步驟檢查伺服器</p>
+<div id="hello-world" class="section level2">
+<h2>Hello World</h2>
+<p>第一件事情，我們應該要確定你的R 能正確的在命令列上執行
+所以我建議你先寫一個<code>test.R</code>的檔案，裡面只有:</p>
+<pre><code>print(&#39;hello world&#39;)</code></pre>
+<p>接著你要切換到存放<code>test.R</code>的目錄下，輸入:</p>
+<pre><code>Rscript test.R</code></pre>
+<p>如果你可以在螢幕上看到hello world，那這階段就通過了。
+如果沒有，那有以下幾種可能的錯誤:</p>
+<div id="沒有安裝r" class="section level3">
+<h3>沒有安裝R</h3>
+<p>有權限就自己裝，或是找管理員安裝吧。</p>
+<p>沒有權限，也可以自己編譯後安裝在家目錄之下，只是這比較高級，就先跳過囉。有機會再分享。</p>
+</div>
+<div id="環境變數理面沒有r的執行檔路徑" class="section level3">
+<h3>環境變數理面沒有R的執行檔路徑</h3>
+<p>如果你知道R 的路徑，例如: <code>/usr/bin/R</code></p>
+<p>或是 Rscript 的路徑，例如: <code>/usr/bin/Rscript</code></p>
+<p>請輸入 <code>echo $PATH</code> 看看 <code>/usr/bin</code> 有沒有在顯示在營幕中。</p>
+<p>$PATH的內容應該是: <code>&lt;目錄1&gt;:&lt;目錄2&gt;:...</code></p>
+<p>例如我的某台伺服器，登入後的$PATH是:</p>
+<pre><code>/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin</code></pre>
+<p>那當我們輸入<code>Rscript test</code>之後，作業系統就會依序找:</p>
+<ul>
+<li><code>/usr/local/sbin/Rscript</code></li>
+<li><code>/usr/local/bin/Rscript</code></li>
+<li>…</li>
+</ul>
+<p>先找到哪個，就先用那個執行檔案當成Rscript對應到的執行檔。如果都找不到，就失敗。</p>
+<p>ps. 如果你了解上面的說明，你應該就知道怎麼快速切換R 的運行版本</p>
+</div>
+<div id="檔案不存在" class="section level3">
+<h3>檔案不存在</h3>
+<p>你可以試試看執行<code>ls test.R</code>或<code>cat test.R</code>。如果出現 No such file or directory 的訊息，就是檔案不存在，或是你輸入的路徑錯誤</p>
+<p>ex: 把 test.R 打成 tests.R</p>
+</div>
+<div id="沒有讀取權限" class="section level3">
+<h3>沒有讀取權限</h3>
+<p>如果你在<code>cat test.R</code>的時候看到 Permission denied ，表示你沒有權限讀取內容。正常來說，如果是你編輯的檔案，不會有這樣的錯誤。但是如果你想要用背景執行，或是做一些工作的自動化，甚至是提供web-service或寫成shiny application，那你一定要先去找出，系統是用哪一個使用者的身分來執行程式。</p>
+<p>舉例來說，如果你用ssh 登入伺服器後在命令列中跑R，那身分就是你自己，所以在上面的情境中不應該會出問題。但是如果你是用一些外部系統，如jenkins，那自動執行的身分可能不是你，可能是一個專用的機器人帳戶，那就會失敗。如果你是要架網站，在php或shiny-server理面跑R ，那執行的使用者可能是<code>www-data</code>或<code>shiny</code>，如果你的檔案沒有開讀取權限給這些帳號，那就會執行失敗。</p>
+<p>這就是常見的，你自己跑的R沒有錯誤，但是寫成網站服務後跑不起來的原因之一。
+讀取權限的錯誤訊息有時候和<code>檔案不存在</code>會一樣，這是因為不只是檔案要有權限讀取，
+放置檔案的目錄、更上層的目錄、更更上層的目錄，也都要有權限，否則可能看到的錯誤
+就是: 檔案不存在，因為權限不足以查詢有哪些檔案在該目錄中。</p>
+</div>
+</div>
+<div id="套件" class="section level2">
+<h2>套件</h2>
+<div id="找不到套件" class="section level3">
+<h3>找不到套件</h3>
+<p>有時候，命令列上的R 會找不到套件。這時候，就要跑: <code>Rscript -e ".libPaths()"</code>來檢察套件的目錄和你想的一不一樣。</p>
+<p>在我的伺服器上，R會show出:</p>
+<pre><code>wush@xxx:~$ Rscript -e &quot;.libPaths()&quot;
+[1] &quot;/home/wush/R/x86_64-pc-linux-gnu-library/3.2&quot;
+[2] &quot;/usr/local/lib/R/site-library&quot;
+[3] &quot;/usr/lib/R/site-library&quot;
+[4] &quot;/usr/lib/R/library&quot;</code></pre>
+<p>這表示R會去以上的目錄找R 套件，找不到就跟你說套件沒有安裝。</p>
+<p>安裝的位置其實會出現在安裝的訊息中。舉例來說:</p>
+<pre><code>&gt; install.packages(&#39;googlesheets&#39;)
+Installing package into ‘/home/wush/R/x86_64-pc-linux-gnu-library/3.2’
+(as ‘lib’ is unspecified)
+also installing the dependency ‘xml2’
+
+trying URL &#39;http://cran.csie.ntu.edu.tw/src/contrib/xml2_1.0.0.tar.gz&#39;
+Content type &#39;application/x-gzip&#39; length 100462 bytes (98 KB)
+==================================================
+downloaded 98 KB
+
+trying URL &#39;http://cran.csie.ntu.edu.tw/src/contrib/googlesheets_0.2.1.tar.gz&#39;
+Content type &#39;application/x-gzip&#39; length 2172597 bytes (2.1 MB)
+==================================================
+downloaded 2.1 MB
+
+/home/wush
+* installing *source* package ‘xml2’ ...
+** package ‘xml2’ successfully unpacked and MD5 sums checked
+Found pkg-config cflags and libs!
+Using PKG_CFLAGS=-I/usr/include/libxml2
+Using PKG_LIBS=-lxml2
+** libs
+g++ -I/usr/share/R/include -DNDEBUG -I/usr/include/libxml2  -I&quot;/home/wush/R/x86_                                   64-pc-linux-gnu-library/3.2/Rcpp/include&quot; -I&quot;/home/wush/R/x86_64-pc-linux-gnu-li                                   brary/3.2/BH/include&quot;   -fpic  -g -O2 -fstack-protector --param=ssp-buffer-size=                                   4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -g  -c RcppExports.cpp -o                                    RcppExports.o
+g++ -I/usr/share/R/include -DNDEBUG -I/usr/include/libxml2  -I&quot;/home/wush/R/x86_64-pc-linux-gnu-library/3.2/Rcpp/include&quot; -I&quot;/home/wush/R/x86_64-pc-linux-gnu-library/3.2/BH/include&quot;   -fpic  -g -O2 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -g  -c connection.cpp -o connection.o
+g++ -I/usr/share/R/include -DNDEBUG -I/usr/include/libxml2  -I&quot;/home/wush/R/x86_64-pc-linux-gnu-library/3.2/Rcpp/include&quot; -I&quot;/home/wush/R/x86_64-pc-linux-gnu-library/3.2/BH/include&quot;   -fpic  -g -O2 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -g  -c xml2_doc.cpp -o xml2_doc.o
+g++ -I/usr/share/R/include -DNDEBUG -I/usr/include/libxml2  -I&quot;/home/wush/R/x86_64-pc-linux-gnu-library/3.2/Rcpp/include&quot; -I&quot;/home/wush/R/x86_64-pc-linux-gnu-library/3.2/BH/include&quot;   -fpic  -g -O2 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -g  -c xml2_init.cpp -o xml2_init.o
+g++ -I/usr/share/R/include -DNDEBUG -I/usr/include/libxml2  -I&quot;/home/wush/R/x86_64-pc-linux-gnu-library/3.2/Rcpp/include&quot; -I&quot;/home/wush/R/x86_64-pc-linux-gnu-library/3.2/BH/include&quot;   -fpic  -g -O2 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -g  -c xml2_namespace.cpp -o xml2_namespace.o
+g++ -I/usr/share/R/include -DNDEBUG -I/usr/include/libxml2  -I&quot;/home/wush/R/x86_64-pc-linux-gnu-library/3.2/Rcpp/include&quot; -I&quot;/home/wush/R/x86_64-pc-linux-gnu-library/3.2/BH/include&quot;   -fpic  -g -O2 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -g  -c xml2_node.cpp -o xml2_node.o
+g++ -I/usr/share/R/include -DNDEBUG -I/usr/include/libxml2  -I&quot;/home/wush/R/x86_64-pc-linux-gnu-library/3.2/Rcpp/include&quot; -I&quot;/home/wush/R/x86_64-pc-linux-gnu-library/3.2/BH/include&quot;   -fpic  -g -O2 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -g  -c xml2_url.cpp -o xml2_url.o
+g++ -I/usr/share/R/include -DNDEBUG -I/usr/include/libxml2  -I&quot;/home/wush/R/x86_64-pc-linux-gnu-library/3.2/Rcpp/include&quot; -I&quot;/home/wush/R/x86_64-pc-linux-gnu-library/3.2/BH/include&quot;   -fpic  -g -O2 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -g  -c xml2_xpath.cpp -o xml2_xpath.o
+g++ -I/usr/share/R/include -DNDEBUG -I/usr/include/libxml2  -I&quot;/home/wush/R/x86_64-pc-linux-gnu-library/3.2/Rcpp/include&quot; -I&quot;/home/wush/R/x86_64-pc-linux-gnu-library/3.2/BH/include&quot;   -fpic  -g -O2 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -g  -c xml_push.cpp -o xml_push.o
+g++ -shared -L/usr/lib/R/lib -Wl,-Bsymbolic-functions -Wl,-z,relro -o xml2.so RcppExports.o connection.o xml2_doc.o xml2_init.o xml2_namespace.o xml2_node.o xml2_url.o xml2_xpath.o xml_push.o -lxml2 -L/usr/lib/R/lib -lR
+installing to /home/wush/R/x86_64-pc-linux-gnu-library/3.2/xml2/libs
+** R
+** inst
+** preparing package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded
+/tmp/RtmpnDBKnW/R.INSTALL297267ebf7b4/xml2
+* DONE (xml2)
+/home/wush
+* installing *source* package ‘googlesheets’ ...
+** package ‘googlesheets’ successfully unpacked and MD5 sums checked
+** R
+** inst
+** preparing package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded
+/tmp/Rtmp8eo6G9/R.INSTALL29e5449caa3a/googlesheets
+* DONE (googlesheets)
+
+The downloaded source packages are in
+        ‘/tmp/RtmpEVOaBi/downloaded_packages’</code></pre>
+<p>上面這串訊息，大家平常都跳過。但是R其實把套件安裝的目的地寫在其中了，位置就寫在長長一串的訊息的第一行: <code>Installing package into ‘/home/wush/R/x86_64-pc-linux-gnu-library/3.2’</code></p>
+<p>然後最後還要檢查，有沒有：<code>* DONE (googlesheets)</code>，沒有的話就是安裝失敗了。要求救的話，請把<code>install.packages...</code>之下的所有訊息都貼上來，網友才有機會救你喔。</p>
+<p>自己平常也可以練習看這些訊息，因為通常錯誤的原因都在裡面了。</p>
+</div>
+<div id="s4-出錯" class="section level3">
+<h3>S4 出錯</h3>
+<p>如果R的指令中有用到如<code>as...</code>等指令時，用<code>Rscript</code>跑的時候很可能出錯。這是因為<code>R</code>預設會載入<code>methods</code>，但是<code>Rscript</code>不會。</p>
+</div>
+</div>
+<div id="其他疑難雜症" class="section level2">
+<h2>其他疑難雜症</h2>
+<p>我的經驗中，還遇到過許多其他的錯誤。比較有印象的一個，是Linux crontab裡面的locale與一般使用時不同(<a href="http://programmermagazine.github.io/201405/htm/article6.html">Z &gt; b 還是 Z &lt; b</a>)。還有一個是時區設定不同。另一次痛的是，多台伺服器的時間不一致導致的錯誤。</p>
+<p>網路的錯誤就更多了，而且更容易發生了。通常我伺服器上的程式，都必須要撰寫額外的邏輯處理網路不通的狀況。</p>
+<p>另一個就是racing condition，當一個檔案被多個程式讀寫的時候發生的錯誤。</p>
+<p>這些都不是R，是作業系統上的錯誤，但是最後都害我在跑R的時候發生不預期的結果。所以在伺服器上除錯，只找R的錯誤通常是不夠的，還必須要多學學作業系統相關的知識。很多時候，錯誤則和環境有關，所以真的找不到原因的時候，仔細比對<code>sessionInfo()</code>的內容、甚至在R理面把<code>system('env')</code>的結果輸出，一個一個仔細比對差異，往往是最終手段。這招確實幫我解決了不少，如locale不同的錯誤。</p>
+<p>目前我知道的，能在R中輸出做頁系統相關環境的指令:</p>
+<pre><code>sessionInfo()
+Sys.getlocale()
+system(&#39;env&#39;) # Linux
+.libPaths() # Package
+getwd() # working directory
+dir() # list existed files
+file.info()
+Sys.time()</code></pre>
+<p>就提供給大家做參考了。</p>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-130199267-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </body>
+</html>
+

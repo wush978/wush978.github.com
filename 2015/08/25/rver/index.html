@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.102.3" />
+
+
+<title>R 和 Microsoft SQL Server - Wush &lt;- &#39;儒爸&#39;</title>
+<meta property="og:title" content="R 和 Microsoft SQL Server - Wush &lt;- &#39;儒爸&#39;">
+
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/meme.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/wush978">GitHub</a></li>
+    
+    <li><a href="https://hahow.in/cr/r-hands-on">Hahow R語言入門</a></li>
+    
+    <li><a href="https://www.linkedin.com/in/wush978/">My LinkedIn Profile</a></li>
+    
+    <li><a href="https://datascienceandr.org">R語言翻轉教室</a></li>
+    
+    <li><a href="https://gitter.im/wush978/DataScienceAndR">聊天室</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">2 min read</span>
+    
+
+    <h1 class="article-title">R 和 Microsoft SQL Server</h1>
+
+    
+    <span class="article-date">2015-08-25</span>
+    
+
+    <div class="article-content">
+      
+
+
+<p>今天我想要跟大家介紹如何用R 連接Microsoft SQL Server。由於我自己比較習慣走JDBC的路線，所以要先請讀者安裝jdk、rJava和RJDBC。由於這件事情牽涉到R的版本、java的版本和SQL Server的版本，所以即使照著網路上的介紹走，仍然很容易遇到錯誤。這部分，只能仰賴微軟的官方文件了。</p>
+<div id="安裝rjava" class="section level2">
+<h2>安裝rJava</h2>
+<p>R上要安裝rJava和RJDBC其實有一點學問。主要的關鍵在於：<em>rJava編譯時使用的java</em></p>
+<p>如果使用CRAN編譯的binary，那java的版本就要透過以下的指令來查詢（出處：<a href="http://stackoverflow.com/q/26948777/1182304" class="uri">http://stackoverflow.com/q/26948777/1182304</a>）：</p>
+<pre><code>library(rJava)
+.jinit()
+jvm = .jnew(&quot;java.lang.System&quot;)
+jvm.props = jvm$getProperties()$toString()
+jvm.props &lt;- strsplit(gsub(&quot;\\{(.*)}&quot;, &quot;\\1&quot;, jvm.props), &quot;, &quot;)[[1]]
+jvm.props</code></pre>
+<p>在落落長的訊息中，應該會看到如：<code>java.version=1.6.0_65</code>之類的文字，我們就知道目前電腦上使用的java版本是1.6。</p>
+<div id="自行編譯rjavaubuntu-mac" class="section level3">
+<h3>自行編譯rJava（Ubuntu &amp; Mac）</h3>
+<p>如果要自行編譯rJava好配合電腦上的java版本，請先安裝對應的jdk。在安裝jdk過後，請先打開command line輸入：</p>
+<pre class="sh"><code>sudo R CMD javareconf</code></pre>
+<p>在mac上應該會出現如：</p>
+<pre><code>Java interpreter : /usr/bin/java
+Java version     : 1.7.0_75
+Java home path   : /Library/Java/JavaVirtualMachines/jdk1.7.0_75.jdk/Contents/Home/jre
+Java compiler    : /usr/bin/javac
+Java headers gen.: /usr/bin/javah
+Java archive tool: /usr/bin/jar
+Non-system Java on OS X
+
+trying to compile and link a JNI program
+detected JNI cpp flags    : -I$(JAVA_HOME)/../include -I$(JAVA_HOME)/../include/darwin
+detected JNI linker flags : -L$(JAVA_HOME)/lib/server -ljvm
+clang -I/Library/Frameworks/R.framework/Resources/include -DNDEBUG -I/Library/Java/JavaVirtualMachines/jdk1.7.0_75.jdk/Contents/Home/jre/../include -I/Library/Java/JavaVirtualMachines/jdk1.7.0_75.jdk/Contents/Home/jre/../include/darwin -I/usr/local/include -I/usr/local/include/freetype2 -I/opt/X11/include    -fPIC  -Wall -mtune=core2 -g -O2  -c conftest.c -o conftest.o
+clang -dynamiclib -Wl,-headerpad_max_install_names -undefined dynamic_lookup -single_module -multiply_defined suppress -L/Library/Frameworks/R.framework/Resources/lib -L/usr/local/lib -o conftest.so conftest.o -L/Library/Java/JavaVirtualMachines/jdk1.7.0_75.jdk/Contents/Home/jre/lib/server -ljvm -F/Library/Frameworks/R.framework/.. -framework R -Wl,-framework -Wl,CoreFoundation
+
+
+JAVA_HOME        : /Library/Java/JavaVirtualMachines/jdk1.7.0_75.jdk/Contents/Home/jre
+Java library path: $(JAVA_HOME)/lib/server
+JNI cpp flags    : -I$(JAVA_HOME)/../include -I$(JAVA_HOME)/../include/darwin
+JNI linker flags : -L$(JAVA_HOME)/lib/server -ljvm
+Updating Java configuration in /Library/Frameworks/R.framework/Resources
+Done.</code></pre>
+<p>等畫面。這是R在設定java環境的輸出。如果有錯誤，可能就要重新檢查一下java或jdk的安裝有沒有問題。</p>
+<p>如果沒問題，就可以進入下一階段安裝rJava和RJDBC的部分：</p>
+<pre class="r"><code>install.packages(c(&#39;rJava&#39;, &#39;RJDBC&#39;), type = &#39;source&#39;)</code></pre>
+<p>設定完java和R之後，我們還要依據SQL Server的版本從以下兩個連結選一個下載：</p>
+<ul>
+<li><a href="https://www.microsoft.com/zh-tw/download/details.aspx?id=11774">Microsoft JDBC Drivers 4.1 and 4.0 for SQL Server</a></li>
+<li><a href="https://www.microsoft.com/zh-tw/download/details.aspx?id=21599">Microsoft SQL Server JDBC 驅動程式 3.0</a></li>
+</ul>
+<p>在點選下載以後，請參考下圖點選紅框框圈起來的位置：</p>
+<div class="figure">
+<img src="http://i.imgur.com/rXDuXJ0.png?1" alt="" />
+<p class="caption">下載示意圖</p>
+</div>
+<p>下載後可以解壓縮得到：<code>sqljdbc.jar</code>、<code>sqljdbc4.jar</code>、<code>sqljdbc41.jar</code>和<code>sqljdbc42.jar</code>。</p>
+</div>
+</div>
+<div id="rjdbc" class="section level2">
+<h2>RJDBC</h2>
+<p>RJDBC是一個比較底層的套件。</p>
+<p>首先，我們要先載入剛剛下載的driver：</p>
+<pre class="r"><code>library(RJDBC)
+drv &lt;- JDBC(&quot;com.microsoft.sqlserver.jdbc.SQLServerDriver&quot;, &lt;path to driver&gt;)</code></pre>
+<p>根據<a href="https://msdn.microsoft.com/zh-tw/library/ms378422(v=sql.110).aspx_">JDBC 驅動程式的系統需求</a>的說法，這裡的driver是根據java版本所得到的。請依照<a href="#安裝rJava">安裝rJava</a>中介紹檢查rJava所使用的java版本，選擇要使用的driver。總結來說：</p>
+<table>
+<tr>
+<th>
+<p>
+JAR
+</p>
+</th>
+<th>
+<p>
+JDBC 版本
+</p>
+</th>
+<th>
+<p>
+JRE (可以執行)
+</p>
+</th>
+<th>
+<p>
+JDK (可以編譯)
+</p>
+</th>
+</tr>
+<tr>
+<td>
+<p>
+sqljdbc.jar
+</p>
+</td>
+<td>
+<p>
+3
+</p>
+</td>
+<td>
+<p>
+5
+</p>
+</td>
+<td>
+<p>
+5
+</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>
+sqljdbc4.jar
+</p>
+</td>
+<td>
+<p>
+4
+</p>
+</td>
+<td>
+<p>
+7 6
+</p>
+</td>
+<td>
+<p>
+6 5
+</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>
+sqljdbc41.jar
+</p>
+</td>
+<td>
+<p>
+4
+</p>
+</td>
+<td>
+<p>
+7
+</p>
+</td>
+<td>
+<p>
+7 6 5
+</p>
+</td>
+</tr>
+</table>
+</div>
+<div id="連接sql-server" class="section level2">
+<h2>連接SQL Server</h2>
+<p>在取得driver之後，我們可以建立與SQL Server的連線：</p>
+<pre><code>con &lt;- RJDBC::dbConnect(drv, paste0(&quot;jdbc:sqlserver://&quot;, ip), user, password)</code></pre>
+<p>這裡第二個參數的字串，是可以參考<a href="https://msdn.microsoft.com/zh-tw/library/ms378526(v=SQL.110).aspx">使用 JDBC 驅動程式</a>的說明來調整的。</p>
+<p>總結來說，可以參考以下的連線字串：</p>
+<pre><code>paste0(
+  &quot;jdbc:sqlserver://localhost:1433;&quot;, 
+  &quot;databaseName=AdventureWorks;user=MyUserName;password=*****;&quot;)</code></pre>
+<p>最後要解決的問題，就是driver版本是否和SQL Server符合。舉例來說：</p>
+<pre><code>Error in .jcall(drv@jdrv, &quot;Ljava/sql/Connection;&quot;, &quot;connect&quot;, as.character(url)[1],  :
+  com.microsoft.sqlserver.jdbc.SQLServerException: 此驅動程式不支援 SQL Server 版本 8。 ClientConnectionId:1c67c8b6-78e1-4ad4-9ea0-b0fab73a9609</code></pre>
+<p>如果讀者克服了上述的困難，就可以嘗試透過<code>DBI</code>，甚至是<code>dplyr</code>來取得SQL Server中的資料了。</p>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-130199267-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </body>
+</html>
+

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.102.3" />
+
+
+<title>Using Eclipse CDT to develop Rcpp Package - Wush &lt;- &#39;儒爸&#39;</title>
+<meta property="og:title" content="Using Eclipse CDT to develop Rcpp Package - Wush &lt;- &#39;儒爸&#39;">
+
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/meme.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/wush978">GitHub</a></li>
+    
+    <li><a href="https://hahow.in/cr/r-hands-on">Hahow R語言入門</a></li>
+    
+    <li><a href="https://www.linkedin.com/in/wush978/">My LinkedIn Profile</a></li>
+    
+    <li><a href="https://datascienceandr.org">R語言翻轉教室</a></li>
+    
+    <li><a href="https://gitter.im/wush978/DataScienceAndR">聊天室</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">2 min read</span>
+    
+
+    <h1 class="article-title">Using Eclipse CDT to develop Rcpp Package</h1>
+
+    
+    <span class="article-date">2013-01-29</span>
+    
+
+    <div class="article-content">
+      
+
+
+<p>Rstudio is great, but it lacks some useful features for C/C++ provided
+by modern IDE such as tracing. Eclipse CDT is a good choice, but it is
+complicated to setup the project correctly.</p>
+<p>I just wrote a cmake script to generate Eclipse CDT project for
+developing Rcpp package.</p>
+<div id="environment" class="section level1">
+<h1>Environment</h1>
+<ul>
+<li>CMake &gt;= 2.8.7</li>
+<li>Eclipse &gt;= 3.7</li>
+<li>Eclipse CDT &gt;= 1.4.2</li>
+<li>R &gt;= 2.15</li>
+<li>Rcpp &gt;= 0.10</li>
+</ul>
+</div>
+<div id="configuration" class="section level1">
+<h1>Configuration</h1>
+<ul>
+<li><p>Download FindLibR.cmake from <a href="https://github.com/rstudio/rstudio/blob/master/cmake/modules/FindLibR.cmake">github</a>
+provided by Rstudio</p></li>
+<li><p>Generate Rcpp package, for example</p></li>
+</ul>
+<pre class="r"><code>library(Rcpp)
+Rcpp.package.skeleton(&quot;RcppPackage&quot;)</code></pre>
+<ul>
+<li>Put the following file, named <em>CMakeLists.txt</em> in the generated folder
+such as <code>RcppPackage</code> in the previous example</li>
+</ul>
+<p><code>cmake CMakeLists.txt cmake_minimum_required(VERSION 2.8) project(RcppPackage) find_package(LibR) if(${LIBR_FOUND}) else()     message(FATAL_ERROR "No R...") endif() message(STATUS ${CMAKE_SOURCE_DIR}) execute_process(     COMMAND ${LIBR_EXECUTABLE} "--slave" "-e" "stopifnot(require('Rcpp'));cat(Rcpp:::Rcpp.system.file('include'))"     OUTPUT_VARIABLE LIBRCPP_INCLUDE_DIRS     )  include_directories(BEFORE ${LIBR_INCLUDE_DIRS}) message(STATUS ${LIBR_INCLUDE_DIRS}) include_directories(BEFORE ${LIBRCPP_INCLUDE_DIRS}) message(STATUS ${LIBRCPP_INCLUDE_DIRS}) add_custom_target(RcppPackage ALL     COMMAND find ${CMAKE_SOURCE_DIR} -name "*.o" -exec rm "{}" "\;"     COMMAND find ${CMAKE_SOURCE_DIR} -name "*.so" -exec rm "{}" "\;"     COMMAND ${LIBR_EXECUTABLE} "--slave" "-e" "\"stopifnot(require(roxygen2));roxygenize('${CMAKE_SOURCE_DIR}',roclets=c('rd','collate','namespace'))\""     COMMAND ${LIBR_EXECUTABLE} CMD INSTALL "${CMAKE_SOURCE_DIR}")</code></p>
+<ul>
+<li><p>Customize CMakeLists.txt such <code>roxygenize</code> and <code>R CMD INSTALL</code></p></li>
+<li><p>Generate project with cmake</p></li>
+</ul>
+<pre class="sh"><code>mkdir build # don&#39;t create subdirectory of RcppPackage
+cd build
+cmake -G &quot;Eclipse CDT4 - Unix Makefiles&quot; &lt;path to RcppPackage&gt; -DCMAKE_ECLIPSE_GENERATE_SOURCE_PROJECT=TRUE</code></pre>
+<ul>
+<li><p>Open eclipse and import project from <code>build</code>(See <a href="http://www.vtk.org/Wiki/Eclipse_CDT4_Generator">cmake-eclipse-cdt</a> for example).
+After indexing, enjoy several convenient features provided by Eclipse CDT
+such as tracing and autocomplete.</p></li>
+<li><p>You can build the project which will be converted to <code>R CMD INSTALL</code> or
+anything in the <em>CMakeLists.txt</em>.</p></li>
+</ul>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-130199267-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </body>
+</html>
+
