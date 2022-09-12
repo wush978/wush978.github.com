@@ -1,0 +1,76 @@
+---
+title: 讓R自動優化建立報告的流程
+date: 2019-03-03 22:30
+slug: drake
+---
+
+在開始介紹今天想介紹的R套件之前，我想先分享一個最近做分析的流程。
+
+我的目標是要幫客戶分析某個任務在各種狀況下的成功率。
+首先客戶每天產出一份excel報表給我，而我需要彙整每份報表之後，根據客戶感興趣的條件來作差異分析，最後要產生一個靜態網頁報告。
+
+然而在每次開會時，客戶都會對資料的定義有變動，導致整套分析要從頭開始。
+這是因為，我們做分析時，都是先清理資料，才開始跑相關的統計數據，最後再畫圖，以及製作相關報表。
+也由於資料量不小，所以我也沒辦法在一個R session中把所有事情做完，而是把工作切割成若干份，分段做，並且需要自己處理中間產生的暫存檔。
+
+## Makefile
+
+為了管理我的分析流程，我通常會一邊做分析，一邊撰寫Makefile。
+
+Makefile是在Open Source界很常用的建置管理工具。
+它的內容是在描述各種檔案之間的新舊關係。
+更具體來說，它是要解決一個專案內，各個檔案之間的相依性關係。
+舉例來說，如果我寫了：
+
+```
+report.html : report.Rmd
+  Rscript -e "rmarkdown::render('report.Rmd')"
+```
+
+就表示，`report.html`這個檔案要比`report.Rmd`這個檔案還要新。
+因此，當我在命令列輸入`make`以後，
+`make`這支程式就會去比較這兩個檔案的變動時間。
+
+如果`make`找不到`report.html`，或是`report.html`的時間比較舊，
+`make`就會幫我執行程式：`Rscript -e "rmarkdown::render('report.Rmd')"`
+
+也因此，我往往會在一個比較複雜的專案中，撰寫`Makefile`。
+最主要的任務是幫我記錄，每個檔案之間的產生順序。
+
+## [drake](https://github.com/ropensci/drake)
+
+今天我看到一個有趣的專案：[drake](https://github.com/ropensci/drake)。
+仔細看字根，他應該就是在講`data`與`R`的`make`。
+
+在簡單看了以下的六分鐘的介紹影片（請直接到drake的說明網站中觀看）後，我發現drake這個專案，可以幫助我管理，一個複雜的資料分析專案的相依性關係。
+
+<a href="https://ropenscilabs.github.io/drake-manual"> <img src="https://ropensci.github.io/drake/figures/video.png" alt="video" align="center" style = "border: none; float: center;"> </a>
+
+首先，drake是一個純R的專案，所以我們可以不用額外去寫`Makefile`，去撰寫那些命令列呼叫R的額外工作。
+舉例來說，在`Makefile`中我們要寫：`Rscript -e "rmarkdown::render(...)"`，在drake中我們只要寫
+`rmarkdown::render(...)`就可以了。
+
+如果只有這樣，其實我大概不會心動。
+但是第二個事情有讓我感興趣：drake會幫我們管理暫存檔案。
+
+在我的Makefile中，常常看到：
+
+```
+first.Rds : first.R
+  Rscript first.R
+
+second.Rds : first.Rds second.R
+  Rscript second.R
+```
+
+這樣的關係。
+
+在drake中，我只需要寫清楚`first`與`second`中間的事情，而不用去處理存取`first.Rds`與`second.Rds`的事情了。
+這很方便。
+因為實務上，我常常在清洗資料的時候增減暫存檔，或是重構存放的目錄（例如把檔案都移到`data`資料夾中）。
+而每次修改，就至少改兩個地方（存與取）
+
+因此，今天就介紹這個有趣的專案給大家。
+有興趣的R友歡迎一起試用看看。
+我自己也會找機會試用看看，有更進一步的心得再跟大家分享。
+

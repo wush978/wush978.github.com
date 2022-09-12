@@ -16,7 +16,7 @@ src[seq.int(start, end, by = 1)]
   as.Date() %>%
   format()
 .config$draft <- FALSE
-.config$slug <- substring(basename(path), 12, nchar(basename(path))) %>%
+if (is.null(.config$slug)) .config$slug <- substring(basename(path), 12, nchar(basename(path))) %>%
   tools::file_path_sans_ext()
 .config <- .config[c("title", "date", "slug")]
 .f <- file(argv[2], open = "w", encoding = "UTF-8")
