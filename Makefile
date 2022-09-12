@@ -19,7 +19,7 @@ content/post/%.Rmd : source/post/%.Rmd
 content/post/%.html : content/post/%.Rmd
 	conda run -n $(CONDA_PREFIX) Rscript -e "blogdown:::build_rmds('$<')"
 
-hugo : install $(CONTENT_RMD) $(CONTENT_HTML)
+hugo : $(CONTENT_RMD) $(CONTENT_HTML)
 	conda run -n $(CONDA_PREFIX) Rscript -e "blogdown::hugo_build()"
 
 run : 
