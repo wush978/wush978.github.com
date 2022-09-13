@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.102.3" />
+
+
+<title>工作的R 環境 - Wush &lt;- &#39;儒爸&#39;</title>
+<meta property="og:title" content="工作的R 環境 - Wush &lt;- &#39;儒爸&#39;">
+
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/meme.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/wush978">GitHub</a></li>
+    
+    <li><a href="https://hahow.in/cr/r-hands-on">Hahow R語言入門</a></li>
+    
+    <li><a href="https://www.linkedin.com/in/wush978/">My LinkedIn Profile</a></li>
+    
+    <li><a href="https://datascienceandr.org">R語言翻轉教室</a></li>
+    
+    <li><a href="https://gitter.im/wush978/DataScienceAndR">聊天室</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">1 min read</span>
+    
+
+    <h1 class="article-title">工作的R 環境</h1>
+
+    
+    <span class="article-date">2022-09-13</span>
+    
+
+    <div class="article-content">
+      
+
+
+<p>在比較有制度的公司工作兩年半多了。</p>
+<p>雖然公司要分析的資料不少、公司的官方工具是 python，但是我還是很習慣用R 做分析。</p>
+<p>今天想開始在自己的部落格紀錄一下，兩年多來在實務上遇到運算問題時，在R 找到且用得很順手的解決辦法。</p>
+<div id="database-like-ops" class="section level2">
+<h2>Database-like ops</h2>
+<p>不知道各位相不相信，我體感測試各種工具，包含Apache Spark、Clickhouse等等，
+只要在記憶體足夠之下，最快的工具仍然是歷久彌堅的<a href="https://cran.r-project.org/web/packages/data.table/vignettes/datatable-intro.html">data.table</a>。
+有興趣的讀者可以看一下 <a href="https://h2oai.github.io/db-benchmark/">h2o 做的 Database-like ops benchmark</a>。</p>
+<p>而且data.table的語法搭配 pipeline operator <code>%&gt;%</code> 寫起來的爽度真的破表。
+之後要來寫幾篇吹捧一下。</p>
+<p>另外我這陣子面試一些同學，發現大家SQL的技能好像還是滿缺乏的，所以可以的話，我也放個SQL語法對照表吧!</p>
+<p>data.table 目前我最大的不滿是 window clause 的支援。我嘗試自己寫個擴充，但是目前好像在資料量大的時候會有bug…
+只能期待有緣的時刻再把它寫完，或是等 data.table 官方自己出相關功能吧!</p>
+</div>
+<div id="平行運算" class="section level2">
+<h2>平行運算</h2>
+<p>想要再加速資料處理的速度? 只要記憶體夠，那 <code>parallel::mclapply</code> 可以說是目前我體感最方便的平行化工具。
+這點也是比python好很多。</p>
+<p>搭配作業系統的 fork 技術，只要不去修改巨大的物件，不用擔心記憶體爆炸。
+而且有時候複雜的運算放到 slaves 之後，跑完 <code>parallel::mclapply</code> 還可以順勢幫你把記憶體釋放乾淨。</p>
+</div>
+<div id="繪圖" class="section level2">
+<h2>繪圖</h2>
+<p>最強繪圖套件: <a href="https://ggplot2.tidyverse.org/">ggplot2</a>不解釋。
+如果想要互動，可以嘗試 plotly，但是因為在 jupyter notebook irkernel 上會衝到，目前我就先只用 ggplot2</p>
+</div>
+<div id="共享" class="section level2">
+<h2>共享</h2>
+<p>搭配 openxlsx 與 googledrive 套件，在R 中可以把繪圖背後的資料也同時上傳到 googledrive。
+自己寫個 helper function 把上傳與設定權限一次搞定!
+在公司有使用G-suite之下，非常方便。</p>
+<p>也可以捨棄Rstudio，直接用 <a href="https://www.kaggle.com/general/248438">Colab-R</a>，搭配 jupyter ir-kernel 直接連回本機做使用。
+這樣做出來的圖表，就可以全部打包與同事分享。
+今天老闆看到我用這套之後，還問我不少細節，打算讓工程師幫大家包一個 python 版本的類似功能呢!</p>
+</div>
+<div id="統計計算" class="section level2">
+<h2>統計計算</h2>
+<div id="信賴區間" class="section level3">
+<h3>信賴區間</h3>
+<p>因為業務需要，常常要處理二項式分布的資料，所以 <code>binom</code> 套件提供簡單的語法讓我可以秒算信賴區間，
+搭配 data.table 可以直接 group by 算出信賴區間，真的超強!
+R 套件們威~<del>武</del>~~~~</p>
+</div>
+<div id="模擬" class="section level3">
+<h3>模擬</h3>
+<p>有時候處理到，不知道是什麼分布的資料，就需要跑bootstrap。
+R 強大的 sample 語法與平行化功能，在這種應用上真的很方便。</p>
+</div>
+<div id="線性模型" class="section level3">
+<h3>線性模型</h3>
+<p>有時候資料變數多了一點，隨手跑個 <code>lm</code> 搭配 <code>summary</code> 先看看資料，真的也是超級方便。</p>
+<p>先 <code>%&gt;%</code> 一番，清理資料完畢後再 <code>%&gt;%</code> 給 <code>lm</code> 跑迴歸，最後再 <code>summary</code> 看各種結果。
+寫code很愉悅，但是看到結果後也是常常很頭痛。</p>
+<pre><code>猜不透
+為什麼分析結果這麼醜
+我也不想再分析更多
+讓bug為彼此的心上了鎖</code></pre>
+<p>阿，不好意思透漏年齡了。</p>
+<p>總之，我最近要來把我一時想到的各種零碎心得給記錄起來。</p>
+</div>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-130199267-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </body>
+</html>
+

@@ -6,7 +6,26 @@
     <description>Recent content in Posts on Wush &lt;- &#39;儒爸&#39;</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-tw</language>
-    <lastBuildDate>Sun, 03 Mar 2019 00:00:00 +0000</lastBuildDate><atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Tue, 13 Sep 2022 00:00:00 +0000</lastBuildDate><atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>工作的R 環境</title>
+      <link>/2022/09/13/r-env/</link>
+      <pubDate>Tue, 13 Sep 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/2022/09/13/r-env/</guid>
+      <description>在比較有制度的公司工作兩年半多了。
+雖然公司要分析的資料不少、公司的官方工具是 python，但是我還是很習慣用R 做分析。
+今天想開始在自己的部落格紀錄一下，兩年多來在實務上遇到運算問題時，在R 找到且用得很順手的解決辦法。
+Database-like ops 不知道各位相不相信，我體感測試各種工具，包含Apache Spark、Clickhouse等等， 只要在記憶體足夠之下，最快的工具仍然是歷久彌堅的data.table。 有興趣的讀者可以看一下 h2o 做的 Database-like ops benchmark。
+而且data.table的語法搭配 pipeline operator %&amp;gt;% 寫起來的爽度真的破表。 之後要來寫幾篇吹捧一下。
+另外我這陣子面試一些同學，發現大家SQL的技能好像還是滿缺乏的，所以可以的話，我也放個SQL語法對照表吧!
+data.table 目前我最大的不滿是 window clause 的支援。我嘗試自己寫個擴充，但是目前好像在資料量大的時候會有bug… 只能期待有緣的時刻再把它寫完，或是等 data.table 官方自己出相關功能吧!
+平行運算 想要再加速資料處理的速度? 只要記憶體夠，那 parallel::mclapply 可以說是目前我體感最方便的平行化工具。 這點也是比python好很多。
+搭配作業系統的 fork 技術，只要不去修改巨大的物件，不用擔心記憶體爆炸。 而且有時候複雜的運算放到 slaves 之後，跑完 parallel::mclapply 還可以順勢幫你把記憶體釋放乾淨。
+繪圖 最強繪圖套件: ggplot2不解釋。 如果想要互動，可以嘗試 plotly，但是因為在 jupyter notebook irkernel 上會衝到，目前我就先只用 ggplot2
+共享 搭配 openxlsx 與 googledrive 套件，在R 中可以把繪圖背後的資料也同時上傳到 googledrive。 自己寫個 helper function 把上傳與設定權限一次搞定! 在公司有使用G-suite之下，非常方便。</description>
+    </item>
+    
     <item>
       <title>讓R自動優化建立報告的流程</title>
       <link>/2019/03/03/drake/</link>
