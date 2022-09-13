@@ -1,0 +1,81 @@
+---
+layout: post
+title: "工作的R 環境"
+date: 2022-09-13 22:12
+comments: true
+categories: R environment
+---
+
+在比較有制度的公司工作兩年半多了。
+
+雖然公司要分析的資料不少、公司的官方工具是 python，但是我還是很習慣用R 做分析。
+
+今天想開始在自己的部落格紀錄一下，兩年多來在實務上遇到運算問題時，在R 找到且用得很順手的解決辦法。
+
+## Database-like ops
+
+不知道各位相不相信，我體感測試各種工具，包含Apache Spark、Clickhouse等等，
+只要在記憶體足夠之下，最快的工具仍然是歷久彌堅的[data.table](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-intro.html)。
+有興趣的讀者可以看一下 [h2o 做的 Database-like ops benchmark](https://h2oai.github.io/db-benchmark/)。
+
+而且data.table的語法搭配 pipeline operator `%>%` 寫起來的爽度真的破表。
+之後要來寫幾篇吹捧一下。
+
+另外我這陣子面試一些同學，發現大家SQL的技能好像還是滿缺乏的，所以可以的話，我也放個SQL語法對照表吧!
+
+data.table 目前我最大的不滿是 window clause 的支援。我嘗試自己寫個擴充，但是目前好像在資料量大的時候會有bug...
+只能期待有緣的時刻再把它寫完，或是等 data.table 官方自己出相關功能吧!
+
+## 平行運算
+
+想要再加速資料處理的速度? 只要記憶體夠，那 `parallel::mclapply` 可以說是目前我體感最方便的平行化工具。
+這點也是比python好很多。
+
+搭配作業系統的 fork 技術，只要不去修改巨大的物件，不用擔心記憶體爆炸。
+而且有時候複雜的運算放到 slaves 之後，跑完 `parallel::mclapply` 還可以順勢幫你把記憶體釋放乾淨。
+
+## 繪圖
+
+最強繪圖套件: [ggplot2](https://ggplot2.tidyverse.org/)不解釋。
+如果想要互動，可以嘗試 plotly，但是因為在 jupyter notebook irkernel 上會衝到，目前我就先只用 ggplot2
+
+## 共享
+
+搭配 openxlsx 與 googledrive 套件，在R 中可以把繪圖背後的資料也同時上傳到 googledrive。
+自己寫個 helper function 把上傳與設定權限一次搞定!
+在公司有使用G-suite之下，非常方便。
+
+也可以捨棄Rstudio，直接用 [Colab-R](https://www.kaggle.com/general/248438)，搭配 jupyter ir-kernel 直接連回本機做使用。
+這樣做出來的圖表，就可以全部打包與同事分享。
+今天老闆看到我用這套之後，還問我不少細節，打算讓工程師幫大家包一個 python 版本的類似功能呢!
+
+## 統計計算
+
+### 信賴區間
+
+因為業務需要，常常要處理二項式分布的資料，所以 `binom` 套件提供簡單的語法讓我可以秒算信賴區間，
+搭配 data.table 可以直接 group by 算出信賴區間，真的超強!
+R 套件們威~~~武~~~~~~
+
+### 模擬
+
+有時候處理到，不知道是什麼分布的資料，就需要跑bootstrap。
+R 強大的 sample 語法與平行化功能，在這種應用上真的很方便。
+
+### 線性模型
+
+有時候資料變數多了一點，隨手跑個 `lm` 搭配 `summary` 先看看資料，真的也是超級方便。
+
+先 `%>%` 一番，清理資料完畢後再 `%>%` 給 `lm` 跑迴歸，最後再 `summary` 看各種結果。
+寫code很愉悅，但是看到結果後也是常常很頭痛。
+
+```
+猜不透
+為什麼分析結果這麼醜
+我也不想再分析更多
+讓bug為彼此的心上了鎖
+```
+
+阿，不好意思透漏年齡了。
+
+總之，我最近要來把我一時想到的各種零碎心得給記錄起來。
